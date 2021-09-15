@@ -17,7 +17,7 @@ type ParsedLogLine struct {
 
 func handleConnection(data string, remote *net.UDPAddr) {
 	parsed := parseLogLine(data, remote)
-	fmt.Printf("[%s] [%s] : %s\n", parsed.LogTimestamp, parsed.SourceServer, parsed.LogLine)
+	fmt.Printf("[%s] : %s\n", parsed.SourceServer, parsed.LogLine)
 }
 
 func parseLogLine(line string, remote *net.UDPAddr) ParsedLogLine {
