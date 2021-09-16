@@ -1,54 +1,71 @@
 package main
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net"
-	"regexp"
 	"strings"
-	"time"
+
+	"gopkg.in/yaml.v2"
 )
 
-type ParsedLogLine struct {
-	LogTimestamp time.Time
-	SourceServer *net.UDPAddr
-	LogLine      string
-}
+const configPath = "config.yaml"
 
-func handleConnection(data string, remote *net.UDPAddr) {
-	parsed := parseLogLine(data, remote)
-	fmt.Printf("[%s] : %s\n", parsed.SourceServer, parsed.LogLine)
-}
-
-func parseLogLine(line string, remote *net.UDPAddr) ParsedLogLine {
-	rLogTimestamp, _ := regexp.Compile(`\d{2}/\d{2}/\d{4} - \d{2}:\d{2}:\d{2}`)
-	logTimestamp := rLogTimestamp.FindString(line)
-	t, err := time.Parse("01/02/2006 - 15:04:05", logTimestamp)
+func loadConfig() (*Config, error) {
+	var config Config
+	yamlFile, err := ioutil.ReadFile(configPath)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
+	if err = yaml.Unmarshal(yamlFile, config); err != nil {
+		return nil, err
+	}
+	return &config, nil
+}
 
-	return ParsedLogLine{LogTimestamp: t, SourceServer: remote, LogLine: line}
+func getAddressMap(hosts []Client) map[string]LogFile {
+	logsDict := make(map[string]LogFile)
+	for _, h := range hosts {
+		logsDict[h.address] = LogFile{
+			state:  Pregame,
+			buffer: bytes.Buffer{},
+		}
+	}
+	return logsDict
 }
 
 func main() {
-	laddr := net.UDPAddr{IP: net.IPv4(0, 0, 0, 0), Port: 27100}
-
-	lner, err := net.ListenUDP("udp", &laddr)
+	cfg, err := loadConfig()
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalf("Failed to parse config: %s", err)
 	}
-	defer lner.Close()
 
-	fmt.Printf("Log Server listening on %s\n", lner.LocalAddr().String())
+	_ = getAddressMap(cfg.Clients)
+
+	udpAddr, err := net.ResolveUDPAddr("udp4", cfg.Server.Host+":"+cfg.Server.Port)
+	if err != nil {
+		log.Fatalf("Failed to parse UDP address: %s", err)
+	}
+	conn, err := net.ListenUDP("udp", udpAddr)
+	if err != nil {
+		log.Fatalf("Failed to create UDP listner: %s", err)
+	}
+	defer conn.Close()
+
+	log.Printf("Log Server listening on %s\n", udpAddr.String())
 
 	for {
 		message := make([]byte, 1024)
-		rlen, remote, err := lner.ReadFromUDP(message[:])
+		rlen, clientAddr, err := conn.ReadFromUDP(message)
 		if err != nil {
-			log.Panic(err)
+			log.Fatalf("Failed to read from UDP: %s", err)
 		}
-		data := strings.TrimSpace(string(message[:rlen]))
-		handleConnection(data, remote)
+		casteMessage := string(message[:rlen])
+		casteMessage = strings.TrimLeft(casteMessage, "L ")
+		casteMessage = strings.TrimSpace(casteMessage)
+
+		fmt.Printf("[%s] : %s\n", clientAddr.String(), message)
 	}
 }
