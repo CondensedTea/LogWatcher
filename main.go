@@ -1,7 +1,6 @@
 package main
 
 import (
-	"bytes"
 	"fmt"
 	"io/ioutil"
 	"log"
@@ -28,13 +27,22 @@ func loadConfig() (*Config, error) {
 func getAddressMap(hosts []Client) map[string]LogFile {
 	logsDict := make(map[string]LogFile)
 	for _, h := range hosts {
+		ch := make(chan string)
 		logsDict[h.address] = LogFile{
-			state:  Pregame,
-			buffer: bytes.Buffer{},
+			state:   Pregame,
+			channel: ch,
 		}
+		logsDict[h.address].StartWorker()
 	}
 	return logsDict
 }
+
+//func spawnWorkers(clients []Client, logfiles map[string]LogFile) {
+//	for _, v := range clients {}
+//		go func() {
+//
+//		}()
+//}
 
 func main() {
 	cfg, err := loadConfig()
@@ -42,7 +50,7 @@ func main() {
 		log.Fatalf("Failed to parse config: %s", err)
 	}
 
-	_ = getAddressMap(cfg.Clients)
+	addrs := getAddressMap(cfg.Clients)
 
 	udpAddr, err := net.ResolveUDPAddr("udp4", cfg.Server.Host+":"+cfg.Server.Port)
 	if err != nil {
@@ -62,9 +70,13 @@ func main() {
 		if err != nil {
 			log.Fatalf("Failed to read from UDP: %s", err)
 		}
-		casteMessage := string(message[:rlen])
-		casteMessage = strings.TrimLeft(casteMessage, "L ")
-		casteMessage = strings.TrimSpace(casteMessage)
+		cleanMsg := string(message[:rlen])
+		cleanMsg = strings.TrimLeft(cleanMsg, "L ")
+		cleanMsg = strings.TrimSpace(cleanMsg)
+
+		fmt.Printf(clientAddr.String())
+
+		addrs[clientAddr.String()].channel <- cleanMsg
 
 		fmt.Printf("[%s] : %s\n", clientAddr.String(), message)
 	}
