@@ -2,16 +2,20 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
+
 	//	"io/ioutil"
 	"log"
 	"net"
 	"strings"
+
 	//	"gopkg.in/yaml.v2"
+
+	"gopkg.in/yaml.v2"
 )
 
-//const configPath = "config.yaml"
+const configPath = "config.yaml"
 
-/*
 func loadConfig() (*Config, error) {
 	var config Config
 	yamlFile, err := ioutil.ReadFile(configPath)
@@ -23,7 +27,6 @@ func loadConfig() (*Config, error) {
 	}
 	return &config, nil
 }
-*/
 
 func getAddressMap(hosts []Client) map[string]LogFile {
 	logsDict := make(map[string]LogFile)
@@ -46,12 +49,11 @@ func getAddressMap(hosts []Client) map[string]LogFile {
 //}
 
 func main() {
-	/*	cfg, err := loadConfig()
-		if err != nil {
-			log.Fatalf("Failed to parse config: %s", err)
-		}
-	*/
-	//	addrs := getAddressMap(cfg.Clients)
+	cfg, err := loadConfig()
+	if err != nil {
+		log.Fatalf("Failed to parse config: %s", err)
+	}
+	addrs := getAddressMap(cfg.Clients)
 
 	udpAddr, err := net.ResolveUDPAddr("udp4", "0.0.0.0:27100")
 	if err != nil {
@@ -63,21 +65,25 @@ func main() {
 	}
 	defer conn.Close()
 
-//    conn.SetReadBuffer(1048576)
+	for k := range addrs {
+		addrs[k].StartWorker()
+	}
 
 	log.Printf("Log Server listening on %s\n", udpAddr.String())
 
-	for {
-		message := make([]byte, 1024)
-		rlen, clientAddr, err := conn.ReadFromUDP(message)
-		if err != nil {
-			log.Fatalf("Failed to read from UDP: %s", err)
+	go func() {
+		for {
+			message := make([]byte, 1024)
+			rlen, clientAddr, err := conn.ReadFromUDP(message)
+			if err != nil {
+				log.Fatalf("Failed to read from UDP: %s", err)
+			}
+			cleanMsg := string(message[:rlen])
+			cleanMsg = strings.TrimSpace(cleanMsg)
+
+			addrs[clientAddr.String()].channel <- cleanMsg
+
+			fmt.Printf("[%s] : %s\n", clientAddr.String(), cleanMsg)
 		}
-		cleanMsg := string(message[0:rlen])
-		cleanMsg = strings.TrimSpace(cleanMsg)
-
-		//addrs[clientAddr.String()].channel <- cleanMsg
-
-		fmt.Printf("[%s] : %s\n", clientAddr.String(), cleanMsg)
-	}
+	}()
 }

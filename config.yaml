@@ -1,6 +1,7 @@
 Server:
   Host: 0.0.0.0
   Port: 27100
+
 Clients:
   - Name: ru.1
     Address: 1
