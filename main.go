@@ -2,12 +2,11 @@ package main
 
 import (
 	"fmt"
-//	"io/ioutil"
+	//	"io/ioutil"
 	"log"
 	"net"
 	"strings"
-
-//	"gopkg.in/yaml.v2"
+	//	"gopkg.in/yaml.v2"
 )
 
 //const configPath = "config.yaml"
@@ -47,12 +46,12 @@ func getAddressMap(hosts []Client) map[string]LogFile {
 //}
 
 func main() {
-/*	cfg, err := loadConfig()
-	if err != nil {
-		log.Fatalf("Failed to parse config: %s", err)
-	}
-*/
-//	addrs := getAddressMap(cfg.Clients)
+	/*	cfg, err := loadConfig()
+		if err != nil {
+			log.Fatalf("Failed to parse config: %s", err)
+		}
+	*/
+	//	addrs := getAddressMap(cfg.Clients)
 
 	udpAddr, err := net.ResolveUDPAddr("udp4", "0.0.0.0:27100")
 	if err != nil {
@@ -72,15 +71,15 @@ func main() {
 		if err != nil {
 			log.Fatalf("Failed to read from UDP: %s", err)
 		}
-//		message = string(message[:rlen])
-//		cleanMsg = strings.TrimLeft(cleanMsg, "L ")
-//		cleanMsg = strings.TrimSpace(cleanMsg)
+		cleanMsg := string(message[:rlen])
+		cleanMsg = strings.TrimLeft(cleanMsg, "L ")
+		cleanMsg = strings.TrimSpace(cleanMsg)
 
-        data := strings.TrimSpace(string(message[:rlen]))
+		data := strings.TrimSpace(cleanMsg)
 
-		fmt.Printf(clientAddr.String())
+		//fmt.Printf(clientAddr.String())
 
-//		addrs[clientAddr.String()].channel <- cleanMsg
+		//		addrs[clientAddr.String()].channel <- cleanMsg
 
 		fmt.Printf("[%s] : %s\n", clientAddr.String(), string(data))
 	}
