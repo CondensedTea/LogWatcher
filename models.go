@@ -56,7 +56,7 @@ func (lf LogFile) StartWorker() {
 				}
 				lf.state = Pregame
 				//postLogFile()
-				file, err := os.Open("test.log")
+				file, err := os.Create("test.log")
 				if err != nil {
 					log.Fatalf("Failed to open logfile: %s", err)
 				}
