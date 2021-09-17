@@ -71,19 +71,17 @@ func main() {
 
 	log.Printf("Log Server listening on %s\n", udpAddr.String())
 
-	go func() {
-		for {
-			message := make([]byte, 1024)
-			rlen, clientAddr, err := conn.ReadFromUDP(message)
-			if err != nil {
-				log.Fatalf("Failed to read from UDP: %s", err)
-			}
-			cleanMsg := string(message[:rlen])
-			cleanMsg = strings.TrimSpace(cleanMsg)
-
-			addrs[clientAddr.String()].channel <- cleanMsg
-
-			fmt.Printf("[%s] : %s\n", clientAddr.String(), cleanMsg)
+	for {
+		message := make([]byte, 1024)
+		rlen, clientAddr, err := conn.ReadFromUDP(message)
+		if err != nil {
+			log.Fatalf("Failed to read from UDP: %s", err)
 		}
-	}()
+		cleanMsg := string(message[:rlen])
+		cleanMsg = strings.TrimSpace(cleanMsg)
+
+		addrs[clientAddr.String()].channel <- cleanMsg
+
+		fmt.Printf("[%s] : %s\n", clientAddr.String(), cleanMsg)
+	}
 }
