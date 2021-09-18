@@ -4,7 +4,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net"
-	"os"
 	"strings"
 
 	"gopkg.in/yaml.v2"
@@ -87,25 +86,23 @@ func main() {
 
 	log.Printf("LogWatcher is listening on %s", udpAddr.String())
 
-	go func() {
-		for {
-			message := make([]byte, 1024)
-			msgLen, clientAddr, err := conn.ReadFromUDP(message)
-			if err != nil {
-				log.Fatalf("Failed to read from UDP: %s", err)
-			}
-			addressIP := clientAddr.IP.String()
-
-			cleanMsg := strings.TrimSpace(string(message[:msgLen]))
-
-			log.Print(cleanMsg)
-
-			addrs[addressIP].channel <- cleanMsg
+	for {
+		message := make([]byte, 1024)
+		msgLen, clientAddr, err := conn.ReadFromUDP(message)
+		if err != nil {
+			log.Fatalf("Failed to read from UDP: %s", err)
 		}
-	}()
+		addressIP := clientAddr.IP.String()
 
-	select {
-	case <-exit:
-		os.Exit(0)
+		cleanMsg := strings.TrimSpace(string(message[:msgLen]))
+
+		log.Print(cleanMsg)
+
+		addrs[addressIP].channel <- cleanMsg
 	}
+	//
+	//select {
+	//case <-exit:
+	//	os.Exit(0)
+	//}
 }
