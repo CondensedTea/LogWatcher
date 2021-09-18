@@ -9,8 +9,8 @@ container_name=LogWatcher
 build:
 	docker build -t condensedtea/logwatcher:latest -t condensedtea/logwatcher:$(version) .
 
-.PHONY: build-server-manually
-build-server-manually:
+.PHONY: build-server
+build-server:
 	go build -o "$(LOCAL_BIN)/LogWatcher" ./server
 
 PHONY: run

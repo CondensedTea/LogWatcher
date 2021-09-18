@@ -77,15 +77,12 @@ func main() {
 	}
 	defer conn.Close()
 
-	exit := make(chan bool)
-
 	for k := range addrs {
-		go addrs[k].StartWorker(exit)
+		go addrs[k].StartWorker()
 		log.Printf("Started worker for %s#%d with address %s", addrs[k].region, addrs[k].server, addrs[k].ip)
 	}
 
 	log.Printf("LogWatcher is listening on %s", udpAddr.String())
-
 	for {
 		message := make([]byte, 1024)
 		msgLen, clientAddr, err := conn.ReadFromUDP(message)
@@ -100,9 +97,4 @@ func main() {
 
 		addrs[addressIP].channel <- cleanMsg
 	}
-	//
-	//select {
-	//case <-exit:
-	//	os.Exit(0)
-	//}
 }

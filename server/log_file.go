@@ -43,10 +43,11 @@ type LogFile struct {
 	apiKey   string
 }
 
-func (lf LogFile) StartWorker(exit chan bool) {
+func (lf LogFile) StartWorker() {
 	client := http.Client{Timeout: 5 * time.Second}
 
-	for msg := range lf.channel {
+	select {
+	case msg := <-lf.channel:
 		log.Printf("State: %d", lf.state)
 		switch lf.state {
 		case Pregame:
@@ -81,7 +82,6 @@ func (lf LogFile) StartWorker(exit chan bool) {
 			}
 		}
 	}
-	exit <- true
 }
 
 func (lf *LogFile) makeMultipartMap() map[string]io.Reader {
