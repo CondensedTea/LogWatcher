@@ -98,6 +98,8 @@ func main() {
 
 			cleanMsg := strings.TrimSpace(string(message[:msgLen]))
 
+			log.Print(cleanMsg)
+
 			addrs[addressIP].channel <- cleanMsg
 		}
 	}()

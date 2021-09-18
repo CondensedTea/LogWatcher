@@ -47,6 +47,7 @@ func (lf LogFile) StartWorker(exit chan bool) {
 	client := http.Client{Timeout: 5 * time.Second}
 
 	for msg := range lf.channel {
+		log.Printf("State: %d", lf.state)
 		switch lf.state {
 		case Pregame:
 			if roundStart.MatchString(msg) {
