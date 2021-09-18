@@ -9,10 +9,9 @@ import (
 	"time"
 )
 
-const serverHost = "localhost:27100"
-
 func main() {
 	logPath := flag.String("log", "", "Path to log file")
+	serverHost := flag.String("host", "localhost:27200", "Address of LogWatcher server")
 	flag.Parse()
 
 	file, err := os.Open(*logPath)
@@ -24,7 +23,7 @@ func main() {
 	scanner := bufio.NewScanner(file)
 
 	for scanner.Scan() {
-		conn, err := net.Dial("udp", serverHost)
+		conn, err := net.Dial("udp", *serverHost)
 		if err != nil {
 			log.Fatal(err)
 		}

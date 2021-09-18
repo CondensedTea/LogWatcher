@@ -17,14 +17,14 @@ func Test_loadConfig(t *testing.T) {
 	}{
 		{
 			name: "default",
-			args: args{"/Users/atyshkevich/LogWatcher/config.yaml"},
+			args: args{"../config.template.yaml"},
 			want: &Config{
 				Server: struct {
-					Host string `yaml:"Host"`
-				}{Host: "0.0.0.0:27100"},
+					Host   string `yaml:"Host"`
+					APIKey string `yaml:"APIKey"`
+				}{Host: "<host>:<port>", APIKey: "<logstf-api-key>"},
 				Clients: []Client{
-					{Name: "ru.1", Address: "46.174.50.10"},
-					{Name: "test", Address: "::1"},
+					{Server: 1, Region: "<region>", Address: "<ip>"},
 				},
 			},
 			wantErr: false,

@@ -1,5 +1,7 @@
 Server:
   Host: <host>:<port>
+  APIKey: <logstf-api-key>
 Clients:
-  - Name: <label>
+  - ID: 1
+    Region: <your-region>
     Address: <ip>

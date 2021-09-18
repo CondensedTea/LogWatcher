@@ -1,5 +1,5 @@
 LOCAL_BIN ?= ./bin
-E2E_LOG_FILE= ./client/test.log
+E2E_LOG_FILE= ./client/short_test.log
 
 .PHONY: build
 build: build-server build-client
