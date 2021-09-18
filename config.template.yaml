@@ -1,0 +1,5 @@
+Server:
+  Host: <host>:<port>
+Clients:
+  - Name: <label>
+    Address: <ip>

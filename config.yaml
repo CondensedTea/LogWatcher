@@ -1,9 +1,0 @@
-Server:
-  Host: 0.0.0.0
-  Port: 27100
-
-Clients:
-  - Name: ru.1
-    Address: 46.174.50.10
-#  - Name: ru.2
-#    Address: 2
