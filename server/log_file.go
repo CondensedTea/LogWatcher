@@ -56,7 +56,6 @@ type LogFile struct {
 func (lf *LogFile) StartWorker() {
 	client := http.Client{Timeout: 5 * time.Second}
 	for msg := range lf.channel {
-		log.Printf("%s#%d -- state %d", lf.region, lf.server, lf.state)
 		lf.processLogLine(msg, &client)
 	}
 }
