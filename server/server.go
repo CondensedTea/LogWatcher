@@ -48,7 +48,7 @@ func makeAddressMap(hosts []Client, apiKey string) map[string]*LogFile {
 	logsDict := make(map[string]*LogFile)
 	for _, h := range hosts {
 		ch := make(chan string)
-		lf := &LogFile{
+		lf := LogFile{
 			server:  h.Server,
 			region:  h.Region,
 			ip:      h.Address,
@@ -56,8 +56,8 @@ func makeAddressMap(hosts []Client, apiKey string) map[string]*LogFile {
 			channel: ch,
 			apiKey:  apiKey,
 		}
-		logsDict[h.Address] = lf
-		go lf.StartWorker()
+		logsDict[h.Address] = &lf
+		go logsDict[h.Address].StartWorker()
 		log.Printf("Started worker for %s#%d with address %s", lf.region, lf.server, lf.ip)
 	}
 	return logsDict
