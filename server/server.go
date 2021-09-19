@@ -44,11 +44,11 @@ func loadConfig(path string) (*Config, error) {
 	return &config, nil
 }
 
-func makeAddressMap(hosts []Client, apiKey string) map[string]LogFile {
-	logsDict := make(map[string]LogFile)
+func makeAddressMap(hosts []Client, apiKey string) map[string]*LogFile {
+	logsDict := make(map[string]*LogFile)
 	for _, h := range hosts {
 		ch := make(chan string)
-		logsDict[h.Address] = LogFile{
+		lf := &LogFile{
 			server:  h.Server,
 			region:  h.Region,
 			ip:      h.Address,
@@ -56,6 +56,9 @@ func makeAddressMap(hosts []Client, apiKey string) map[string]LogFile {
 			channel: ch,
 			apiKey:  apiKey,
 		}
+		logsDict[h.Address] = lf
+		go lf.StartWorker()
+		log.Printf("Started worker for %s#%d with address %s", lf.region, lf.server, lf.ip)
 	}
 	return logsDict
 }
@@ -77,11 +80,6 @@ func main() {
 	}
 	defer conn.Close()
 
-	for k := range addrs {
-		go addrs[k].StartWorker()
-		log.Printf("Started worker for %s#%d with address %s", addrs[k].region, addrs[k].server, addrs[k].ip)
-	}
-
 	log.Printf("LogWatcher is listening on %s", udpAddr.String())
 	for {
 		message := make([]byte, 1024)
@@ -89,12 +87,11 @@ func main() {
 		if err != nil {
 			log.Fatalf("Failed to read from UDP: %s", err)
 		}
-		addressIP := clientAddr.IP.String()
 
 		cleanMsg := strings.TrimSpace(string(message[:msgLen]))
 
 		log.Print(cleanMsg)
 
-		addrs[addressIP].channel <- cleanMsg
+		addrs[clientAddr.String()].channel <- cleanMsg
 	}
 }

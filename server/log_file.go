@@ -11,6 +11,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -38,46 +39,54 @@ type LogFile struct {
 	state    State
 	channel  chan string
 	buffer   bytes.Buffer
+	mu       sync.Mutex
 	pickupID int
 	matchMap string
 	apiKey   string
 }
 
-func (lf LogFile) StartWorker() {
+func (lf *LogFile) StartWorker() {
 	client := http.Client{Timeout: 5 * time.Second}
-
-	select {
-	case msg := <-lf.channel:
+	for {
 		log.Printf("State: %d", lf.state)
-		switch lf.state {
-		case Pregame:
-			if roundStart.MatchString(msg) {
-				_, err := lf.buffer.WriteString(msg + "\n")
-				if err != nil {
-					log.Fatal(err)
-				}
-				lf.state = Game
+		select {
+		case msg := <-lf.channel:
+			lf.processLogLine(msg, &client)
+		}
+	}
+}
+
+func (lf *LogFile) processLogLine(msg string, client ClientInterface) {
+	lf.mu.Lock()
+	defer lf.mu.Unlock()
+	switch lf.state {
+	case Pregame:
+		if roundStart.MatchString(msg) {
+			_, err := lf.buffer.WriteString(msg + "\n")
+			if err != nil {
+				log.Fatal(err)
 			}
-		case Game:
-			if !logClosed.MatchString(msg) {
-				_, err := lf.buffer.WriteString(msg + "\n")
-				if err != nil {
+			lf.state = Game
+		}
+	case Game:
+		if !logClosed.MatchString(msg) {
+			_, err := lf.buffer.WriteString(msg + "\n")
+			if err != nil {
+				log.Fatal(err)
+			}
+		} else {
+			lf.state = Pregame
+			_, err := lf.buffer.WriteString(msg + "\n")
+			if err != nil {
+				log.Fatal(err)
+			}
+			if os.Getenv(dryRunEnv) == "" {
+				if err = lf.uploadLogFile(client); err != nil {
 					log.Fatal(err)
 				}
 			} else {
-				lf.state = Pregame
-				_, err := lf.buffer.WriteString(msg + "\n")
-				if err != nil {
+				if err = saveFile(lf.buffer, receivedLogFile); err != nil {
 					log.Fatal(err)
-				}
-				if os.Getenv(dryRunEnv) == "" {
-					if err = lf.uploadLogFile(&client); err != nil {
-						log.Fatal(err)
-					}
-				} else {
-					if err = saveFile(lf.buffer, receivedLogFile); err != nil {
-						log.Fatal(err)
-					}
 				}
 			}
 		}
