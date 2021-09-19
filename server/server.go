@@ -92,7 +92,7 @@ func main() {
 
 		clientHost := clientAddr.String()
 
-		log.Print(clientAddr.String(), cleanMsg)
+		log.Printf("%s: %s", clientAddr.String(), cleanMsg)
 
 		lf, ok := m[clientHost]
 		if !ok {

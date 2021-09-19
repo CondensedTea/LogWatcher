@@ -25,6 +25,7 @@ const (
 
 var (
 	roundStart = regexp.MustCompile(`: World triggered "Round_Start"`)
+	gameOver   = regexp.MustCompile(`: World triggered "Game_Over" reason "`)
 	logClosed  = regexp.MustCompile(`: Log file closed.`)
 )
 
@@ -47,12 +48,9 @@ type LogFile struct {
 
 func (lf *LogFile) StartWorker() {
 	client := http.Client{Timeout: 5 * time.Second}
-	for {
-		log.Printf("State: %d", lf.state)
-		select {
-		case msg := <-lf.channel:
-			lf.processLogLine(msg, &client)
-		}
+	for msg := range lf.channel {
+		log.Printf("Host: %s has state #%d", lf.ip, lf.state)
+		lf.processLogLine(msg, &client)
 	}
 }
 
@@ -69,17 +67,17 @@ func (lf *LogFile) processLogLine(msg string, client ClientInterface) {
 			lf.state = Game
 		}
 	case Game:
-		if !logClosed.MatchString(msg) {
+		if !logClosed.MatchString(msg) || !gameOver.MatchString(msg) {
 			_, err := lf.buffer.WriteString(msg + "\n")
 			if err != nil {
 				log.Fatal(err)
 			}
 		} else {
-			lf.state = Pregame
 			_, err := lf.buffer.WriteString(msg + "\n")
 			if err != nil {
 				log.Fatal(err)
 			}
+			lf.state = Pregame
 			if os.Getenv(dryRunEnv) == "" {
 				if err = lf.uploadLogFile(client); err != nil {
 					log.Fatal(err)
