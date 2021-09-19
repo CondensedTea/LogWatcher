@@ -22,8 +22,9 @@ func main() {
 
 	scanner := bufio.NewScanner(file)
 
+	conn, err := net.Dial("udp", *serverHost)
+
 	for scanner.Scan() {
-		conn, err := net.Dial("udp", *serverHost)
 		if err != nil {
 			log.Fatal(err)
 		}

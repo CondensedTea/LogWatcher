@@ -3,46 +3,10 @@ package main
 import (
 	"log"
 	"net"
-	"os"
 	"strings"
-
-	"gopkg.in/yaml.v2"
 )
 
 const configPath = "config.yaml"
-
-type State int
-
-const (
-	Pregame State = iota
-	Game    State = iota
-)
-
-type Client struct {
-	Server  int    `yaml:"ID"`
-	Region  string `yaml:"Region"`
-	Address string `yaml:"Address"`
-}
-
-type Config struct {
-	Server struct {
-		Host   string `yaml:"Host"`
-		APIKey string `yaml:"APIKey"`
-	} `yaml:"Server"`
-	Clients []Client `yaml:"Clients"`
-}
-
-func loadConfig(path string) (*Config, error) {
-	var config Config
-	yamlFile, err := os.ReadFile(path)
-	if err != nil {
-		return nil, err
-	}
-	if err = yaml.Unmarshal(yamlFile, &config); err != nil {
-		return nil, err
-	}
-	return &config, nil
-}
 
 func makeAddressMap(hosts []Client, apiKey string) map[string]*LogFile {
 	logsDict := make(map[string]*LogFile)
@@ -64,7 +28,7 @@ func makeAddressMap(hosts []Client, apiKey string) map[string]*LogFile {
 }
 
 func main() {
-	cfg, err := loadConfig(configPath)
+	cfg, err := LoadConfig(configPath)
 	if err != nil {
 		log.Fatalf("Failed to parse config: %s", err)
 	}
@@ -92,13 +56,12 @@ func main() {
 
 		clientHost := clientAddr.String()
 
-		log.Printf("%s: %s", clientAddr.String(), cleanMsg)
-
 		lf, ok := m[clientHost]
 		if !ok {
-			log.Printf("Got packet from unknown address: %s", clientHost)
+			log.Printf("[Unknown message]: [%s] %s", clientHost, cleanMsg)
 			continue
 		}
+		log.Printf("[%s][state:%d] %s", clientAddr.String(), lf.state, cleanMsg)
 		lf.channel <- cleanMsg
 	}
 }

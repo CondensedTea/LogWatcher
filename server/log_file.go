@@ -15,6 +15,13 @@ import (
 	"time"
 )
 
+type State int
+
+const (
+	Pregame State = iota
+	Game    State = iota
+)
+
 const (
 	receivedLogFile = "received.log"
 	region          = "ru"
@@ -67,16 +74,11 @@ func (lf *LogFile) processLogLine(msg string, client ClientInterface) {
 			lf.state = Game
 		}
 	case Game:
-		if !logClosed.MatchString(msg) && !gameOver.MatchString(msg) {
-			_, err := lf.buffer.WriteString(msg + "\n")
-			if err != nil {
-				log.Fatal(err)
-			}
-		} else {
-			_, err := lf.buffer.WriteString(msg + "\n")
-			if err != nil {
-				log.Fatal(err)
-			}
+		_, err := lf.buffer.WriteString(msg + "\n")
+		if err != nil {
+			log.Fatal(err)
+		}
+		if logClosed.MatchString(msg) || gameOver.MatchString(msg) {
 			lf.state = Pregame
 			if os.Getenv(dryRunEnv) == "" {
 				if err = lf.uploadLogFile(client); err != nil {
@@ -136,6 +138,9 @@ func (lf *LogFile) uploadLogFile(client ClientInterface) error {
 
 	if res.StatusCode != http.StatusOK {
 		bodyBytes, _ := ioutil.ReadAll(res.Body)
+		if err = saveFile(lf.buffer, "logstf_failed_upload.log"); err != nil {
+			return fmt.Errorf("failed to save err log after this: %s err=%s", string(bodyBytes), err)
+		}
 		return fmt.Errorf("logs.tf returned code: %d, body: %s", res.StatusCode, string(bodyBytes))
 	}
 	return nil
