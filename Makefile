@@ -1,5 +1,5 @@
 LOCAL_BIN ?= ./bin
-E2E_LOG_FILE= ./client/short_test.log
+E2E_LOG_FILE= ./test_client/short_test.log
 
 version=v1.0.0
 container_name=LogWatcher
@@ -23,7 +23,7 @@ down:
 
 .PHONY: client
 client:
-	go build -o "$(LOCAL_BIN)/TestClient" ./client
+	go build -o "$(LOCAL_BIN)/TestClient" ./test_client
 
 PHONY: e2e
 e2e:

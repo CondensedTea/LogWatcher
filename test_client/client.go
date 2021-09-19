@@ -11,7 +11,7 @@ import (
 
 func main() {
 	logPath := flag.String("log", "", "Path to log file")
-	serverHost := flag.String("host", "localhost:27200", "Address of LogWatcher server")
+	serverHost := flag.String("host", "localhost:27100", "Address of LogWatcher server")
 	flag.Parse()
 
 	file, err := os.Open(*logPath)

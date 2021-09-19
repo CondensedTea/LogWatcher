@@ -33,13 +33,13 @@ type ClientInterface interface {
 }
 
 type LogFile struct {
-	server   int
-	region   string
-	ip       string
-	state    State
-	channel  chan string
-	buffer   bytes.Buffer
-	mu       sync.Mutex
+	server  int
+	region  string
+	ip      string
+	state   State
+	channel chan string
+	buffer  bytes.Buffer
+	sync.Mutex
 	pickupID int
 	matchMap string
 	apiKey   string
@@ -57,8 +57,8 @@ func (lf *LogFile) StartWorker() {
 }
 
 func (lf *LogFile) processLogLine(msg string, client ClientInterface) {
-	lf.mu.Lock()
-	defer lf.mu.Unlock()
+	lf.Lock()
+	defer lf.Unlock()
 	switch lf.state {
 	case Pregame:
 		if roundStart.MatchString(msg) {

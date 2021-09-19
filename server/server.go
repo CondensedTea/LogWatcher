@@ -48,7 +48,7 @@ func makeAddressMap(hosts []Client, apiKey string) map[string]*LogFile {
 	logsDict := make(map[string]*LogFile)
 	for _, h := range hosts {
 		ch := make(chan string)
-		lf := LogFile{
+		lf := &LogFile{
 			server:  h.Server,
 			region:  h.Region,
 			ip:      h.Address,
@@ -56,8 +56,8 @@ func makeAddressMap(hosts []Client, apiKey string) map[string]*LogFile {
 			channel: ch,
 			apiKey:  apiKey,
 		}
-		logsDict[h.Address] = &lf
-		go logsDict[h.Address].StartWorker()
+		go lf.StartWorker()
+		logsDict[h.Address] = lf
 		log.Printf("Started worker for %s#%d with address %s", lf.region, lf.server, lf.ip)
 	}
 	return logsDict
@@ -68,7 +68,7 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to parse config: %s", err)
 	}
-	addrs := makeAddressMap(cfg.Clients, cfg.Server.APIKey)
+	m := makeAddressMap(cfg.Clients, cfg.Server.APIKey)
 
 	udpAddr, err := net.ResolveUDPAddr("udp4", cfg.Server.Host)
 	if err != nil {
@@ -92,13 +92,13 @@ func main() {
 
 		clientHost := clientAddr.String()
 
-		log.Print(cleanMsg)
+		log.Print(clientAddr.String(), cleanMsg)
 
-		//var msgCopy string
-		//msgCopy = cleanMsg
-
-		addrs[clientHost].mu.Lock()
-		addrs[clientHost].channel <- cleanMsg
-		addrs[clientHost].mu.Unlock()
+		lf, ok := m[clientHost]
+		if !ok {
+			log.Printf("Got packet from unknown address: %s", clientHost)
+			continue
+		}
+		lf.channel <- cleanMsg
 	}
 }
