@@ -90,11 +90,13 @@ func main() {
 
 		cleanMsg := strings.TrimSpace(string(message[:msgLen]))
 
+		clientHost := clientAddr.String()
+
 		log.Print(cleanMsg)
 
-		var msgCopy string
-		msgCopy = cleanMsg
+		//var msgCopy string
+		//msgCopy = cleanMsg
 
-		addrs[clientAddr.String()].channel <- msgCopy
+		addrs[clientHost].channel <- cleanMsg
 	}
 }
