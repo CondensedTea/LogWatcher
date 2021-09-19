@@ -4,4 +4,4 @@ Server:
 Clients:
   - ID: 1
     Region: <your-region>
-    Address: <ip>
+    Address: <ip>:<port>

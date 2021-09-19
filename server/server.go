@@ -1,9 +1,9 @@
 package main
 
 import (
-	"io/ioutil"
 	"log"
 	"net"
+	"os"
 	"strings"
 
 	"gopkg.in/yaml.v2"
@@ -34,7 +34,7 @@ type Config struct {
 
 func loadConfig(path string) (*Config, error) {
 	var config Config
-	yamlFile, err := ioutil.ReadFile(path)
+	yamlFile, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}

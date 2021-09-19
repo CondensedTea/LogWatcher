@@ -49,7 +49,7 @@ type LogFile struct {
 func (lf *LogFile) StartWorker() {
 	client := http.Client{Timeout: 5 * time.Second}
 	for msg := range lf.channel {
-		log.Printf("Host: %s has state #%d", lf.ip, lf.state)
+		log.Printf("%s#%d -- state %d", lf.region, lf.server, lf.state)
 		lf.processLogLine(msg, &client)
 	}
 }
@@ -67,7 +67,7 @@ func (lf *LogFile) processLogLine(msg string, client ClientInterface) {
 			lf.state = Game
 		}
 	case Game:
-		if !logClosed.MatchString(msg) || !gameOver.MatchString(msg) {
+		if !logClosed.MatchString(msg) && !gameOver.MatchString(msg) {
 			_, err := lf.buffer.WriteString(msg + "\n")
 			if err != nil {
 				log.Fatal(err)

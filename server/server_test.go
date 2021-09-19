@@ -24,10 +24,22 @@ func Test_loadConfig(t *testing.T) {
 					APIKey string `yaml:"APIKey"`
 				}{Host: "<host>:<port>", APIKey: "<logstf-api-key>"},
 				Clients: []Client{
-					{Server: 1, Region: "<region>", Address: "<ip>"},
+					{Server: 1, Region: "<your-region>", Address: "<ip>:<port>"},
 				},
 			},
 			wantErr: false,
+		},
+		{
+			name:    "no file",
+			args:    args{"../fake-config.yaml"},
+			want:    nil,
+			wantErr: true,
+		},
+		{
+			name:    "bad yaml",
+			args:    args{"../Dockerfile"},
+			want:    nil,
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
