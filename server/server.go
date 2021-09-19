@@ -92,6 +92,9 @@ func main() {
 
 		log.Print(cleanMsg)
 
-		addrs[clientAddr.String()].channel <- cleanMsg
+		var msgCopy string
+		msgCopy = cleanMsg
+
+		addrs[clientAddr.String()].channel <- msgCopy
 	}
 }
