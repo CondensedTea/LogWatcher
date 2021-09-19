@@ -97,7 +97,8 @@ func main() {
 		//var msgCopy string
 		//msgCopy = cleanMsg
 
-		lf := addrs[clientHost]
-		lf.channel <- cleanMsg
+		addrs[clientHost].mu.Lock()
+		addrs[clientHost].channel <- cleanMsg
+		addrs[clientHost].mu.Unlock()
 	}
 }
