@@ -97,6 +97,7 @@ func main() {
 		//var msgCopy string
 		//msgCopy = cleanMsg
 
-		addrs[clientHost].channel <- cleanMsg
+		lf := addrs[clientHost]
+		lf.channel <- cleanMsg
 	}
 }
