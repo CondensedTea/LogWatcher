@@ -3,10 +3,12 @@ package main
 import (
 	"log"
 	"net"
-	"strings"
+	"regexp"
 )
 
 const configPath = "config.yaml"
+
+var logLineRegexp = regexp.MustCompile(`L \d{2}/\d{2}/\d{4} - \d{2}:\d{2}:\d{2}: .+`)
 
 func makeAddressMap(hosts []Client, apiKey string) map[string]*LogFile {
 	logsDict := make(map[string]*LogFile)
@@ -52,13 +54,11 @@ func main() {
 			log.Fatalf("Failed to read from UDP: %s", err)
 		}
 
-		cleanMsg := strings.TrimSpace(string(message[:msgLen]))
+		cleanMsg := logLineRegexp.FindString(string(message[:msgLen]))
 
-		clientHost := clientAddr.String()
-
-		lf, ok := m[clientHost]
+		lf, ok := m[clientAddr.String()]
 		if !ok {
-			log.Printf("[Unknown message]: [%s] %s", clientHost, cleanMsg)
+			log.Printf("[Unknown server]: [%s] %s", clientAddr.String(), cleanMsg)
 			continue
 		}
 		log.Printf("[%s][state:%d] %s", clientAddr.String(), lf.state, cleanMsg)
