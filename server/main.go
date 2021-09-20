@@ -16,8 +16,8 @@ func main() {
 		log.Fatalf("Failed to create server instance: %s", err)
 	}
 
-	//router := NewRouter(server)
-	//go router.Run()
+	router := NewRouter(server)
+	go router.Run()
 
 	server.Listen()
 }
