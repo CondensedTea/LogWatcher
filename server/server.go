@@ -6,9 +6,13 @@ import (
 	"regexp"
 )
 
-const configPath = "config.yaml"
-
 var logLineRegexp = regexp.MustCompile(`L \d{2}/\d{2}/\d{4} - \d{2}:\d{2}:\d{2}: .+`)
+
+type Server struct {
+	address    *net.UDPAddr
+	conn       *net.UDPConn
+	addressMap map[string]*LogFile
+}
 
 func makeAddressMap(hosts []Client, apiKey string) map[string]*LogFile {
 	logsDict := make(map[string]*LogFile)
@@ -29,36 +33,38 @@ func makeAddressMap(hosts []Client, apiKey string) map[string]*LogFile {
 	return logsDict
 }
 
-func main() {
-	cfg, err := LoadConfig(configPath)
-	if err != nil {
-		log.Fatalf("Failed to parse config: %s", err)
-	}
-	m := makeAddressMap(cfg.Clients, cfg.Server.APIKey)
-
+func NewServer(cfg *Config) (*Server, error) {
 	udpAddr, err := net.ResolveUDPAddr("udp4", cfg.Server.Host)
 	if err != nil {
-		log.Fatalf("Failed to parse UDP address: %s", err)
+		return nil, err
 	}
 	conn, err := net.ListenUDP("udp", udpAddr)
 	if err != nil {
-		log.Fatalf("Failed to create UDP listner: %s", err)
+		return nil, err
 	}
-	defer conn.Close()
+	m := makeAddressMap(cfg.Clients, cfg.Server.APIKey)
 
-	log.Printf("LogWatcher is listening on %s", udpAddr.String())
+	return &Server{
+		address:    udpAddr,
+		conn:       conn,
+		addressMap: m,
+	}, nil
+}
+
+func (s *Server) Listen() {
+	log.Printf("LogWatcher is listening on %s", s.address.String())
+	defer s.conn.Close()
 	for {
 		message := make([]byte, 1024)
-		msgLen, clientAddr, err := conn.ReadFromUDP(message)
+		msgLen, clientAddr, err := s.conn.ReadFromUDP(message)
 		if err != nil {
-			log.Fatalf("Failed to read from UDP: %s", err)
+			log.Fatalf("Failed to read from UDP socket: %s", err)
 		}
-
 		cleanMsg := logLineRegexp.FindString(string(message[:msgLen]))
 
-		lf, ok := m[clientAddr.String()]
+		lf, ok := s.addressMap[clientAddr.String()]
 		if !ok {
-			log.Printf("[Unknown server]: [%s] %s", clientAddr.String(), cleanMsg)
+			log.Printf("[Unknown address: %s]: %s", clientAddr.String(), cleanMsg)
 			continue
 		}
 		log.Printf("[%s#%d][state:%d] %s", lf.region, lf.server, lf.state, cleanMsg)
