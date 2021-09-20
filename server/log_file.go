@@ -66,7 +66,7 @@ func (lf *LogFile) processLogLine(msg string, client ClientInterface) {
 	defer lf.Unlock()
 	switch lf.State {
 	case Pregame:
-		if match := mapLoaded.FindStringSubmatch(msg); match[1] != "" {
+		if match := mapLoaded.FindStringSubmatch(msg); len(match) > 0 {
 			lf.GameMap = match[1]
 		}
 		if roundStart.MatchString(msg) {
