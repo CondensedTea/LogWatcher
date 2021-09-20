@@ -88,6 +88,7 @@ func (lf *LogFile) processLogLine(msg string, client ClientInterface) {
 					log.Fatal(err)
 				}
 			}
+			lf.flush()
 		}
 	}
 }
@@ -100,6 +101,12 @@ func (lf *LogFile) makeMultipartMap() map[string]io.Reader {
 	m["logfile"] = &lf.buffer
 	m["uploader"] = strings.NewReader(uploaderSign)
 	return m
+}
+
+func (lf *LogFile) flush() {
+	lf.buffer = bytes.Buffer{}
+	lf.pickupID = 0
+	lf.matchMap = ""
 }
 
 func (lf *LogFile) uploadLogFile(client ClientInterface) error {

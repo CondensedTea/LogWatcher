@@ -61,7 +61,7 @@ func main() {
 			log.Printf("[Unknown server]: [%s] %s", clientAddr.String(), cleanMsg)
 			continue
 		}
-		log.Printf("[%s][state:%d] %s", clientAddr.String(), lf.state, cleanMsg)
+		log.Printf("[%s#%d][state:%d] %s", lf.region, lf.server, lf.state, cleanMsg)
 		lf.channel <- cleanMsg
 	}
 }
