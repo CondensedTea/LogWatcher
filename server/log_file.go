@@ -15,11 +15,11 @@ import (
 	"time"
 )
 
-type State int
+type StateType int
 
 const (
-	Pregame State = iota
-	Game    State = iota
+	Pregame StateType = iota
+	Game    StateType = iota
 )
 
 const (
@@ -42,15 +42,15 @@ type ClientInterface interface {
 }
 
 type LogFile struct {
-	server  int
-	region  string
-	ip      string
-	state   State
+	Server  int
+	Region  string
+	IP      string
+	State   StateType
 	channel chan string
 	buffer  bytes.Buffer
 	sync.Mutex
-	pickupID int
-	matchMap string
+	PickupID int
+	GameMap  string
 	apiKey   string
 }
 
@@ -64,17 +64,17 @@ func (lf *LogFile) StartWorker() {
 func (lf *LogFile) processLogLine(msg string, client ClientInterface) {
 	lf.Lock()
 	defer lf.Unlock()
-	switch lf.state {
+	switch lf.State {
 	case Pregame:
 		if match := mapLoaded.FindStringSubmatch(msg); match[1] != "" {
-			lf.matchMap = match[1]
+			lf.GameMap = match[1]
 		}
 		if roundStart.MatchString(msg) {
 			_, err := lf.buffer.WriteString(msg + "\n")
 			if err != nil {
 				log.Fatal(err)
 			}
-			lf.state = Game
+			lf.State = Game
 		}
 	case Game:
 		_, err := lf.buffer.WriteString(msg + "\n")
@@ -82,7 +82,7 @@ func (lf *LogFile) processLogLine(msg string, client ClientInterface) {
 			log.Fatal(err)
 		}
 		if logClosed.MatchString(msg) || gameOver.MatchString(msg) {
-			lf.state = Pregame
+			lf.State = Pregame
 			if os.Getenv(dryRunEnv) == "" {
 				if err = lf.uploadLogFile(client); err != nil {
 					log.Fatal(err)
@@ -99,8 +99,8 @@ func (lf *LogFile) processLogLine(msg string, client ClientInterface) {
 
 func (lf *LogFile) makeMultipartMap() map[string]io.Reader {
 	m := make(map[string]io.Reader)
-	m["title"] = strings.NewReader(fmt.Sprintf("tf2pickup.%s #%d", region, lf.pickupID))
-	m["map"] = strings.NewReader(lf.matchMap)
+	m["title"] = strings.NewReader(fmt.Sprintf("tf2pickup.%s #%d", region, lf.PickupID))
+	m["map"] = strings.NewReader(lf.GameMap)
 	m["key"] = strings.NewReader(lf.apiKey)
 	m["logfile"] = &lf.buffer
 	m["uploader"] = strings.NewReader(uploaderSign)
@@ -109,8 +109,8 @@ func (lf *LogFile) makeMultipartMap() map[string]io.Reader {
 
 func (lf *LogFile) flush() {
 	lf.buffer = bytes.Buffer{}
-	lf.pickupID = 0
-	lf.matchMap = ""
+	lf.PickupID = 0
+	lf.GameMap = ""
 }
 
 func (lf *LogFile) uploadLogFile(client ClientInterface) error {

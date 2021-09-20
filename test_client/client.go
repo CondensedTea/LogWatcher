@@ -22,15 +22,15 @@ func main() {
 
 	scanner := bufio.NewScanner(file)
 
-	conn, err := net.Dial("udp", *serverHost)
+	conn, err := net.Dial("udp4", *serverHost)
+	if err != nil {
+		log.Fatalf("Failed to dial to UDP server: %s", err)
+	}
 
 	for scanner.Scan() {
-		if err != nil {
-			log.Fatal(err)
-		}
 		_, err = conn.Write([]byte(scanner.Text()))
 		if err != nil {
-			log.Fatal(err)
+			log.Fatalf("Failed to write to UDP socket: %s", err)
 		}
 		time.Sleep(50 * time.Millisecond)
 	}
