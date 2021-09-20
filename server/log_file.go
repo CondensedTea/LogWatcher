@@ -34,6 +34,7 @@ var (
 	roundStart = regexp.MustCompile(`: World triggered "Round_Start"`)
 	gameOver   = regexp.MustCompile(`: World triggered "Game_Over" reason "`)
 	logClosed  = regexp.MustCompile(`: Log file closed.`)
+	mapLoaded  = regexp.MustCompile(`: Loading map "([a-z-_])"`)
 )
 
 type ClientInterface interface {
@@ -65,6 +66,9 @@ func (lf *LogFile) processLogLine(msg string, client ClientInterface) {
 	defer lf.Unlock()
 	switch lf.state {
 	case Pregame:
+		if match := mapLoaded.FindStringSubmatch(msg); match[1] != "" {
+			lf.matchMap = match[1]
+		}
 		if roundStart.MatchString(msg) {
 			_, err := lf.buffer.WriteString(msg + "\n")
 			if err != nil {
