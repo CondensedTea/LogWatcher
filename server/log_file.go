@@ -34,7 +34,7 @@ var (
 	roundStart = regexp.MustCompile(`: World triggered "Round_Start"`)
 	gameOver   = regexp.MustCompile(`: World triggered "Game_Over" reason "`)
 	logClosed  = regexp.MustCompile(`: Log file closed.`)
-	mapLoaded  = regexp.MustCompile(`: Loading map "([a-z-_])"`)
+	mapLoaded  = regexp.MustCompile(`: Loading map "(.+?)"`)
 )
 
 type ClientInterface interface {
