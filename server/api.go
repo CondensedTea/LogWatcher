@@ -13,6 +13,7 @@ type CreateMessage struct {
 }
 
 func NewRouter(server *Server) *gin.Engine {
+	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 
 	router.POST("/game", server.putPickupInfo)

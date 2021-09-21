@@ -11,9 +11,11 @@ const (
 	apiHost    = "localhost:8081"
 )
 
-var log = logrus.Logger{
-	Out:   os.Stdout,
-	Level: logrus.DebugLevel,
+var log = logrus.New()
+
+func init() {
+	log.SetLevel(logrus.DebugLevel)
+	log.SetOutput(os.Stdout)
 }
 
 func main() {
