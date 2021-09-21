@@ -1,9 +1,11 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"net"
 	"regexp"
+
+	"github.com/sirupsen/logrus"
 )
 
 var logLineRegexp = regexp.MustCompile(`L \d{2}/\d{2}/\d{4} - \d{2}:\d{2}:\d{2}: .+`)
@@ -16,18 +18,17 @@ type Server struct {
 func makeAddressMap(hosts []Client, apiKey string) map[string]*LogFile {
 	logsDict := make(map[string]*LogFile)
 	for _, h := range hosts {
-		ch := make(chan string)
 		lf := &LogFile{
 			Server:  h.Server,
 			Region:  h.Region,
 			IP:      h.Address,
 			State:   Pregame,
-			channel: ch,
+			channel: make(chan string),
 			apiKey:  apiKey,
 		}
 		go lf.StartWorker()
 		logsDict[h.Address] = lf
-		log.Printf("Started worker for %s#%d with address %s", lf.Region, lf.Server, lf.IP)
+		log.Infof("Started worker for %s#%d with host %s", lf.Region, lf.Server, lf.IP)
 	}
 	return logsDict
 }
@@ -51,7 +52,7 @@ func (s *Server) Listen() {
 		log.Fatalf("failed to listen UDP port: %s", err)
 	}
 	//defer s.conn.Close()
-	log.Printf("LogWatcher is listening on %s", s.address.String())
+	log.Infof("LogWatcher is listening on %s", s.address.String())
 	for {
 		message := make([]byte, 1024)
 		msgLen, clientAddr, err := conn.ReadFromUDP(message)
@@ -62,10 +63,16 @@ func (s *Server) Listen() {
 
 		lf, ok := s.addressMap[clientAddr.String()]
 		if !ok {
-			log.Printf("[Unknown address: %s]: %s", clientAddr.String(), cleanMsg)
+			log.WithFields(logrus.Fields{
+				"address": clientAddr.String(),
+				"server":  "unknown",
+			}).Debugf(cleanMsg)
 			continue
 		}
-		log.Printf("[%s#%d][State:%d] %s", lf.Region, lf.Server, lf.State, cleanMsg)
+		log.WithFields(logrus.Fields{
+			"server": fmt.Sprintf("%s#%d", lf.Region, lf.Server),
+			"state":  lf.State.String(),
+		}).Infof(cleanMsg)
 		lf.channel <- cleanMsg
 	}
 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"mime/multipart"
 	"net/http"
 	"os"
@@ -13,13 +12,26 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/sirupsen/logrus"
 )
 
 type StateType int
 
+func (st *StateType) String() string {
+	switch *st {
+	case Pregame:
+		return "Pregame"
+	case Game:
+		return "Game"
+	default:
+		return "unknown state"
+	}
+}
+
 const (
 	Pregame StateType = iota
-	Game    StateType = iota
+	Game
 )
 
 const (
@@ -37,6 +49,14 @@ var (
 	mapLoaded  = regexp.MustCompile(`: Loading map "(.+?)"`)
 )
 
+var dryRun = false
+
+func init() {
+	if os.Getenv(dryRunEnv) != "" {
+		dryRun = true
+	}
+}
+
 type ClientInterface interface {
 	Do(r *http.Request) (*http.Response, error)
 }
@@ -52,6 +72,10 @@ type LogFile struct {
 	PickupID int
 	GameMap  string
 	apiKey   string
+}
+
+func (lf *LogFile) Origin() string {
+	return fmt.Sprintf("%s#%d", lf.Region, lf.Server)
 }
 
 func (lf *LogFile) StartWorker() {
@@ -72,24 +96,34 @@ func (lf *LogFile) processLogLine(msg string, client ClientInterface) {
 		if roundStart.MatchString(msg) {
 			_, err := lf.buffer.WriteString(msg + "\n")
 			if err != nil {
-				log.Fatal(err)
+				log.WithFields(logrus.Fields{
+					"server": lf.Origin(),
+					"state":  lf.State.String(),
+				}).Fatalf("Failed to write to LogFile buffer: %s", err)
 			}
 			lf.State = Game
 		}
 	case Game:
 		_, err := lf.buffer.WriteString(msg + "\n")
 		if err != nil {
-			log.Fatal(err)
+			log.WithFields(logrus.Fields{
+				"server": lf.Origin(),
+				"state":  lf.State.String(),
+			}).Fatalf("Failed to write to LogFile buffer: %s", err)
 		}
 		if logClosed.MatchString(msg) || gameOver.MatchString(msg) {
 			lf.State = Pregame
-			if os.Getenv(dryRunEnv) == "" {
+			if dryRun {
 				if err = lf.uploadLogFile(client); err != nil {
-					log.Fatal(err)
+					log.WithFields(logrus.Fields{
+						"server": lf.Origin(),
+					}).Fatalf("Failed to upload file to logs.tf: %s", err)
 				}
 			} else {
 				if err = saveFile(lf.buffer, receivedLogFile); err != nil {
-					log.Fatal(err)
+					log.WithFields(logrus.Fields{
+						"server": lf.Origin(),
+					}).Fatalf("Failed to save file to disk: %s", err)
 				}
 			}
 			lf.flush()
@@ -129,7 +163,7 @@ func (lf *LogFile) uploadLogFile(client ClientInterface) error {
 				return err
 			}
 		}
-		if _, err := io.Copy(fw, reader); err != nil {
+		if _, err = io.Copy(fw, reader); err != nil {
 			return err
 		}
 	}
@@ -149,7 +183,7 @@ func (lf *LogFile) uploadLogFile(client ClientInterface) error {
 	if res.StatusCode != http.StatusOK {
 		bodyBytes, _ := ioutil.ReadAll(res.Body)
 		if err = saveFile(lf.buffer, "logstf_failed_upload.log"); err != nil {
-			return fmt.Errorf("failed to save err log after this: %s err=%s", string(bodyBytes), err)
+			return fmt.Errorf("failed to save failed log to disk, logstf response: %s err=%s", string(bodyBytes), err)
 		}
 		return fmt.Errorf("logs.tf returned code: %d, body: %s", res.StatusCode, string(bodyBytes))
 	}

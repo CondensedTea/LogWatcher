@@ -4,7 +4,6 @@ E2E_LOG_FILE= ./test_client/short_test.log
 version=v1.0.0
 container_name=LogWatcher
 
-
 .PHONY: build
 build:
 	docker build -t condensedtea/logwatcher:latest -t condensedtea/logwatcher:$(version) .

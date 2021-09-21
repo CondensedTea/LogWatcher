@@ -1,13 +1,20 @@
 package main
 
 import (
-	"log"
+	"os"
+
+	"github.com/sirupsen/logrus"
 )
 
 const (
 	configPath = "config.yaml"
-	httpHost   = "0.0.0.0:8081"
+	apiHost    = "localhost:8081"
 )
+
+var log = logrus.Logger{
+	Out:   os.Stdout,
+	Level: logrus.DebugLevel,
+}
 
 func main() {
 	cfg, err := LoadConfig(configPath)
@@ -20,7 +27,7 @@ func main() {
 	}
 
 	router := NewRouter(server)
-	go router.Run(httpHost)
+	go router.Run(apiHost)
 
 	server.Listen()
 }
