@@ -8,7 +8,7 @@ import (
 
 type Client struct {
 	Server  int    `yaml:"ID"`
-	Region  string `yaml:"Region"`
+	Domain  string `yaml:"Domain"`
 	Address string `yaml:"Address"`
 }
 

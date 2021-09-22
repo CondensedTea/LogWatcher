@@ -27,6 +27,7 @@ const (
 	uploaderSign          = "LogWatcher"
 	logsTFURL             = "http://logs.tf/upload"
 	dryRunEnv             = "DRY_RUN"
+	StartedState          = "started"
 	maxSecondsAfterLaunch = 15.0
 )
 
@@ -90,20 +91,20 @@ func init() {
 }
 
 type LogFile struct {
-	Server  int
-	Region  string
-	IP      string
-	State   StateType
-	channel chan string
-	buffer  bytes.Buffer
 	sync.Mutex
+	Server   int
+	Domain   string
+	IP       string
+	State    StateType
+	channel  chan string
+	buffer   bytes.Buffer
 	PickupID int
 	GameMap  string
 	apiKey   string
 }
 
 func (lf *LogFile) Origin() string {
-	return fmt.Sprintf("%s#%d", lf.Region, lf.Server)
+	return fmt.Sprintf("%s#%d", lf.Domain, lf.Server)
 }
 
 func (lf *LogFile) StartWorker() {
@@ -170,7 +171,7 @@ func (lf *LogFile) processLogLine(msg string, client ClientInterface) {
 
 func (lf *LogFile) makeMultipartMap() map[string]io.Reader {
 	m := make(map[string]io.Reader)
-	m["title"] = strings.NewReader(fmt.Sprintf("tf2pickup.%s #%d", lf.Region, lf.PickupID))
+	m["title"] = strings.NewReader(fmt.Sprintf("tf2pickup.%s #%d", lf.Domain, lf.PickupID))
 	m["map"] = strings.NewReader(lf.GameMap)
 	m["key"] = strings.NewReader(lf.apiKey)
 	m["logfile"] = &lf.buffer
@@ -229,7 +230,7 @@ func (lf *LogFile) uploadLogFile(client ClientInterface) error {
 
 func (lf *LogFile) updatePickupID(client ClientInterface) error {
 	var gr GamesResponse
-	url := fmt.Sprintf("http://api.tf2pickup.%s/games", lf.Region)
+	url := fmt.Sprintf("http://api.tf2pickup.%s/games", lf.Domain)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return err
@@ -239,7 +240,7 @@ func (lf *LogFile) updatePickupID(client ClientInterface) error {
 		return err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("api.tf2pickup.%s/games returned bad status: %d", lf.Region, resp.StatusCode)
+		return fmt.Errorf("api.tf2pickup.%s/games returned bad status: %d", lf.Domain, resp.StatusCode)
 	}
 	defer resp.Body.Close()
 
@@ -248,7 +249,9 @@ func (lf *LogFile) updatePickupID(client ClientInterface) error {
 	}
 
 	for _, result := range gr.Results {
-		if result.Map == lf.GameMap && time.Now().Sub(result.LaunchedAt).Seconds() < maxSecondsAfterLaunch {
+		if result.State == StartedState &&
+			result.Map == lf.GameMap &&
+			time.Now().Sub(result.LaunchedAt).Seconds() < maxSecondsAfterLaunch {
 			lf.PickupID = result.ID
 			break
 		}

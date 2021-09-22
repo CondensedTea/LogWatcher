@@ -8,7 +8,7 @@ import (
 
 type CreateMessage struct {
 	Server   int    `json:"Server"`
-	Region   string `json:"Region"`
+	Domain   string `json:"Domain"`
 	PickupID int    `json:"pickup_id"`
 }
 
@@ -29,7 +29,7 @@ func (s *Server) putPickupInfo(context *gin.Context) {
 		return
 	}
 	for _, v := range s.addressMap {
-		if v.Region == cm.Region && v.Server == cm.Server {
+		if v.Domain == cm.Domain && v.Server == cm.Server {
 			v.PickupID = cm.PickupID
 			context.JSON(http.StatusAccepted, gin.H{
 				"status": "accepted",
