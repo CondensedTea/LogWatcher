@@ -16,7 +16,7 @@ func NewRouter(server *Server) *gin.Engine {
 	gin.SetMode(gin.ReleaseMode)
 	router := gin.Default()
 
-	router.POST("/game", server.putPickupInfo)
+	//router.POST("/game", server.putPickupInfo)
 	return router
 }
 
