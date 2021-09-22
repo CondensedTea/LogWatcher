@@ -17,5 +17,4 @@ COPY config.yaml .
 
 EXPOSE 27100/udp
 
-ENTRYPOINT ["./LogWatcher"]
-CMD [""]
+ENTRYPOINT ["sh", "./LogWatcher"]
