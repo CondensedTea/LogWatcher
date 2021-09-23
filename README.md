@@ -1,5 +1,8 @@
-### LogWatcher
-UDP server for log collection and upload to https://logs.tf
+## LogWatcher
+[![Build](https://github.com/CondensedTea/LogWatcher/actions/workflows/build.yaml/badge.svg?branch=main)](https://github.com/CondensedTea/LogWatcher/actions/workflows/build.yaml)
+
+
+UDP server for centralised log collection and upload to https://logs.tf
 
 #### How to use: 
 1. Setup your TF2 server to send logs to LogWatcher: 
