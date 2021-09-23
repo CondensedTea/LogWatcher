@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net"
 	"regexp"
 
@@ -70,8 +69,9 @@ func (s *Server) Listen() {
 			continue
 		}
 		log.WithFields(logrus.Fields{
-			"server": fmt.Sprintf("%s#%d", lf.Domain, lf.Server),
-			"state":  lf.State.String(),
+			"server":    lf.Origin(),
+			"state":     lf.State.String(),
+			"pickup_id": lf.PickupID,
 		}).Infof(cleanMsg)
 		lf.channel <- cleanMsg
 	}
