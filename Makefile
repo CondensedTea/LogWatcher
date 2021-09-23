@@ -27,4 +27,4 @@ e2e:
 
 PHONY: test
 test:
-	go test -race .
+	go test -race ./server
