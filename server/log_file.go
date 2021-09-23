@@ -119,9 +119,7 @@ func (lf *LogFile) processLogLine(msg string, client ClientInterface) {
 	defer lf.Unlock()
 	switch lf.State {
 	case Pregame:
-		if match := mapLoaded.FindStringSubmatch(msg); len(match) > 0 {
-			lf.GameMap = match[1]
-		}
+		lf.tryParseGameMap(msg)
 		if roundStart.MatchString(msg) {
 			_, err := lf.buffer.WriteString(msg + "\n")
 			if err != nil {
@@ -129,12 +127,12 @@ func (lf *LogFile) processLogLine(msg string, client ClientInterface) {
 					"server": lf.Origin(),
 				}).Fatalf("Failed to write to LogFile buffer: %s", err)
 			}
-			lf.State = Game
 			if err = lf.updatePickupID(client); err != nil {
 				log.WithFields(logrus.Fields{
 					"server": lf.Origin(),
 				}).Fatalf("Failed to get pickup id from API: %s", err)
 			}
+			lf.State = Game
 			log.WithFields(logrus.Fields{
 				"server":    lf.Origin(),
 				"pickup_id": lf.PickupID,
@@ -151,7 +149,7 @@ func (lf *LogFile) processLogLine(msg string, client ClientInterface) {
 		}
 		if logClosed.MatchString(msg) || gameOver.MatchString(msg) {
 			lf.State = Pregame
-			if dryRun {
+			if !dryRun {
 				if err = lf.uploadLogFile(client); err != nil {
 					log.WithFields(logrus.Fields{
 						"server": lf.Origin(),
@@ -166,6 +164,12 @@ func (lf *LogFile) processLogLine(msg string, client ClientInterface) {
 			}
 			lf.flush()
 		}
+	}
+}
+
+func (lf *LogFile) tryParseGameMap(msg string) {
+	if match := mapLoaded.FindStringSubmatch(msg); len(match) > 0 {
+		lf.GameMap = match[1]
 	}
 }
 
