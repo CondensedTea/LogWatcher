@@ -10,11 +10,7 @@ UDP server for centralised log collection and upload to https://logs.tf
 logaddress_add <logwatcher-IP-address>:27100
 ```
 
-2. Build Docker image:
+2. Build Docker image and run server on 27000/udp:
 ```bash
-make build
-```
-3. Run container with latest image:
-```
-make run
+make
 ```
