@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -61,7 +62,7 @@ type GamesResponse struct {
 		LaunchedAt       time.Time `json:"launchedAt"`
 		GameServer       string    `json:"gameServer"`
 		StvConnectString string    `json:"stvConnectString"`
-		ID               int       `json:"id,string"`
+		ID               string    `json:"id"`
 		LogsUrl          string    `json:"logsUrl,omitempty"`
 		Score            struct {
 			Red int `json:"red"`
@@ -257,7 +258,11 @@ func (lf *LogFile) updatePickupID(client ClientInterface) error {
 		if result.State == StartedState &&
 			result.Map == lf.GameMap &&
 			time.Since(result.LaunchedAt).Seconds() < maxSecondsAfterLaunch {
-			lf.PickupID = result.ID
+			id, err := strconv.Atoi(result.ID)
+			if err != nil {
+				return err
+			}
+			lf.PickupID = id
 			break
 		}
 	}
