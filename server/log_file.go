@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"regexp"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -256,11 +255,7 @@ func (lf *LogFile) updatePickupID(client ClientInterface) error {
 
 	for _, result := range gr.Results {
 		if result.State == StartedState && result.Map == lf.GameMap {
-			id, err := strconv.Atoi(result.ID)
-			if err != nil {
-				return err
-			}
-			lf.PickupID = id
+			lf.PickupID = result.Number
 			break
 		}
 	}
