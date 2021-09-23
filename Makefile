@@ -24,3 +24,7 @@ down:
 PHONY: e2e
 e2e:
 	./bin/TestClient -log $(E2E_LOG_FILE)
+
+PHONY: test
+test:
+	go test -race .

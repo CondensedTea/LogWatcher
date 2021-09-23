@@ -24,7 +24,7 @@ func Test_LoadConfig(t *testing.T) {
 					APIKey string `yaml:"APIKey"`
 				}{Host: "<host>:<port>", APIKey: "<logstf-api-key>"},
 				Clients: []Client{
-					{Server: 1, Domain: "<your-Domain>", Address: "<IP>:<port>"},
+					{Server: 1, Domain: "<your-domain>", Address: "<ip>:<port>"},
 				},
 			},
 			wantErr: false,

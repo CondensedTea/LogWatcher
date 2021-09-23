@@ -8,7 +8,7 @@ import (
 
 const (
 	configPath = "config.yaml"
-	apiHost    = "localhost:8081"
+	//apiHost    = "localhost:8081"
 )
 
 var log = logrus.New()
@@ -28,8 +28,8 @@ func main() {
 		log.Fatalf("Failed to create Server instance: %s", err)
 	}
 
-	router := NewRouter(server)
-	go router.Run(apiHost)
+	//router := NewRouter(server)
+	//go router.Run(apiHost)
 
 	server.Listen()
 }

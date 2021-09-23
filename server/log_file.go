@@ -23,13 +23,12 @@ const (
 )
 
 const (
-	receivedLogFile       = "received.log"
-	uploaderSign          = "LogWatcher"
-	logsTFURL             = "https://logs.tf/upload"
-	pickupAPITemplateUrl  = "https://api.tf2pickup.%s/games"
-	dryRunEnv             = "DRY_RUN"
-	StartedState          = "started"
-	maxSecondsAfterLaunch = 15.0
+	receivedLogFile      = "received.log"
+	uploaderSign         = "LogWatcher"
+	logsTFURL            = "https://logs.tf/upload"
+	pickupAPITemplateUrl = "https://api.tf2pickup.%s/games"
+	dryRunEnv            = "DRY_RUN"
+	StartedState         = "started"
 )
 
 type StateType int
@@ -193,20 +192,19 @@ func (lf *LogFile) flush() {
 func (lf *LogFile) uploadLogFile(client ClientInterface) error {
 	var b bytes.Buffer
 	w := multipart.NewWriter(&b)
-	m := lf.makeMultipartMap()
-	for key, reader := range m {
-		var fw io.Writer
+	for key, reader := range lf.makeMultipartMap() {
+		var writer io.Writer
 		var err error
 		if key == "logfile" {
-			if fw, err = w.CreateFormFile(key, "upload.log"); err != nil {
+			if writer, err = w.CreateFormFile(key, "upload.log"); err != nil {
 				return err
 			}
 		} else {
-			if fw, err = w.CreateFormField(key); err != nil {
+			if writer, err = w.CreateFormField(key); err != nil {
 				return err
 			}
 		}
-		if _, err = io.Copy(fw, reader); err != nil {
+		if _, err = io.Copy(writer, reader); err != nil {
 			return err
 		}
 	}
