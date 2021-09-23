@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -14,6 +15,20 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+)
+
+const (
+	Pregame StateType = iota
+	Game
+)
+
+const (
+	receivedLogFile       = "received.log"
+	uploaderSign          = "LogWatcher"
+	logsTFURL             = "http://logs.tf/upload"
+	dryRunEnv             = "DRY_RUN"
+	StartedState          = "started"
+	maxSecondsAfterLaunch = 15.0
 )
 
 type StateType int
@@ -29,27 +44,45 @@ func (st *StateType) String() string {
 	}
 }
 
-const (
-	Pregame StateType = iota
-	Game
-)
-
-const (
-	receivedLogFile = "received.log"
-	region          = "ru"
-	uploaderSign    = "LogWatcher"
-	logsTFURL       = "http://logs.tf/upload"
-	dryRunEnv       = "DRY_RUN"
-)
+type GamesResponse struct {
+	Results []struct {
+		ConnectInfoVersion int    `json:"connectInfoVersion"`
+		State              string `json:"state"`
+		Number             int    `json:"number"`
+		Map                string `json:"map"`
+		Slots              []struct {
+			ConnectionStatus string `json:"connectionStatus"`
+			Status           string `json:"status"`
+			GameClass        string `json:"gameClass"`
+			Team             string `json:"team"`
+			Player           string `json:"player"`
+		} `json:"slots"`
+		LaunchedAt       time.Time `json:"launchedAt"`
+		GameServer       string    `json:"gameServer"`
+		StvConnectString string    `json:"stvConnectString"`
+		ID               int       `json:"id,string"`
+		LogsUrl          string    `json:"logsUrl,omitempty"`
+		Score            struct {
+			Red int `json:"red"`
+			Blu int `json:"blu"`
+		} `json:"score,omitempty"`
+		DemoUrl string `json:"demoUrl,omitempty"`
+	} `json:"results"`
+	ItemCount int `json:"itemCount"`
+}
 
 var (
 	roundStart = regexp.MustCompile(`: World triggered "Round_Start"`)
 	gameOver   = regexp.MustCompile(`: World triggered "Game_Over" reason "`)
 	logClosed  = regexp.MustCompile(`: Log file closed.`)
 	mapLoaded  = regexp.MustCompile(`: Loading map "(.+?)"`)
+
+	dryRun = false
 )
 
-var dryRun = false
+type ClientInterface interface {
+	Do(r *http.Request) (*http.Response, error)
+}
 
 func init() {
 	if os.Getenv(dryRunEnv) != "" {
@@ -57,25 +90,21 @@ func init() {
 	}
 }
 
-type ClientInterface interface {
-	Do(r *http.Request) (*http.Response, error)
-}
-
 type LogFile struct {
-	Server  int
-	Region  string
-	IP      string
-	State   StateType
-	channel chan string
-	buffer  bytes.Buffer
 	sync.Mutex
+	Server   int
+	Domain   string
+	IP       string
+	State    StateType
+	channel  chan string
+	buffer   bytes.Buffer
 	PickupID int
 	GameMap  string
 	apiKey   string
 }
 
 func (lf *LogFile) Origin() string {
-	return fmt.Sprintf("%s#%d", lf.Region, lf.Server)
+	return fmt.Sprintf("%s#%d", lf.Domain, lf.Server)
 }
 
 func (lf *LogFile) StartWorker() {
@@ -90,18 +119,25 @@ func (lf *LogFile) processLogLine(msg string, client ClientInterface) {
 	defer lf.Unlock()
 	switch lf.State {
 	case Pregame:
-		if match := mapLoaded.FindStringSubmatch(msg); len(match) > 0 {
-			lf.GameMap = match[1]
-		}
+		lf.tryParseGameMap(msg)
 		if roundStart.MatchString(msg) {
 			_, err := lf.buffer.WriteString(msg + "\n")
 			if err != nil {
 				log.WithFields(logrus.Fields{
 					"server": lf.Origin(),
-					"state":  lf.State.String(),
 				}).Fatalf("Failed to write to LogFile buffer: %s", err)
 			}
+			if err = lf.updatePickupID(client); err != nil {
+				log.WithFields(logrus.Fields{
+					"server": lf.Origin(),
+				}).Fatalf("Failed to get pickup id from API: %s", err)
+			}
 			lf.State = Game
+			log.WithFields(logrus.Fields{
+				"server":    lf.Origin(),
+				"pickup_id": lf.PickupID,
+				"map":       lf.GameMap,
+			}).Infof("Succesifully parsed pickup ID")
 		}
 	case Game:
 		_, err := lf.buffer.WriteString(msg + "\n")
@@ -113,7 +149,7 @@ func (lf *LogFile) processLogLine(msg string, client ClientInterface) {
 		}
 		if logClosed.MatchString(msg) || gameOver.MatchString(msg) {
 			lf.State = Pregame
-			if dryRun {
+			if !dryRun {
 				if err = lf.uploadLogFile(client); err != nil {
 					log.WithFields(logrus.Fields{
 						"server": lf.Origin(),
@@ -131,9 +167,15 @@ func (lf *LogFile) processLogLine(msg string, client ClientInterface) {
 	}
 }
 
+func (lf *LogFile) tryParseGameMap(msg string) {
+	if match := mapLoaded.FindStringSubmatch(msg); len(match) > 0 {
+		lf.GameMap = match[1]
+	}
+}
+
 func (lf *LogFile) makeMultipartMap() map[string]io.Reader {
 	m := make(map[string]io.Reader)
-	m["title"] = strings.NewReader(fmt.Sprintf("tf2pickup.%s #%d", region, lf.PickupID))
+	m["title"] = strings.NewReader(fmt.Sprintf("tf2pickup.%s #%d", lf.Domain, lf.PickupID))
 	m["map"] = strings.NewReader(lf.GameMap)
 	m["key"] = strings.NewReader(lf.apiKey)
 	m["logfile"] = &lf.buffer
@@ -169,7 +211,7 @@ func (lf *LogFile) uploadLogFile(client ClientInterface) error {
 	}
 	w.Close()
 
-	req, err := http.NewRequest("POST", logsTFURL, &b)
+	req, err := http.NewRequest(http.MethodPost, logsTFURL, &b)
 	if err != nil {
 		return err
 	}
@@ -186,6 +228,37 @@ func (lf *LogFile) uploadLogFile(client ClientInterface) error {
 			return fmt.Errorf("failed to save failed log to disk, logstf response: %s err=%s", string(bodyBytes), err)
 		}
 		return fmt.Errorf("logs.tf returned code: %d, body: %s", res.StatusCode, string(bodyBytes))
+	}
+	return nil
+}
+
+func (lf *LogFile) updatePickupID(client ClientInterface) error {
+	var gr GamesResponse
+	url := fmt.Sprintf("http://api.tf2pickup.%s/games", lf.Domain)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return err
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("api.tf2pickup.%s/games returned bad status: %d", lf.Domain, resp.StatusCode)
+	}
+	defer resp.Body.Close()
+
+	if err = json.NewDecoder(resp.Body).Decode(&gr); err != nil {
+		return err
+	}
+
+	for _, result := range gr.Results {
+		if result.State == StartedState &&
+			result.Map == lf.GameMap &&
+			time.Now().Sub(result.LaunchedAt).Seconds() < maxSecondsAfterLaunch {
+			lf.PickupID = result.ID
+			break
+		}
 	}
 	return nil
 }

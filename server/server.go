@@ -20,7 +20,7 @@ func makeAddressMap(hosts []Client, apiKey string) map[string]*LogFile {
 	for _, h := range hosts {
 		lf := &LogFile{
 			Server:  h.Server,
-			Region:  h.Region,
+			Domain:  h.Domain,
 			IP:      h.Address,
 			State:   Pregame,
 			channel: make(chan string),
@@ -28,7 +28,7 @@ func makeAddressMap(hosts []Client, apiKey string) map[string]*LogFile {
 		}
 		go lf.StartWorker()
 		logsDict[h.Address] = lf
-		log.Infof("Started worker for %s#%d with host %s", lf.Region, lf.Server, lf.IP)
+		log.Infof("Started worker for %s#%d with host %s", lf.Domain, lf.Server, lf.IP)
 	}
 	return logsDict
 }
@@ -70,7 +70,7 @@ func (s *Server) Listen() {
 			continue
 		}
 		log.WithFields(logrus.Fields{
-			"server": fmt.Sprintf("%s#%d", lf.Region, lf.Server),
+			"server": fmt.Sprintf("%s#%d", lf.Domain, lf.Server),
 			"state":  lf.State.String(),
 		}).Infof(cleanMsg)
 		lf.channel <- cleanMsg
