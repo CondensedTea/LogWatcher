@@ -1,6 +1,5 @@
 FROM golang:1.16-alpine as builder
 
-
 RUN mkdir app
 WORKDIR app/
 
@@ -12,6 +11,7 @@ RUN GOOS=linux go build -o ./LogWatcher ./server/
 
 FROM scratch
 
+COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
 COPY --from=builder /go/app/LogWatcher .
 COPY config.yaml .
 

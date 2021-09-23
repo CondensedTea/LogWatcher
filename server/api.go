@@ -26,6 +26,7 @@ func (s *Server) putPickupInfo(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, gin.H{
 			"error": err,
 		})
+		context.Abort()
 		return
 	}
 	for _, v := range s.addressMap {
@@ -40,5 +41,4 @@ func (s *Server) putPickupInfo(context *gin.Context) {
 	context.JSON(http.StatusNotFound, gin.H{
 		"error": "gameserver was not found",
 	})
-	return
 }

@@ -25,7 +25,8 @@ const (
 const (
 	receivedLogFile       = "received.log"
 	uploaderSign          = "LogWatcher"
-	logsTFURL             = "http://logs.tf/upload"
+	logsTFURL             = "https://logs.tf/upload"
+	pickupAPITemplateUrl  = "https://api.tf2pickup.%s/games"
 	dryRunEnv             = "DRY_RUN"
 	StartedState          = "started"
 	maxSecondsAfterLaunch = 15.0
@@ -234,7 +235,7 @@ func (lf *LogFile) uploadLogFile(client ClientInterface) error {
 
 func (lf *LogFile) updatePickupID(client ClientInterface) error {
 	var gr GamesResponse
-	url := fmt.Sprintf("http://api.tf2pickup.%s/games", lf.Domain)
+	url := fmt.Sprintf(pickupAPITemplateUrl, lf.Domain)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return err
@@ -255,7 +256,7 @@ func (lf *LogFile) updatePickupID(client ClientInterface) error {
 	for _, result := range gr.Results {
 		if result.State == StartedState &&
 			result.Map == lf.GameMap &&
-			time.Now().Sub(result.LaunchedAt).Seconds() < maxSecondsAfterLaunch {
+			time.Since(result.LaunchedAt).Seconds() < maxSecondsAfterLaunch {
 			lf.PickupID = result.ID
 			break
 		}
