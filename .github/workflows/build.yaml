@@ -23,7 +23,8 @@ jobs:
         run: make build-local
 
       - name: Dry run server
-        run: DRY_RUN=1 ./bin/LogWatcher -config ${{ env.config }}
+        run: ./bin/LogWatcher -config ${{ env.config }}
+        timeout-minutes: 0.1
 
       - name: Run e2e
         run: E2E_LOG_FILE=${{ env.e2e_log }} make e2e
