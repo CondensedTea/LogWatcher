@@ -23,7 +23,7 @@ jobs:
         run: make build-local
 
       - name: Run server and e2e test
-        run: (./bin/LogWatcher -config e2e/e2e_config.yaml; exit 0) & ./bin/TestClient -log e2e/short.log
+        run: (./bin/LogWatcher -config e2e/e2e_config.yaml; exit 0) & sleep 1; ./bin/TestClient -log e2e/short.log
 
       - name: Compare outputs
         id: compare
