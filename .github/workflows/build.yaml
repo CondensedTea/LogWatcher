@@ -7,7 +7,6 @@ on:
 
 jobs:
   build:
-    needs: [lint, test]
     runs-on: ubuntu-latest
     env:
       e2e_log: "test_client/short_test.log"
