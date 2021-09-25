@@ -127,10 +127,13 @@ func (lf *LogFile) processLogLine(msg string, client ClientInterface) {
 					"server": lf.Origin(),
 				}).Fatalf("Failed to write to LogFile buffer: %s", err)
 			}
-			if err = lf.updatePickupID(client); err != nil {
-				log.WithFields(logrus.Fields{
-					"server": lf.Origin(),
-				}).Fatalf("Failed to get pickup id from API: %s", err)
+			if !dryRun {
+				fmt.Println("DRYRUN: ", dryRun)
+				if err = lf.updatePickupID(client); err != nil {
+					log.WithFields(logrus.Fields{
+						"server": lf.Origin(),
+					}).Fatalf("Failed to get pickup id from API: %s", err)
+				}
 			}
 			lf.State = Game
 			log.WithFields(logrus.Fields{
@@ -222,9 +225,9 @@ func (lf *LogFile) uploadLogFile(client ClientInterface) error {
 	}
 
 	if res.StatusCode != http.StatusOK {
-		bodyBytes, _ := ioutil.ReadAll(res.Body)
-		if err = saveFile(lf.buffer, "logstf_failed_upload.log"); err != nil {
-			return fmt.Errorf("failed to save failed log to disk, logstf response: %s err=%s", string(bodyBytes), err)
+		bodyBytes, err := ioutil.ReadAll(res.Body)
+		if err != nil {
+			return fmt.Errorf("failed to read buffer: %s", err)
 		}
 		return fmt.Errorf("logs.tf returned code: %d, body: %s", res.StatusCode, string(bodyBytes))
 	}

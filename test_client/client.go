@@ -11,7 +11,8 @@ import (
 
 func main() {
 	logPath := flag.String("log", "", "Path to log file")
-	serverHost := flag.String("host", "localhost:27100", "Address of LogWatcher server")
+	clientHost := flag.String("from", "localhost:27150", "Address of udp client")
+	serverHost := flag.String("to", "localhost:27100", "Address of LogWatcher server")
 	flag.Parse()
 
 	file, err := os.Open(*logPath)
@@ -22,7 +23,16 @@ func main() {
 
 	scanner := bufio.NewScanner(file)
 
-	conn, err := net.Dial("udp4", *serverHost)
+	laddress, err := net.ResolveUDPAddr("udp4", *clientHost)
+	if err != nil {
+		log.Fatalf("Failed to resolve client host: %s", err)
+	}
+	raddress, err := net.ResolveUDPAddr("udp4", *serverHost)
+	if err != nil {
+		log.Fatalf("Failed to resolve server host: %s", err)
+	}
+
+	conn, err := net.DialUDP("udp4", laddress, raddress)
 	if err != nil {
 		log.Fatalf("Failed to dial to UDP server: %s", err)
 	}

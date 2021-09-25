@@ -15,8 +15,8 @@ build:
 
 .PHONY: build-local
 build-local:
-	go build -o "$(LOCAL_BIN)/LogWatcher" ./server
-	go build -o "$(LOCAL_BIN)/TestClient" ./test_client
+	CGO_ENABLED=0 go build -o "$(LOCAL_BIN)/LogWatcher" ./server
+	CGO_ENABLED=0 go build -o "$(LOCAL_BIN)/TestClient" ./test_client
 
 PHONY: run
 run:
@@ -28,7 +28,7 @@ down:
 
 PHONY: e2e
 e2e:
-	./bin/TestClient -log $(E2E_LOG_FILE)
+	DRY_RUN=1 ./bin/TestClient -log $(E2E_LOG_FILE)
 
 PHONY: test
 test:

@@ -7,7 +7,7 @@ COPY go.mod .
 COPY go.sum .
 COPY server/ ./server/
 
-RUN GOOS=linux go build -o ./LogWatcher ./server/
+RUN CGO_ENABLED=0 GOOS=linux go build -o ./LogWatcher ./server/
 
 FROM scratch
 
