@@ -22,11 +22,8 @@ jobs:
       - name: Build
         run: make build-local
 
-      - name: Dry run server
-        run: timeout 10 ./bin/LogWatcher -config ${{ env.config }}
-
-      - name: Run e2e
-        run: E2E_LOG_FILE=${{ env.e2e_log }} make e2e
+      - name: Run server and e2e test
+        run: (./bin/LogWatcher -config e2e/e2e_config.yaml; exit 0) & ./bin/TestClient -log e2e/short.log
 
       - name: Compare outputs
         id: compare

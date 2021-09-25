@@ -22,7 +22,8 @@ func Test_LoadConfig(t *testing.T) {
 				Server: struct {
 					Host   string `yaml:"Host"`
 					APIKey string `yaml:"APIKey"`
-				}{Host: "<host>:<port>", APIKey: "<logstf-api-key>"},
+					DryRun bool   `yaml:"DryRun,omitempty"`
+				}{Host: "<host>:<port>", APIKey: "<logstf-api-key>", DryRun: false},
 				Clients: []Client{
 					{Server: 1, Domain: "<your-domain>", Address: "<ip>:<port>"},
 				},
