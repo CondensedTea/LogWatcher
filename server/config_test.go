@@ -31,7 +31,7 @@ func Test_LoadConfig(t *testing.T) {
 		},
 		{
 			name:    "no file",
-			args:    args{"../fake-config.yaml"},
+			args:    args{"../fake-e2e_config.yaml"},
 			want:    nil,
 			wantErr: true,
 		},

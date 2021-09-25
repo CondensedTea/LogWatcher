@@ -1,5 +1,4 @@
 LOCAL_BIN ?= ./bin
-E2E_LOG_FILE= ./test_client/short_test.log
 
 version=v1.0.0
 container_name=LogWatcher
@@ -16,7 +15,7 @@ build:
 .PHONY: build-local
 build-local:
 	CGO_ENABLED=0 go build -o "$(LOCAL_BIN)/LogWatcher" ./server
-	CGO_ENABLED=0 go build -o "$(LOCAL_BIN)/TestClient" ./test_client
+	CGO_ENABLED=0 go build -o "$(LOCAL_BIN)/TestClient" ./e2e
 
 PHONY: run
 run:

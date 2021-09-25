@@ -9,9 +9,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      e2e_log: "test_client/short_test.log"
+      e2e_log: "e2e/short.log"
       e2e_output: "received.log"
-      config: "config.template.yaml"
+      config: "e2e/e2e_config.yaml"
     steps:
       - uses: actions/checkout@v2
       - name: Setup go
@@ -26,7 +26,7 @@ jobs:
         run: DRY_RUN=1 ./bin/LogWatcher -config ${{ env.config }}
 
       - name: Run e2e
-        run: ./bin/TestClient -log ${{ env.e2e_log }} -out
+        run: E2E_LOG_FILE=${{ env.e2e_log }} make e2e
 
       - name: Compare outputs
         id: compare
