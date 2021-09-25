@@ -33,7 +33,7 @@ jobs:
 
       - name: Check comparision
         uses: actions/github-script@v3
-        if ${{ steps.compare.outputs.result == true }}
+        if: ${{ steps.compare.outputs.result == true }}
         with:
           script: |
             core.setFailed('end2end test failed: files are different')
