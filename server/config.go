@@ -16,7 +16,7 @@ type Config struct {
 	Server struct {
 		Host   string `yaml:"Host"`
 		APIKey string `yaml:"APIKey"`
-		DryRun bool   `yaml:"dryRun,omitempty"`
+		DryRun bool   `yaml:"DryRun,omitempty"`
 	} `yaml:"Server"`
 	Clients []Client `yaml:"Clients"`
 }
