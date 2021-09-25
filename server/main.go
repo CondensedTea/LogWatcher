@@ -1,14 +1,10 @@
 package main
 
 import (
+	"flag"
 	"os"
 
 	"github.com/sirupsen/logrus"
-)
-
-const (
-	configPath = "config.yaml"
-	//apiHost    = "localhost:8081"
 )
 
 var log = logrus.New()
@@ -19,7 +15,8 @@ func init() {
 }
 
 func main() {
-	cfg, err := LoadConfig(configPath)
+	config := flag.String("config", "config.yaml", "Path to config file")
+	cfg, err := LoadConfig(*config)
 	if err != nil {
 		log.Fatalf("Failed to parse config: %s", err)
 	}
