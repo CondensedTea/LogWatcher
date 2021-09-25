@@ -14,7 +14,7 @@ type Server struct {
 	addressMap map[string]*LogFile
 }
 
-func makeAddressMap(hosts []Client, apiKey string) map[string]*LogFile {
+func makeAddressMap(hosts []Client, apiKey string, dryRun bool) map[string]*LogFile {
 	logsDict := make(map[string]*LogFile)
 	for _, h := range hosts {
 		lf := &LogFile{
@@ -24,6 +24,7 @@ func makeAddressMap(hosts []Client, apiKey string) map[string]*LogFile {
 			State:   Pregame,
 			channel: make(chan string),
 			apiKey:  apiKey,
+			dryRun:  dryRun,
 		}
 		go lf.StartWorker()
 		logsDict[h.Address] = lf
@@ -37,7 +38,7 @@ func NewServer(cfg *Config) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	m := makeAddressMap(cfg.Clients, cfg.Server.APIKey)
+	m := makeAddressMap(cfg.Clients, cfg.Server.APIKey, cfg.Server.DryRun)
 
 	return &Server{
 		address:    udpAddr,
@@ -50,7 +51,6 @@ func (s *Server) Listen() {
 	if err != nil {
 		log.Fatalf("failed to listen UDP port: %s", err)
 	}
-	//defer s.conn.Close()
 	log.Infof("LogWatcher is listening on %s", s.address.String())
 	for {
 		message := make([]byte, 1024)

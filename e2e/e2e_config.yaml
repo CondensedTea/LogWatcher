@@ -1,6 +1,7 @@
 Server:
   Host: localhost:27100
   APIKey: fake
+  dryRun: true
 Clients:
   - ID: 1
     Domain: test

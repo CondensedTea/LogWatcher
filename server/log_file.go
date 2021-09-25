@@ -27,7 +27,6 @@ const (
 	uploaderSign         = "LogWatcher"
 	logsTFURL            = "https://logs.tf/upload"
 	pickupAPITemplateUrl = "https://api.tf2pickup.%s/games"
-	dryRunEnv            = "DRY_RUN"
 	StartedState         = "started"
 )
 
@@ -76,18 +75,10 @@ var (
 	gameOver   = regexp.MustCompile(`: World triggered "Game_Over" reason "`)
 	logClosed  = regexp.MustCompile(`: Log file closed.`)
 	mapLoaded  = regexp.MustCompile(`: Loading map "(.+?)"`)
-
-	dryRun = false
 )
 
 type ClientInterface interface {
 	Do(r *http.Request) (*http.Response, error)
-}
-
-func init() {
-	if os.Getenv(dryRunEnv) != "" {
-		dryRun = true
-	}
 }
 
 type LogFile struct {
@@ -101,6 +92,7 @@ type LogFile struct {
 	PickupID int
 	GameMap  string
 	apiKey   string
+	dryRun   bool
 }
 
 func (lf *LogFile) Origin() string {
@@ -127,8 +119,7 @@ func (lf *LogFile) processLogLine(msg string, client ClientInterface) {
 					"server": lf.Origin(),
 				}).Fatalf("Failed to write to LogFile buffer: %s", err)
 			}
-			if !dryRun {
-				fmt.Println("DRYRUN: ", dryRun)
+			if !lf.dryRun {
 				if err = lf.updatePickupID(client); err != nil {
 					log.WithFields(logrus.Fields{
 						"server": lf.Origin(),
@@ -152,7 +143,7 @@ func (lf *LogFile) processLogLine(msg string, client ClientInterface) {
 		}
 		if logClosed.MatchString(msg) || gameOver.MatchString(msg) {
 			lf.State = Pregame
-			if !dryRun {
+			if !lf.dryRun {
 				if err = lf.uploadLogFile(client); err != nil {
 					log.WithFields(logrus.Fields{
 						"server": lf.Origin(),

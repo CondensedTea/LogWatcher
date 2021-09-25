@@ -27,7 +27,7 @@ down:
 
 PHONY: e2e
 e2e:
-	DRY_RUN=1 ./bin/TestClient -log $(E2E_LOG_FILE)
+	./bin/TestClient -log $(E2E_LOG_FILE)
 
 PHONY: test
 test:
