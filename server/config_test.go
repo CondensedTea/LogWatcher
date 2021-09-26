@@ -17,15 +17,16 @@ func Test_LoadConfig(t *testing.T) {
 	}{
 		{
 			name: "default",
-			args: args{"../config.template.yaml"},
+			args: args{"../e2e/e2e_config.yaml"},
 			want: &Config{
 				Server: struct {
 					Host   string `yaml:"Host"`
 					APIKey string `yaml:"APIKey"`
 					DryRun bool   `yaml:"DryRun,omitempty"`
-				}{Host: "<host>:<port>", APIKey: "<logstf-api-key>", DryRun: false},
+					DSN    string `yaml:"DSN"`
+				}{Host: "localhost:27100", APIKey: "fake", DryRun: true, DSN: "fake"},
 				Clients: []Client{
-					{Server: 1, Domain: "<your-domain>", Address: "<ip>:<port>"},
+					{Server: 1, Domain: "test", Address: "127.0.0.1:27150"},
 				},
 			},
 			wantErr: false,

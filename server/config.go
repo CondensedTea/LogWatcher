@@ -17,6 +17,7 @@ type Config struct {
 		Host   string `yaml:"Host"`
 		APIKey string `yaml:"APIKey"`
 		DryRun bool   `yaml:"DryRun,omitempty"`
+		DSN    string `yaml:"DSN"`
 	} `yaml:"Server"`
 	Clients []Client `yaml:"Clients"`
 }

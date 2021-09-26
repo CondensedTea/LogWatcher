@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build:
+  e2e:
     runs-on: ubuntu-latest
     env:
       e2e_log: "e2e/short.log"
@@ -27,11 +27,11 @@ jobs:
 
       - name: Compare outputs
         id: compare
-        run: cmp -s ${{ env.e2e_log }} ${{ env.e2e_output }} || echo "::set-output result=true"
+        run: cmp -s ${{ env.e2e_log }} ${{ env.e2e_output }} || echo "::set-output result=false"
 
-      - name: Check comparision
+      - name: Exit if e2e failed
         uses: actions/github-script@v3
-        if: ${{ steps.compare.outputs.result == true }}
+        if: ${{ steps.compare.outputs.result == false }}
         with:
           script: |
-            core.setFailed('end2end test failed: files are different')
+            core.setFailed('E2E test failed: files are different')

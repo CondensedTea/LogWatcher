@@ -3,7 +3,9 @@ module LogWatcher
 go 1.16
 
 require (
+	github.com/jackc/pgx v3.6.2+incompatible // indirect
 	github.com/kr/pretty v0.3.0 // indirect
+	github.com/leighmacdonald/steamid v1.2.0 // indirect
 	github.com/rogpeppe/go-internal v1.8.0 // indirect
 	github.com/sirupsen/logrus v1.8.1
 	github.com/stretchr/testify v1.7.0 // indirect

@@ -4,6 +4,7 @@ import (
 	"net"
 	"regexp"
 
+	"github.com/jackc/pgx"
 	"github.com/sirupsen/logrus"
 )
 
@@ -14,21 +15,33 @@ type Server struct {
 	addressMap map[string]*LogFile
 }
 
-func makeAddressMap(hosts []Client, apiKey string, dryRun bool) map[string]*LogFile {
+func makeAddressMap(hosts []Client, dryRun bool, apiKey, url string) map[string]*LogFile {
+	dbConfig, err := pgx.ParseConnectionString(url)
+	if err != nil {
+		log.Fatalf("Failed to parse db url: %s", err)
+	}
+	conn, err := pgx.Connect(dbConfig)
+	if err != nil {
+		log.Fatalf("Failed to connect to db: %s", err)
+	}
 	logsDict := make(map[string]*LogFile)
 	for _, h := range hosts {
+		s := ServerInfo{
+			ID:     h.Server,
+			Domain: h.Domain,
+			IP:     h.Address,
+		}
 		lf := &LogFile{
-			Server:  h.Server,
-			Domain:  h.Domain,
-			IP:      h.Address,
+			Server:  s,
 			State:   Pregame,
 			channel: make(chan string),
 			apiKey:  apiKey,
 			dryRun:  dryRun,
+			conn:    conn,
 		}
 		go lf.StartWorker()
 		logsDict[h.Address] = lf
-		log.Infof("Started worker for %s#%d with host %s", lf.Domain, lf.Server, lf.IP)
+		log.Infof("Started worker for %s#%d with host %s", lf.Server.Domain, lf.Server.ID, lf.Server.IP)
 	}
 	return logsDict
 }
@@ -38,7 +51,7 @@ func NewServer(cfg *Config) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	m := makeAddressMap(cfg.Clients, cfg.Server.APIKey, cfg.Server.DryRun)
+	m := makeAddressMap(cfg.Clients, cfg.Server.DryRun, cfg.Server.APIKey, cfg.Server.DSN)
 
 	return &Server{
 		address:    udpAddr,
@@ -71,7 +84,7 @@ func (s *Server) Listen() {
 		log.WithFields(logrus.Fields{
 			"server":    lf.Origin(),
 			"state":     lf.State.String(),
-			"pickup_id": lf.PickupID,
+			"pickup_id": lf.Game.PickupID,
 		}).Infof(cleanMsg)
 		lf.channel <- cleanMsg
 	}
