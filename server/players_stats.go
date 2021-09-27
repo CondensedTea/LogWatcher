@@ -42,13 +42,13 @@ func (gi *GameInfo) updatePlayerStats(msg string) error {
 		p2 := steamid.SID3ToSID64(steamid.SID3(match[2]))
 		_, ok := gi.Stats[p1]
 		if !ok {
-			gi.Stats[p1].Kills = 1
+			gi.Stats[p1] = &PlayerStats{Kills: 1}
 		} else {
 			gi.Stats[p1].Kills += 1
 		}
 		_, ok = gi.Stats[p2]
 		if !ok {
-			gi.Stats[p2].Deaths = 1
+			gi.Stats[p2] = &PlayerStats{Deaths: 1}
 		} else {
 			gi.Stats[p2].Deaths += 1
 		}
@@ -56,41 +56,35 @@ func (gi *GameInfo) updatePlayerStats(msg string) error {
 		match := damageRegexp.FindStringSubmatch(msg)
 		p1 := steamid.SID3ToSID64(steamid.SID3(match[1]))
 		p2 := steamid.SID3ToSID64(steamid.SID3(match[2]))
-		dmg, err := strconv.Atoi(match[3])
-		if err != nil {
-			return err
-		}
+		dmg, _ := strconv.Atoi(match[3])
 		_, ok := gi.Stats[p1]
 		if !ok {
-			gi.Stats[p1].DamageDone = dmg
+			gi.Stats[p1] = &PlayerStats{DamageDone: dmg}
 		} else {
 			gi.Stats[p1].DamageDone += dmg
 		}
 		_, ok = gi.Stats[p2]
 		if !ok {
-			gi.Stats[p1].DamageTaken = dmg
+			gi.Stats[p2] = &PlayerStats{DamageTaken: dmg}
 		} else {
-			gi.Stats[p1].DamageTaken += dmg
+			gi.Stats[p2].DamageTaken += dmg
 		}
 	case healsRegexp.MatchString(msg):
 		match := healsRegexp.FindStringSubmatch(msg)
 		p1 := steamid.SID3ToSID64(steamid.SID3(match[1]))
 		p2 := steamid.SID3ToSID64(steamid.SID3(match[2]))
-		heals, err := strconv.Atoi(match[3])
-		if err != nil {
-			return err
-		}
-		_, ok := gi.Stats[p1]
+		heals, _ := strconv.Atoi(match[3])
+		h, ok := gi.Stats[p1]
 		if !ok {
-			gi.Stats[p1].Healed = heals
+			gi.Stats[p1] = &PlayerStats{Healed: heals}
 		} else {
-			gi.Stats[p1].Healed += heals
+			h.Healed += heals
 		}
-		_, ok = gi.Stats[p2]
+		h, ok = gi.Stats[p2]
 		if !ok {
-			gi.Stats[p1].HealsReceived = heals
+			gi.Stats[p2] = &PlayerStats{HealsReceived: heals}
 		} else {
-			gi.Stats[p1].HealsReceived += heals
+			h.HealsReceived += heals
 		}
 	}
 	return nil
