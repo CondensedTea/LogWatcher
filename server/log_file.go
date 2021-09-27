@@ -63,7 +63,7 @@ type LogFile struct {
 	State   StateType
 	channel chan string
 	buffer  bytes.Buffer
-	Game    GameInfo
+	Game    *GameInfo
 	apiKey  string
 	dryRun  bool
 	conn    *pgx.Conn

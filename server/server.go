@@ -5,6 +5,7 @@ import (
 	"regexp"
 
 	"github.com/jackc/pgx"
+	"github.com/leighmacdonald/steamid/steamid"
 	"github.com/sirupsen/logrus"
 )
 
@@ -31,10 +32,15 @@ func makeAddressMap(hosts []Client, dryRun bool, apiKey, url string) map[string]
 			Domain: h.Domain,
 			IP:     h.Address,
 		}
+		gi := &GameInfo{
+			Players: make([]PickupPlayer, 0),
+			Stats:   make(map[steamid.SID64]*PlayerStats),
+		}
 		lf := &LogFile{
 			Server:  s,
 			State:   Pregame,
 			channel: make(chan string),
+			Game:    gi,
 			apiKey:  apiKey,
 			dryRun:  dryRun,
 			conn:    conn,
