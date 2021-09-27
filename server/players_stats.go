@@ -38,8 +38,8 @@ func (gi *GameInfo) updatePlayerStats(msg string) error {
 	switch {
 	case killRegexp.MatchString(msg):
 		match := killRegexp.FindStringSubmatch(msg)
-		p1 := steamid.SID3ToSID64(steamid.SID3(match[0]))
-		p2 := steamid.SID3ToSID64(steamid.SID3(match[1]))
+		p1 := steamid.SID3ToSID64(steamid.SID3(match[1]))
+		p2 := steamid.SID3ToSID64(steamid.SID3(match[2]))
 		_, ok := gi.Stats[p1]
 		if !ok {
 			gi.Stats[p1].Kills = 1
@@ -54,9 +54,9 @@ func (gi *GameInfo) updatePlayerStats(msg string) error {
 		}
 	case damageRegexp.MatchString(msg):
 		match := damageRegexp.FindStringSubmatch(msg)
-		p1 := steamid.SID3ToSID64(steamid.SID3(match[0]))
-		p2 := steamid.SID3ToSID64(steamid.SID3(match[1]))
-		dmg, err := strconv.Atoi(match[2])
+		p1 := steamid.SID3ToSID64(steamid.SID3(match[1]))
+		p2 := steamid.SID3ToSID64(steamid.SID3(match[2]))
+		dmg, err := strconv.Atoi(match[3])
 		if err != nil {
 			return err
 		}
@@ -73,10 +73,10 @@ func (gi *GameInfo) updatePlayerStats(msg string) error {
 			gi.Stats[p1].DamageTaken += dmg
 		}
 	case healsRegexp.MatchString(msg):
-		match := damageRegexp.FindStringSubmatch(msg)
-		p1 := steamid.SID3ToSID64(steamid.SID3(match[0]))
-		p2 := steamid.SID3ToSID64(steamid.SID3(match[1]))
-		heals, err := strconv.Atoi(match[2])
+		match := healsRegexp.FindStringSubmatch(msg)
+		p1 := steamid.SID3ToSID64(steamid.SID3(match[1]))
+		p2 := steamid.SID3ToSID64(steamid.SID3(match[2]))
+		heals, err := strconv.Atoi(match[3])
 		if err != nil {
 			return err
 		}
