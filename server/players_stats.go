@@ -92,12 +92,14 @@ func (gi *GameInfo) updatePlayerStats(msg string) error {
 
 func (lf *LogFile) insertPlayerStats() error {
 	tx, err := lf.conn.Begin()
+	defer tx.Rollback()
 	if err != nil {
 		return err
 	}
 	for steamID64, stat := range lf.Game.Stats {
 		for _, player := range lf.Game.Players {
 			if steamID64.String() == player.SteamID64 {
+				log.Infof("Inserting player(%v) stats: Server: %v, pickupid: %v, stats: %v", player, lf.Server, lf.Game.PickupID, stat)
 				_, err := tx.Exec(
 					insertPlayerStatsQuery,
 					lf.Server.Domain,
