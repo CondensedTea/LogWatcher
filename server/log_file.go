@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"net/http"
 	"os"
@@ -9,9 +10,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/jackc/pgx"
 	"github.com/leighmacdonald/steamid/steamid"
 	"github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 const (
@@ -58,6 +59,7 @@ type GameInfo struct {
 }
 
 type LogFile struct {
+	ctx context.Context
 	sync.Mutex
 	Server  ServerInfo
 	State   StateType
@@ -66,7 +68,7 @@ type LogFile struct {
 	Game    *GameInfo
 	apiKey  string
 	dryRun  bool
-	conn    *pgx.Conn
+	conn    *mongo.Client
 }
 
 func (lf *LogFile) Origin() string {
@@ -135,7 +137,8 @@ func (lf *LogFile) processLogLine(msg string, client ClientInterface) {
 						"server": lf.Origin(),
 					}).Fatalf("Failed to upload file to logs.tf: %s", err)
 				}
-				if err = lf.insertPlayerStats(); err != nil {
+				stats := lf.ExtractPlayerStats()
+				if err = lf.insertGameStats(stats); err != nil {
 					log.WithFields(logrus.Fields{
 						"server": lf.Origin(),
 					}).Fatalf("Failed to insert stats to db: %s", err)

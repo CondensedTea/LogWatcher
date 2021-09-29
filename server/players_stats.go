@@ -7,17 +7,10 @@ import (
 	"github.com/leighmacdonald/steamid/steamid"
 )
 
-const insertPlayerStatsQuery = `insert into stats(domain,
-												server_id,
-												pickup_id,
-												steamid64,
-												class,
-												kills,
-												death,
-												damage_done,
-												damage_taken,
-												heals,
-												heals_received) values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`
+const (
+	mongoDatabase   = "stats"
+	mongoCollection = "stats"
+)
 
 var (
 	killRegexp   = regexp.MustCompile(`(\[U:\d:\d{1,10}]).+killed.+(\[U:\d:\d{1,10}])`)
@@ -32,6 +25,13 @@ type PlayerStats struct {
 	DamageTaken   int
 	Healed        int
 	HealsReceived int
+}
+
+type GameStats struct {
+	player   PickupPlayer
+	stats    PlayerStats
+	server   ServerInfo
+	pickupID int
 }
 
 func (gi *GameInfo) updatePlayerStats(msg string) error {
@@ -90,38 +90,28 @@ func (gi *GameInfo) updatePlayerStats(msg string) error {
 	return nil
 }
 
-func (lf *LogFile) insertPlayerStats() error {
-	tx, err := lf.conn.Begin()
-	defer tx.Rollback()
-	if err != nil {
-		return err
-	}
-	for steamID64, stat := range lf.Game.Stats {
+func (lf *LogFile) ExtractPlayerStats() []interface{} {
+	s := make([]interface{}, 0)
+	for steamID, stats := range lf.Game.Stats {
 		for _, player := range lf.Game.Players {
-			if steamID64.String() == player.SteamID64 {
-				log.Infof("Inserting player(%v) stats: Server: %v, pickupid: %v, stats: %v", player, lf.Server, lf.Game.PickupID, stat)
-				_, err := tx.Exec(
-					insertPlayerStatsQuery,
-					lf.Server.Domain,
-					lf.Server.ID,
-					lf.Game.PickupID,
-					player.SteamID64,
-					player.Class,
-					stat.Kills,
-					stat.Deaths,
-					stat.DamageDone,
-					stat.DamageTaken,
-					stat.Healed,
-					stat.HealsReceived,
-				)
-				if err != nil {
-					return err
+			if steamID.String() == player.SteamID64 {
+				gs := GameStats{
+					player:   player,
+					stats:    *stats,
+					server:   lf.Server,
+					pickupID: lf.Game.PickupID,
 				}
+				s = append(s, gs)
 			}
 		}
 	}
-	if err = tx.Commit(); err != nil {
-		return err
-	}
-	return nil
+	return s
+}
+
+func (lf *LogFile) insertGameStats(documents []interface{}) error {
+	_, err := lf.conn.
+		Database(mongoDatabase).
+		Collection(mongoCollection).
+		InsertMany(lf.ctx, documents)
+	return err
 }

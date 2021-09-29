@@ -1,12 +1,14 @@
 package main
 
 import (
+	"context"
 	"net"
 	"regexp"
 
-	"github.com/jackc/pgx"
 	"github.com/leighmacdonald/steamid/steamid"
 	"github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var logLineRegexp = regexp.MustCompile(`L \d{2}/\d{2}/\d{4} - \d{2}:\d{2}:\d{2}: .+`)
@@ -17,13 +19,9 @@ type Server struct {
 }
 
 func makeAddressMap(hosts []Client, dryRun bool, apiKey, url string) map[string]*LogFile {
-	dbConfig, err := pgx.ParseConnectionString(url)
+	conn, err := mongo.Connect(context.Background(), options.Client().ApplyURI(url))
 	if err != nil {
-		log.Fatalf("Failed to parse db url: %s", err)
-	}
-	conn, err := pgx.Connect(dbConfig)
-	if err != nil {
-		log.Fatalf("Failed to connect to db: %s", err)
+		log.Fatalf("Failed to connect to mongodb: %s", err)
 	}
 	logsDict := make(map[string]*LogFile)
 	for _, h := range hosts {
@@ -37,6 +35,7 @@ func makeAddressMap(hosts []Client, dryRun bool, apiKey, url string) map[string]
 			Stats:   make(map[steamid.SID64]*PlayerStats),
 		}
 		lf := &LogFile{
+			ctx:     context.Background(),
 			Server:  s,
 			State:   Pregame,
 			channel: make(chan string),
