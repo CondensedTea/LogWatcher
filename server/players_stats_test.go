@@ -1,10 +1,14 @@
 package main
 
 import (
+	"bytes"
+	"context"
 	"reflect"
+	"sync"
 	"testing"
 
 	"github.com/leighmacdonald/steamid/steamid"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 func TestGameInfo_updatePlayerStats(t *testing.T) {
@@ -113,6 +117,78 @@ func TestGameInfo_updatePlayerStats(t *testing.T) {
 			}
 			if !reflect.DeepEqual(gi.Stats, tt.want) {
 				t.Errorf("updatePlayerStats() got = %v, want = %v", gi.Stats, tt.want)
+			}
+		})
+	}
+}
+
+func TestLogFile_ExtractPlayerStats(t *testing.T) {
+	type fields struct {
+		ctx     context.Context
+		Mutex   sync.Mutex
+		Server  ServerInfo
+		State   StateType
+		channel chan string
+		buffer  bytes.Buffer
+		Game    *GameInfo
+		apiKey  string
+		dryRun  bool
+		conn    *mongo.Client
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   []interface{}
+	}{
+		{
+			name: "default",
+			fields: fields{
+				Server: ServerInfo{
+					ID:     1,
+					Domain: "test",
+					IP:     "test",
+				},
+
+				Game: &GameInfo{
+					Players: []PickupPlayer{{SteamID64: "76561198011558250"}},
+					Stats: map[steamid.SID64]*PlayerStats{
+						steamid.SID64FromString("76561198011558250"): {
+							Kills: 1,
+						},
+					},
+					PickupID: 123,
+				},
+			},
+			want: []interface{}{
+				GameStats{
+					player:   PickupPlayer{SteamID64: "76561198011558250"},
+					stats:    PlayerStats{Kills: 1},
+					pickupID: 123,
+					server: ServerInfo{
+						ID:     1,
+						Domain: "test",
+						IP:     "test",
+					},
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			lf := &LogFile{
+				ctx:     tt.fields.ctx,
+				Mutex:   tt.fields.Mutex,
+				Server:  tt.fields.Server,
+				State:   tt.fields.State,
+				channel: tt.fields.channel,
+				buffer:  tt.fields.buffer,
+				Game:    tt.fields.Game,
+				apiKey:  tt.fields.apiKey,
+				dryRun:  tt.fields.dryRun,
+				conn:    tt.fields.conn,
+			}
+			if got := lf.ExtractPlayerStats(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("ExtractPlayerStats() = %v, want %v", got, tt.want)
 			}
 		})
 	}

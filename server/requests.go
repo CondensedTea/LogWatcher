@@ -22,12 +22,6 @@ type ClientInterface interface {
 	Do(r *http.Request) (*http.Response, error)
 }
 
-type PickupPlayer struct {
-	PlayerID  string
-	Class     string
-	SteamID64 string
-}
-
 type PlayersResponse struct {
 	SteamId string `json:"steamId"`
 	Name    string `json:"name"`
@@ -147,11 +141,12 @@ func (lf *LogFile) updatePickupInfo(client ClientInterface) error {
 
 	for _, result := range gr.Results {
 		if result.State == StartedState && result.Map == lf.Game.Map {
-			players := make([]PickupPlayer, len(result.Slots))
+			players := make([]PickupPlayer, 0)
 			for _, player := range result.Slots {
 				p := PickupPlayer{PlayerID: player.Player, Class: player.GameClass}
 				players = append(players, p)
 			}
+			lf.Game.Players = players
 			lf.Game.PickupID = result.Number
 			break
 		}
@@ -179,10 +174,10 @@ func (lf *LogFile) resolvePlayers(client ClientInterface) error {
 		return err
 	}
 
-	for _, pickupPlayer := range lf.Game.Players {
+	for i, pickupPlayer := range lf.Game.Players {
 		for _, pr := range responses {
 			if pickupPlayer.PlayerID == pr.Id {
-				pickupPlayer.SteamID64 = pr.SteamId
+				lf.Game.Players[i].SteamID64 = pr.SteamId
 			}
 		}
 	}

@@ -58,6 +58,12 @@ type GameInfo struct {
 	Stats    map[steamid.SID64]*PlayerStats
 }
 
+type PickupPlayer struct {
+	PlayerID  string
+	Class     string
+	SteamID64 string
+}
+
 type LogFile struct {
 	ctx context.Context
 	sync.Mutex
