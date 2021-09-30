@@ -179,15 +179,8 @@ func saveFile(buf bytes.Buffer, path string) error {
 	if err != nil {
 		return err
 	}
+	defer file.Close()
 	_, err = buf.WriteTo(file)
-	if err != nil {
-		return err
-	}
-	err = file.Sync()
-	if err != nil {
-		return err
-	}
-	err = file.Close()
 	if err != nil {
 		return err
 	}

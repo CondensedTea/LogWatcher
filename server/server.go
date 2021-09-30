@@ -8,7 +8,6 @@ import (
 	"github.com/leighmacdonald/steamid/steamid"
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var logLineRegexp = regexp.MustCompile(`L \d{2}/\d{2}/\d{4} - \d{2}:\d{2}:\d{2}: .+`)
@@ -18,11 +17,7 @@ type Server struct {
 	addressMap map[string]*LogFile
 }
 
-func makeAddressMap(hosts []Client, dryRun bool, apiKey, url string) map[string]*LogFile {
-	conn, err := mongo.Connect(context.Background(), options.Client().ApplyURI(url))
-	if err != nil {
-		log.Fatalf("Failed to connect to mongodb: %s", err)
-	}
+func makeAddressMap(hosts []Client, dryRun bool, apiKey string, conn *mongo.Client) map[string]*LogFile {
 	logsDict := make(map[string]*LogFile)
 	for _, h := range hosts {
 		s := ServerInfo{
@@ -51,12 +46,12 @@ func makeAddressMap(hosts []Client, dryRun bool, apiKey, url string) map[string]
 	return logsDict
 }
 
-func NewServer(cfg *Config) (*Server, error) {
+func NewServer(cfg *Config, conn *mongo.Client) (*Server, error) {
 	udpAddr, err := net.ResolveUDPAddr("udp4", cfg.Server.Host)
 	if err != nil {
 		return nil, err
 	}
-	m := makeAddressMap(cfg.Clients, cfg.Server.DryRun, cfg.Server.APIKey, cfg.Server.DSN)
+	m := makeAddressMap(cfg.Clients, cfg.Server.DryRun, cfg.Server.APIKey, conn)
 
 	return &Server{
 		address:    udpAddr,

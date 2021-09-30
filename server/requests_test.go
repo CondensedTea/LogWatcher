@@ -83,7 +83,7 @@ func TestLogFile_updatePickupInfo(t *testing.T) {
 				t.Errorf("updatePickupInfo() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if !cmp.Equal(lf.Game, tt.want) {
-				t.Errorf("updatePickupInfo() got = %v, want %v", lf.Game, tt.want)
+				t.Errorf("updatePickupInfo() failed comparison got = %v, want %v", lf.Game, tt.want)
 			}
 		})
 	}

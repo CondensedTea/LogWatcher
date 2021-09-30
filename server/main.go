@@ -1,10 +1,13 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"os"
 
 	"github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var log = logrus.New()
@@ -21,7 +24,11 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to parse config: %s", err)
 	}
-	server, err := NewServer(cfg)
+	conn, err := mongo.Connect(context.Background(), options.Client().ApplyURI(cfg.Server.DSN))
+	if err != nil {
+		log.Fatalf("Failed to connect to mongodb: %s", err)
+	}
+	server, err := NewServer(cfg, conn)
 	if err != nil {
 		log.Fatalf("Failed to create Server instance: %s", err)
 	}
