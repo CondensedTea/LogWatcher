@@ -69,7 +69,8 @@ func (s *Server) Listen() {
 		message := make([]byte, 1024)
 		msgLen, clientAddr, err := conn.ReadFromUDP(message)
 		if err != nil {
-			log.Fatalf("Failed to read from UDP socket: %s", err)
+			log.Errorf("Failed to read from UDP socket: %s", err)
+			return
 		}
 		cleanMsg := logLineRegexp.FindString(string(message[:msgLen]))
 

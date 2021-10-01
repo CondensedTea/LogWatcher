@@ -97,20 +97,20 @@ func (lf *LogFile) processLogLine(msg string, client ClientInterface) {
 		if roundStart.MatchString(msg) {
 			_, err := lf.buffer.WriteString(msg + "\n")
 			if err != nil {
-				log.WithFields(logrus.Fields{
-					"server": lf.Origin(),
-				}).Fatalf("Failed to write to LogFile buffer: %s", err)
+				log.WithFields(logrus.Fields{"server": lf.Origin()}).
+					Errorf("Failed to write to LogFile buffer: %s", err)
+				return
 			}
 			if !lf.dryRun {
 				if err = lf.updatePickupInfo(client); err != nil {
-					log.WithFields(logrus.Fields{
-						"server": lf.Origin(),
-					}).Fatalf("Failed to get pickup id from API: %s", err)
+					log.WithFields(logrus.Fields{"server": lf.Origin()}).
+						Errorf("Failed to get pickup id from API: %s", err)
+					return
 				}
 				if err = lf.resolvePlayers(client); err != nil {
-					log.WithFields(logrus.Fields{
-						"server": lf.Origin(),
-					}).Fatalf("Failed to resolve pickup player ids through API: %s", err)
+					log.WithFields(logrus.Fields{"server": lf.Origin()}).
+						Errorf("Failed to resolve pickup player ids through API: %s", err)
+					return
 				}
 			}
 			lf.State = Game
@@ -141,19 +141,22 @@ func (lf *LogFile) processLogLine(msg string, client ClientInterface) {
 				if err = lf.uploadLogFile(client); err != nil {
 					log.WithFields(logrus.Fields{
 						"server": lf.Origin(),
-					}).Fatalf("Failed to upload file to logs.tf: %s", err)
+					}).Errorf("Failed to upload file to logs.tf: %s", err)
+					return
 				}
 				stats := lf.ExtractPlayerStats()
 				if err = lf.insertGameStats(stats); err != nil {
 					log.WithFields(logrus.Fields{
 						"server": lf.Origin(),
-					}).Fatalf("Failed to insert stats to db: %s", err)
+					}).Errorf("Failed to insert stats to db: %s", err)
+					return
 				}
 			} else {
 				if err = saveFile(lf.buffer, receivedLogFile); err != nil {
 					log.WithFields(logrus.Fields{
 						"server": lf.Origin(),
-					}).Fatalf("Failed to save file to disk: %s", err)
+					}).Errorf("Failed to save file to disk: %s", err)
+					return
 				}
 			}
 			lf.flush()
