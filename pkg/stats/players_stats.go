@@ -33,7 +33,7 @@ type PlayerStats struct {
 }
 
 type GameStats struct {
-	Player   requests.PickupPlayer
+	Player   *requests.PickupPlayer
 	Stats    PlayerStats
 	Server   ServerInfo
 	PickupID int
@@ -95,16 +95,20 @@ func UpdatePlayerStats(msg string, stats map[steamid.SID64]*PlayerStats) error {
 	return nil
 }
 
-func ExtractPlayerStats(gameStats map[steamid.SID64]*PlayerStats, server ServerInfo, pickupID int) []interface{} {
+func ExtractPlayerStats(players []*requests.PickupPlayer, gameStats map[steamid.SID64]*PlayerStats, server ServerInfo, pickupID int) []interface{} {
 	s := make([]interface{}, 0)
-	for steamID, stats := range gameStats {
-		gs := GameStats{
-			Player:   requests.PickupPlayer{SteamID: steamID.String()},
-			Stats:    *stats,
-			Server:   server,
-			PickupID: pickupID,
+	for _, player := range players {
+		for steamID, stats := range gameStats {
+			if player.SteamID == steamID.String() {
+				gs := GameStats{
+					Player:   player,
+					Stats:    *stats,
+					Server:   server,
+					PickupID: pickupID,
+				}
+				s = append(s, gs)
+			}
 		}
-		s = append(s, gs)
 	}
 	return s
 }

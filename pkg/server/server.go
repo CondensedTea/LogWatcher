@@ -128,7 +128,7 @@ func (s *Server) processLogLine(msg string, client requests.HTTPDoer) {
 				s.log.WithFields(logrus.Fields{"app": s.Origin()}).
 					Errorf("Failed to upload file to logs.tf: %s", err)
 			}
-			playersStats := stats.ExtractPlayerStats(s.Game.Stats, s.Server, s.Game.PickupID)
+			playersStats := stats.ExtractPlayerStats(s.Game.Players, s.Game.Stats, s.Server, s.Game.PickupID)
 			if err = stats.InsertGameStats(s.ctx, s.conn, playersStats); err != nil {
 				s.log.WithFields(logrus.Fields{"app": s.Origin()}).
 					Errorf("Failed to insert stats to db: %s", err)
