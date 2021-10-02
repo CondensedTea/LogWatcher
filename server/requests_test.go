@@ -76,7 +76,6 @@ func TestLogFile_updatePickupInfo(t *testing.T) {
 				buffer:  tt.fields.buffer,
 				Game:    tt.fields.Game,
 				apiKey:  tt.fields.apiKey,
-				dryRun:  tt.fields.dryRun,
 				conn:    tt.fields.conn,
 			}
 			if err := lf.updatePickupInfo(tt.args.client); (err != nil) != tt.wantErr {
@@ -123,7 +122,7 @@ func TestLogFile_resolvePlayers(t *testing.T) {
 			args: args{NewClientInterfaceMock(mc).DoMock.Return(
 				&http.Response{StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader(playersRawJSON))}, nil,
 			)},
-			want: []PickupPlayer{{PlayerID: "6133487c4573f9001cdc0abb", Class: "soldier", SteamID64: "76561198011558250"}},
+			want: []PickupPlayer{{PlayerID: "6133487c4573f9001cdc0abb", Class: "soldier", SteamID: "76561198011558250"}},
 		},
 	}
 	for _, tt := range tests {
@@ -137,7 +136,6 @@ func TestLogFile_resolvePlayers(t *testing.T) {
 				buffer:  tt.fields.buffer,
 				Game:    tt.fields.Game,
 				apiKey:  tt.fields.apiKey,
-				dryRun:  tt.fields.dryRun,
 				conn:    tt.fields.conn,
 			}
 			if err := lf.resolvePlayers(tt.args.client); (err != nil) != tt.wantErr {

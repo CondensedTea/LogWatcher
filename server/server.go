@@ -17,7 +17,7 @@ type Server struct {
 	addressMap map[string]*LogFile
 }
 
-func makeAddressMap(hosts []Client, dryRun bool, apiKey string, conn *mongo.Client) map[string]*LogFile {
+func makeAddressMap(hosts []Client, apiKey string, conn *mongo.Client) map[string]*LogFile {
 	logsDict := make(map[string]*LogFile)
 	for _, h := range hosts {
 		s := ServerInfo{
@@ -36,7 +36,6 @@ func makeAddressMap(hosts []Client, dryRun bool, apiKey string, conn *mongo.Clie
 			channel: make(chan string),
 			Game:    gi,
 			apiKey:  apiKey,
-			dryRun:  dryRun,
 			conn:    conn,
 		}
 		go lf.StartWorker()
@@ -51,7 +50,7 @@ func NewServer(cfg *Config, conn *mongo.Client) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
-	m := makeAddressMap(cfg.Clients, cfg.Server.DryRun, cfg.Server.APIKey, conn)
+	m := makeAddressMap(cfg.Clients, cfg.Server.APIKey, conn)
 
 	return &Server{
 		address:    udpAddr,

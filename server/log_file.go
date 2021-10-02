@@ -5,7 +5,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"os"
 	"regexp"
 	"sync"
 	"time"
@@ -21,8 +20,7 @@ const (
 )
 
 const (
-	receivedLogFile = "received.log"
-	StartedState    = "started"
+	StartedState = "started"
 )
 
 type StateType int
@@ -59,9 +57,9 @@ type GameInfo struct {
 }
 
 type PickupPlayer struct {
-	PlayerID  string
-	Class     string
-	SteamID64 string
+	PlayerID string `bson:"player_id"`
+	Class    string
+	SteamID  string `bson:"steam_id"`
 }
 
 type LogFile struct {
@@ -73,7 +71,6 @@ type LogFile struct {
 	buffer  bytes.Buffer
 	Game    *GameInfo
 	apiKey  string
-	dryRun  bool
 	conn    *mongo.Client
 }
 
@@ -82,7 +79,7 @@ func (lf *LogFile) Origin() string {
 }
 
 func (lf *LogFile) StartWorker() {
-	client := http.Client{Timeout: 5 * time.Second}
+	client := http.Client{Timeout: 10 * time.Second}
 	for msg := range lf.channel {
 		lf.processLogLine(msg, &client)
 	}
@@ -99,19 +96,14 @@ func (lf *LogFile) processLogLine(msg string, client ClientInterface) {
 			if err != nil {
 				log.WithFields(logrus.Fields{"server": lf.Origin()}).
 					Errorf("Failed to write to LogFile buffer: %s", err)
-				return
 			}
-			if !lf.dryRun {
-				if err = lf.updatePickupInfo(client); err != nil {
-					log.WithFields(logrus.Fields{"server": lf.Origin()}).
-						Errorf("Failed to get pickup id from API: %s", err)
-					return
-				}
-				if err = lf.resolvePlayers(client); err != nil {
-					log.WithFields(logrus.Fields{"server": lf.Origin()}).
-						Errorf("Failed to resolve pickup player ids through API: %s", err)
-					return
-				}
+			if err = lf.updatePickupInfo(client); err != nil {
+				log.WithFields(logrus.Fields{"server": lf.Origin()}).
+					Errorf("Failed to get pickup id from API: %s", err)
+			}
+			if err = lf.resolvePlayers(client); err != nil {
+				log.WithFields(logrus.Fields{"server": lf.Origin()}).
+					Errorf("Failed to resolve pickup player ids through API: %s", err)
 			}
 			lf.State = Game
 			log.WithFields(logrus.Fields{
@@ -126,7 +118,7 @@ func (lf *LogFile) processLogLine(msg string, client ClientInterface) {
 			log.WithFields(logrus.Fields{
 				"server": lf.Origin(),
 				"state":  lf.State.String(),
-			}).Fatalf("Failed to write to LogFile buffer: %s", err)
+			}).Errorf("Failed to write to LogFile buffer: %s", err)
 		}
 		if err = lf.Game.updatePlayerStats(msg); err != nil {
 			log.WithFields(logrus.Fields{
@@ -135,29 +127,19 @@ func (lf *LogFile) processLogLine(msg string, client ClientInterface) {
 				"msg":    msg,
 			}).Errorf("Error on updating player stats: %s", err)
 		}
+		for k, v := range lf.Game.Stats {
+			log.Infof("STATS: %#v, %#v", k, v)
+		}
 		if logClosed.MatchString(msg) || gameOver.MatchString(msg) {
 			lf.State = Pregame
-			if !lf.dryRun {
-				if err = lf.uploadLogFile(client); err != nil {
-					log.WithFields(logrus.Fields{
-						"server": lf.Origin(),
-					}).Errorf("Failed to upload file to logs.tf: %s", err)
-					return
-				}
-				stats := lf.ExtractPlayerStats()
-				if err = lf.insertGameStats(stats); err != nil {
-					log.WithFields(logrus.Fields{
-						"server": lf.Origin(),
-					}).Errorf("Failed to insert stats to db: %s", err)
-					return
-				}
-			} else {
-				if err = saveFile(lf.buffer, receivedLogFile); err != nil {
-					log.WithFields(logrus.Fields{
-						"server": lf.Origin(),
-					}).Errorf("Failed to save file to disk: %s", err)
-					return
-				}
+			if err = lf.uploadLogFile(client); err != nil {
+				log.WithFields(logrus.Fields{"server": lf.Origin()}).
+					Errorf("Failed to upload file to logs.tf: %s", err)
+			}
+			stats := lf.ExtractPlayerStats()
+			if err = lf.insertGameStats(stats); err != nil {
+				log.WithFields(logrus.Fields{"server": lf.Origin()}).
+					Errorf("Failed to insert stats to db: %s", err)
 			}
 			lf.flush()
 		}
@@ -175,17 +157,4 @@ func (lf *LogFile) flush() {
 	lf.Game.PickupID = 0
 	lf.Game.Map = ""
 	lf.Game.Stats = make(map[steamid.SID64]*PlayerStats)
-}
-
-func saveFile(buf bytes.Buffer, path string) error {
-	file, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-	_, err = buf.WriteTo(file)
-	if err != nil {
-		return err
-	}
-	return nil
 }

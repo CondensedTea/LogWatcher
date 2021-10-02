@@ -8,8 +8,8 @@ import (
 )
 
 const (
-	mongoDatabase   = "stats"
-	mongoCollection = "stats"
+	mongoDatabase   = "logwatcher"
+	mongoCollection = "playerstats"
 )
 
 var (
@@ -21,17 +21,17 @@ var (
 type PlayerStats struct {
 	Kills         int
 	Deaths        int
-	DamageDone    int
-	DamageTaken   int
+	DamageDone    int `bson:"damage_done"`
+	DamageTaken   int `bson:"damage_taken"`
 	Healed        int
-	HealsReceived int
+	HealsReceived int `bson:"heals_received"`
 }
 
 type GameStats struct {
-	player   PickupPlayer
-	stats    PlayerStats
-	server   ServerInfo
-	pickupID int
+	Player   PickupPlayer
+	Stats    PlayerStats
+	Server   ServerInfo
+	PickupID int
 }
 
 func (gi *GameInfo) updatePlayerStats(msg string) error {
@@ -93,18 +93,18 @@ func (gi *GameInfo) updatePlayerStats(msg string) error {
 func (lf *LogFile) ExtractPlayerStats() []interface{} {
 	s := make([]interface{}, 0)
 	for steamID, stats := range lf.Game.Stats {
-		for _, player := range lf.Game.Players {
-			if steamID.String() == player.SteamID64 {
-				gs := GameStats{
-					player:   player,
-					stats:    *stats,
-					server:   lf.Server,
-					pickupID: lf.Game.PickupID,
-				}
-				s = append(s, gs)
-			}
+		//for _, player := range lf.Game.Players {
+		//	if steamID.String() == player.SteamID {
+		gs := GameStats{
+			Player:   PickupPlayer{SteamID: steamID.String()},
+			Stats:    *stats,
+			Server:   lf.Server,
+			PickupID: lf.Game.PickupID,
 		}
+		s = append(s, gs)
 	}
+	//}
+	//}
 	return s
 }
 

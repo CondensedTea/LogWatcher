@@ -7,6 +7,7 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/google/go-cmp/cmp"
 	"github.com/leighmacdonald/steamid/steamid"
 	"go.mongodb.org/mongo-driver/mongo"
 )
@@ -115,7 +116,7 @@ func TestGameInfo_updatePlayerStats(t *testing.T) {
 			if err := gi.updatePlayerStats(tt.args.msg); (err != nil) != tt.wantErr {
 				t.Errorf("updatePlayerStats() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			if !reflect.DeepEqual(gi.Stats, tt.want) {
+			if !cmp.Equal(gi.Stats, tt.want) {
 				t.Errorf("updatePlayerStats() got = %v, want = %v", gi.Stats, tt.want)
 			}
 		})
@@ -150,7 +151,7 @@ func TestLogFile_ExtractPlayerStats(t *testing.T) {
 				},
 
 				Game: &GameInfo{
-					Players: []PickupPlayer{{SteamID64: "76561198011558250"}},
+					Players: []PickupPlayer{{SteamID: "76561198011558250"}},
 					Stats: map[steamid.SID64]*PlayerStats{
 						steamid.SID64FromString("76561198011558250"): {
 							Kills: 1,
@@ -161,10 +162,10 @@ func TestLogFile_ExtractPlayerStats(t *testing.T) {
 			},
 			want: []interface{}{
 				GameStats{
-					player:   PickupPlayer{SteamID64: "76561198011558250"},
-					stats:    PlayerStats{Kills: 1},
-					pickupID: 123,
-					server: ServerInfo{
+					Player:   PickupPlayer{SteamID: "76561198011558250"},
+					Stats:    PlayerStats{Kills: 1},
+					PickupID: 123,
+					Server: ServerInfo{
 						ID:     1,
 						Domain: "test",
 						IP:     "test",
@@ -184,7 +185,6 @@ func TestLogFile_ExtractPlayerStats(t *testing.T) {
 				buffer:  tt.fields.buffer,
 				Game:    tt.fields.Game,
 				apiKey:  tt.fields.apiKey,
-				dryRun:  tt.fields.dryRun,
 				conn:    tt.fields.conn,
 			}
 			if got := lf.ExtractPlayerStats(); !reflect.DeepEqual(got, tt.want) {

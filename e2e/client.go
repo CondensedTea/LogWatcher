@@ -40,7 +40,7 @@ func main() {
 	for scanner.Scan() {
 		_, err = conn.Write([]byte(scanner.Text()))
 		if err != nil {
-			log.Fatalf("Failed to write to UDP socket: %s", err)
+			log.Printf("Failed to write to UDP socket: %s", err)
 		}
 		time.Sleep(50 * time.Millisecond)
 	}

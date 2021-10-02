@@ -14,7 +14,7 @@ import (
 
 const (
 	uploaderSign         = "LogWatcher"
-	logsTFURL            = "https://logs.tf/upload"
+	logsTFURL            = "http://logs.tf/upload"
 	pickupAPITemplateUrl = "https://api.tf2pickup.%s"
 )
 
@@ -177,7 +177,7 @@ func (lf *LogFile) resolvePlayers(client ClientInterface) error {
 	for i, pickupPlayer := range lf.Game.Players {
 		for _, pr := range responses {
 			if pickupPlayer.PlayerID == pr.Id {
-				lf.Game.Players[i].SteamID64 = pr.SteamId
+				lf.Game.Players[i].SteamID = pr.SteamId
 			}
 		}
 	}

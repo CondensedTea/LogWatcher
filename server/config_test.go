@@ -1,8 +1,9 @@
 package main
 
 import (
-	"reflect"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 func Test_LoadConfig(t *testing.T) {
@@ -22,9 +23,8 @@ func Test_LoadConfig(t *testing.T) {
 				Server: struct {
 					Host   string `yaml:"Host"`
 					APIKey string `yaml:"APIKey"`
-					DryRun bool   `yaml:"DryRun,omitempty"`
 					DSN    string `yaml:"DSN"`
-				}{Host: "localhost:27100", APIKey: "fake", DryRun: true, DSN: "fake"},
+				}{Host: "localhost:27100", APIKey: "fake", DSN: "fake"},
 				Clients: []Client{
 					{Server: 1, Domain: "test", Address: "127.0.0.1:27150"},
 				},
@@ -51,7 +51,7 @@ func Test_LoadConfig(t *testing.T) {
 				t.Errorf("loadConfig() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
+			if !cmp.Equal(got, tt.want) {
 				t.Errorf("loadConfig() got = %v, want %v", got, tt.want)
 			}
 		})
