@@ -1,7 +1,10 @@
 package requests
 
 import (
+	"fmt"
 	"io"
+	"time"
+
 	//"LogWatcher/pkg/app"
 	//"LogWatcher/pkg/stats"
 	//"bytes"
@@ -19,7 +22,7 @@ import (
 
 const (
 	playersRawJSON = `[{"steamId":"76561198011558250","name":"supra","avatar":{"small":""},"id":"6133487c4573f9001cdc0abb","_links":[{"href":"/players/6133487c4573f9001cdc0abb/linked-profiles","title":"Linked profiles"}]}]`
-	gamesRawJSON   = `{"results":[{"connectInfoVersion":1,"state":"started","number":391,"map":"cp_granary_pro_rc8","slots":[{"connectionStatus":"","status":"","gameClass":"soldier","team":"red","player":"6133487c4573f9001cdc0abb"}],"launchedAt":"","gameServer":"","stvConnectString":"","logsUrl":"","id":"6154dddef56b5b0013b269a3"}]}`
+	gamesRawJSON   = `{"results":[{"connectInfoVersion":1,"state":"started","number":391,"map":"cp_granary_pro_rc8","slots":[{"connectionStatus":"","status":"","gameClass":"soldier","team":"red","player":"6133487c4573f9001cdc0abb"}],"launchedAt":"2021-09-29T21:42:54.745Z","gameServer":"","stvConnectString":"","logsUrl":"","id":"6154dddef56b5b0013b269a3"}]}`
 )
 
 func TestLogFile_ResolvePlayers(t *testing.T) {
@@ -42,7 +45,7 @@ func TestLogFile_ResolvePlayers(t *testing.T) {
 					&http.Response{StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader(playersRawJSON))}, nil),
 				domain: "test",
 				players: []*PickupPlayer{
-					{PlayerID: "6133487c4573f9001cdc0abb", Class: "soldier"},
+					{SteamID: "76561198011558250", Class: "soldier"},
 				},
 			},
 			want: []*PickupPlayer{{PlayerID: "6133487c4573f9001cdc0abb", Class: "soldier", SteamID: "76561198011558250"}},
@@ -53,9 +56,9 @@ func TestLogFile_ResolvePlayers(t *testing.T) {
 			if err := ResolvePlayers(tt.args.client, tt.args.domain, tt.args.players); (err != nil) != tt.wantErr {
 				t.Errorf("resolvePlayers() error = %v, wantErr %v", err, tt.wantErr)
 			}
+			fmt.Println("tt: ", tt.args.players[0])
 			if !cmp.Equal(tt.args.players, tt.want) {
 				t.Errorf("resolvePlayers() got = %v, want = %v", tt.args.players, tt.want)
-
 			}
 		})
 	}
@@ -89,6 +92,63 @@ func TestUploadLogFile(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if err := UploadLogFile(tt.args.client, tt.args.payload); (err != nil) != tt.wantErr {
 				t.Errorf("UploadLogFile() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestGetPickupGames(t *testing.T) {
+	ts, _ := time.Parse("2006-01-02T15:04:05.999Z", "2021-09-29T21:42:54.745Z")
+	mc := minimock.NewController(t)
+	type args struct {
+		client HTTPDoer
+		domain string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    GamesResponse
+		wantErr bool
+	}{
+		{
+			name: "default",
+			args: args{
+				client: NewHTTPDoerMock(mc).DoMock.Return(&http.Response{
+					StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader(gamesRawJSON)),
+				}, nil),
+				domain: "test",
+			},
+			want: GamesResponse{
+				Results: []Result{
+					{
+						ConnectInfoVersion: 1,
+						State:              "started",
+						Number:             391,
+						Map:                "cp_granary_pro_rc8",
+						Slots: []Slot{
+							{
+								GameClass: "soldier",
+								Team:      "red",
+								Player:    "6133487c4573f9001cdc0abb",
+							},
+						},
+						LaunchedAt: ts,
+						ID:         "6154dddef56b5b0013b269a3",
+					},
+				},
+				ItemCount: 0,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := GetPickupGames(tt.args.client, tt.args.domain)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetPickupGames() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !cmp.Equal(got, tt.want) {
+				t.Errorf("GetPickupGames() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

@@ -25,7 +25,7 @@ type HTTPDoer interface {
 // PickupPlayer represents information about player in single game
 type PickupPlayer struct {
 	PlayerID string `bson:"player_id"`
-	Class    string
+	Class    string `bson:"class"`
 	SteamID  string `bson:"steam_id"`
 }
 
@@ -48,32 +48,38 @@ type PlayersResponse struct {
 	} `json:"_links"`
 }
 
+type Score struct {
+	Red int `json:"red"`
+	Blu int `json:"blu"`
+}
+
+type Slot struct {
+	ConnectionStatus string `json:"connectionStatus"`
+	Status           string `json:"status"`
+	GameClass        string `json:"gameClass"`
+	Team             string `json:"team"`
+	Player           string `json:"player"`
+}
+
+type Result struct {
+	ConnectInfoVersion int       `json:"connectInfoVersion"`
+	State              string    `json:"state"`
+	Number             int       `json:"number"`
+	Map                string    `json:"map"`
+	Slots              []Slot    `json:"slots"`
+	LaunchedAt         time.Time `json:"launchedAt"`
+	GameServer         string    `json:"gameServer"`
+	StvConnectString   string    `json:"stvConnectString"`
+	ID                 string    `json:"id"`
+	LogsUrl            string    `json:"logsUrl,omitempty"`
+	Score              Score     `json:"score,omitempty"`
+	DemoUrl            string    `json:"demoUrl,omitempty"`
+}
+
 // GamesResponse represents response from api.tf2pickup.*/games
 type GamesResponse struct {
-	Results []struct {
-		ConnectInfoVersion int    `json:"connectInfoVersion"`
-		State              string `json:"state"`
-		Number             int    `json:"number"`
-		Map                string `json:"map"`
-		Slots              []struct {
-			ConnectionStatus string `json:"connectionStatus"`
-			Status           string `json:"status"`
-			GameClass        string `json:"gameClass"`
-			Team             string `json:"team"`
-			Player           string `json:"player"`
-		} `json:"slots"`
-		LaunchedAt       time.Time `json:"launchedAt"`
-		GameServer       string    `json:"gameServer"`
-		StvConnectString string    `json:"stvConnectString"`
-		ID               string    `json:"id"`
-		LogsUrl          string    `json:"logsUrl,omitempty"`
-		Score            struct {
-			Red int `json:"red"`
-			Blu int `json:"blu"`
-		} `json:"score,omitempty"`
-		DemoUrl string `json:"demoUrl,omitempty"`
-	} `json:"results"`
-	ItemCount int `json:"itemCount"`
+	Results   []Result `json:"results"`
+	ItemCount int      `json:"itemCount"`
 }
 
 // UploadLogFile is used for uploading multipart payload to logs.tf/upload endpoint
@@ -165,8 +171,8 @@ func ResolvePlayers(client HTTPDoer, domain string, players []*PickupPlayer) err
 	}
 	for _, pickupPlayer := range players {
 		for _, pr := range responses {
-			if pickupPlayer.PlayerID == pr.Id {
-				pickupPlayer.SteamID = pr.SteamId
+			if pickupPlayer.SteamID == pr.SteamId {
+				pickupPlayer.PlayerID = pr.Id
 			}
 		}
 	}
