@@ -33,7 +33,11 @@ jobs:
         run: make build-local
 
       - name: Test
-        run: go test ./... -race -coverprofile=coverage.out -covermode=atomic
+        run: |
+        go test ./... -race -coverprofile=coverage.out -covermode=atomic
 
       - name: Upload coverage report
-        run: bash <(curl -s https://codecov.io/bash)
+        uses: codecov/codecov-action@v2.1.0
+        with:
+          file: ./coverage.out
+          fail_ci_if_error: true
