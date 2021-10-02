@@ -5,9 +5,9 @@ WORKDIR app/
 
 COPY go.mod .
 COPY go.sum .
-COPY server/ ./server/
+COPY app/ ./app/
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o ./LogWatcher ./server/
+RUN CGO_ENABLED=0 GOOS=linux go build -o ./LogWatcher ./app/
 
 FROM scratch
 

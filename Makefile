@@ -14,7 +14,7 @@ build:
 
 .PHONY: build-local
 build-local:
-	CGO_ENABLED=0 go build -o "$(LOCAL_BIN)/LogWatcher" ./server
+	CGO_ENABLED=0 go build -o "$(LOCAL_BIN)/LogWatcher" ./app
 	CGO_ENABLED=0 go build -o "$(LOCAL_BIN)/TestClient" ./e2e
 
 PHONY: run
@@ -31,4 +31,4 @@ e2e:
 
 PHONY: test
 test:
-	go test -race ./server
+	go test -race ./...

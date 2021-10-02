@@ -12,7 +12,7 @@ import (
 func main() {
 	logPath := flag.String("log", "", "Path to log file")
 	clientHost := flag.String("from", "localhost:27150", "Address of udp client")
-	serverHost := flag.String("to", "localhost:27100", "Address of LogWatcher server")
+	serverHost := flag.String("to", "localhost:27100", "Address of LogWatcher app")
 	flag.Parse()
 
 	file, err := os.Open(*logPath)
@@ -29,12 +29,12 @@ func main() {
 	}
 	raddress, err := net.ResolveUDPAddr("udp4", *serverHost)
 	if err != nil {
-		log.Fatalf("Failed to resolve server host: %s", err)
+		log.Fatalf("Failed to resolve app host: %s", err)
 	}
 
 	conn, err := net.DialUDP("udp4", laddress, raddress)
 	if err != nil {
-		log.Fatalf("Failed to dial to UDP server: %s", err)
+		log.Fatalf("Failed to dial to UDP app: %s", err)
 	}
 
 	for scanner.Scan() {

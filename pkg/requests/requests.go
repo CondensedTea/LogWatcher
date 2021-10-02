@@ -1,6 +1,7 @@
-package main
+package requests
 
 import (
+	//"LogWatcher/pkg/stats"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -8,18 +9,22 @@ import (
 	"io/ioutil"
 	"mime/multipart"
 	"net/http"
-	"strings"
 	"time"
 )
 
 const (
-	uploaderSign         = "LogWatcher"
 	logsTFURL            = "http://logs.tf/upload"
 	pickupAPITemplateUrl = "https://api.tf2pickup.%s"
 )
 
 type ClientInterface interface {
 	Do(r *http.Request) (*http.Response, error)
+}
+
+type PickupPlayer struct {
+	PlayerID string `bson:"player_id"`
+	Class    string
+	SteamID  string `bson:"steam_id"`
 }
 
 type PlayersResponse struct {
@@ -67,20 +72,10 @@ type GamesResponse struct {
 	ItemCount int `json:"itemCount"`
 }
 
-func (lf *LogFile) makeMultipartMap() map[string]io.Reader {
-	m := make(map[string]io.Reader)
-	m["title"] = strings.NewReader(fmt.Sprintf("tf2pickup.%s #%d", lf.Server.Domain, lf.Game.PickupID))
-	m["map"] = strings.NewReader(lf.Game.Map)
-	m["key"] = strings.NewReader(lf.apiKey)
-	m["logfile"] = &lf.buffer
-	m["uploader"] = strings.NewReader(uploaderSign)
-	return m
-}
-
-func (lf *LogFile) uploadLogFile(client ClientInterface) error {
+func UploadLogFile(client ClientInterface, payload map[string]io.Reader) error {
 	var b bytes.Buffer
 	w := multipart.NewWriter(&b)
-	for key, reader := range lf.makeMultipartMap() {
+	for key, reader := range payload {
 		var writer io.Writer
 		var err error
 		if key == "logfile" {
@@ -119,44 +114,31 @@ func (lf *LogFile) uploadLogFile(client ClientInterface) error {
 	return nil
 }
 
-func (lf *LogFile) updatePickupInfo(client ClientInterface) error {
+func GetPickupGames(client ClientInterface, domain string) (GamesResponse, error) {
 	var gr GamesResponse
-	url := fmt.Sprintf(pickupAPITemplateUrl+"/games", lf.Server.Domain)
+	url := fmt.Sprintf(pickupAPITemplateUrl+"/games", domain)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
-		return err
+		return gr, err
 	}
 	resp, err := client.Do(req)
 	if err != nil {
-		return err
+		return gr, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("api.tf2pickup.%s/games returned bad status: %d", lf.Server.Domain, resp.StatusCode)
+		return gr, fmt.Errorf("api.tf2pickup.%s/games returned bad status: %d", domain, resp.StatusCode)
 	}
 	defer resp.Body.Close()
 
 	if err = json.NewDecoder(resp.Body).Decode(&gr); err != nil {
-		return err
+		return gr, err
 	}
-
-	for _, result := range gr.Results {
-		if result.State == StartedState && result.Map == lf.Game.Map {
-			players := make([]PickupPlayer, 0)
-			for _, player := range result.Slots {
-				p := PickupPlayer{PlayerID: player.Player, Class: player.GameClass}
-				players = append(players, p)
-			}
-			lf.Game.Players = players
-			lf.Game.PickupID = result.Number
-			break
-		}
-	}
-	return nil
+	return gr, nil
 }
 
-func (lf *LogFile) resolvePlayers(client ClientInterface) error {
+func ResolvePlayers(client ClientInterface, domain string, players []*PickupPlayer) error {
 	var responses []PlayersResponse
-	url := fmt.Sprintf(pickupAPITemplateUrl+"/players", lf.Server.Domain)
+	url := fmt.Sprintf(pickupAPITemplateUrl+"/players", domain)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return err
@@ -166,18 +148,17 @@ func (lf *LogFile) resolvePlayers(client ClientInterface) error {
 		return err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return fmt.Errorf("api.tf2pickup.%s/players returned bad status: %d", lf.Server.Domain, resp.StatusCode)
+		return fmt.Errorf("api.tf2pickup.%s/players returned bad status: %d", domain, resp.StatusCode)
 	}
 	defer resp.Body.Close()
 
 	if err = json.NewDecoder(resp.Body).Decode(&responses); err != nil {
 		return err
 	}
-
-	for i, pickupPlayer := range lf.Game.Players {
+	for _, pickupPlayer := range players {
 		for _, pr := range responses {
 			if pickupPlayer.PlayerID == pr.Id {
-				lf.Game.Players[i].SteamID = pr.SteamId
+				pickupPlayer.SteamID = pr.SteamId
 			}
 		}
 	}

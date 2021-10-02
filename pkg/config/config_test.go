@@ -1,9 +1,15 @@
-package main
+package config
 
 import (
 	"testing"
 
 	"github.com/google/go-cmp/cmp"
+)
+
+const (
+	testCfgPath = `test_config.yaml`
+	fakeCfgPath = `fake_config.yaml`
+	badCfgPath  = `bad_config.yaml`
 )
 
 func Test_LoadConfig(t *testing.T) {
@@ -18,7 +24,7 @@ func Test_LoadConfig(t *testing.T) {
 	}{
 		{
 			name: "default",
-			args: args{"../e2e/e2e_config.yaml"},
+			args: args{testCfgPath},
 			want: &Config{
 				Server: struct {
 					Host   string `yaml:"Host"`
@@ -33,13 +39,13 @@ func Test_LoadConfig(t *testing.T) {
 		},
 		{
 			name:    "no file",
-			args:    args{"../fake-e2e_config.yaml"},
+			args:    args{fakeCfgPath},
 			want:    nil,
 			wantErr: true,
 		},
 		{
 			name:    "bad yaml",
-			args:    args{"../Dockerfile"},
+			args:    args{badCfgPath},
 			want:    nil,
 			wantErr: true,
 		},
