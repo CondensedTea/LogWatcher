@@ -167,7 +167,7 @@ func (s *Server) MakeMultipartMap() map[string]io.Reader {
 func MakeRouterMap(hosts []config.Client, apiKey string, conn *mongo.Client, log *logrus.Logger) map[string]*Server {
 	serverMap := make(map[string]*Server)
 	for _, h := range hosts {
-		lf := &Server{
+		s := &Server{
 			log: log,
 			ctx: context.Background(),
 			Server: stats.ServerInfo{
@@ -178,15 +178,15 @@ func MakeRouterMap(hosts []config.Client, apiKey string, conn *mongo.Client, log
 			State:   Pregame,
 			Channel: make(chan string),
 			Game: &GameInfo{
-				Players: make([]*requests.PickupPlayer, 0),
+				Players: make([]*stats.PickupPlayer, 0),
 				Stats:   make(map[steamid.SID64]*stats.PlayerStats),
 			},
 			apiKey: apiKey,
 			conn:   conn,
 		}
-		go lf.StartWorker()
-		serverMap[h.Address] = lf
-		lf.log.Infof("Started worker for %s#%d with host %s", lf.Server.Domain, lf.Server.ID, lf.Server.IP)
+		go s.StartWorker()
+		serverMap[h.Address] = s
+		s.log.Infof("Started worker for %s#%d with host %s", s.Server.Domain, s.Server.ID, s.Server.IP)
 	}
 	return serverMap
 }
@@ -201,9 +201,9 @@ func (s *Server) updatePickupInfo(client requests.HTTPDoer) error {
 	s.log.Debugf("Got list of games from pickup API with length of %d", gr.ItemCount)
 	for _, result := range gr.Results {
 		if result.State == StartedState && result.Map == s.Game.Map {
-			players := make([]*requests.PickupPlayer, 0)
+			players := make([]*stats.PickupPlayer, 0)
 			for _, player := range result.Slots {
-				p := &requests.PickupPlayer{PlayerID: player.Player, Class: player.GameClass}
+				p := &stats.PickupPlayer{PlayerID: player.Player, Class: player.GameClass}
 				players = append(players, p)
 			}
 			s.Game.Players = players
@@ -217,6 +217,6 @@ func (s *Server) updatePickupInfo(client requests.HTTPDoer) error {
 type GameInfo struct {
 	PickupID int
 	Map      string
-	Players  []*requests.PickupPlayer
+	Players  []*stats.PickupPlayer
 	Stats    map[steamid.SID64]*stats.PlayerStats
 }

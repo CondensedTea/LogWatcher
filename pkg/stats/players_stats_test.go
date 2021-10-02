@@ -1,7 +1,6 @@
 package stats
 
 import (
-	"LogWatcher/pkg/requests"
 	//"LogWatcher/pkg/app"
 	//"bytes"
 	//"context"
@@ -115,6 +114,7 @@ func TestGameInfo_UpdatePlayerStats(t *testing.T) {
 
 func TestLogFile_ExtractPlayerStats(t *testing.T) {
 	type args struct {
+		players   []*PickupPlayer
 		gameStats map[steamid.SID64]*PlayerStats
 		server    ServerInfo
 		pickupID  int
@@ -127,6 +127,9 @@ func TestLogFile_ExtractPlayerStats(t *testing.T) {
 		{
 			name: "default",
 			args: args{
+				players: []*PickupPlayer{
+					{SteamID: "76561198011558250", Class: "soldier", PlayerID: "0"},
+				},
 				gameStats: map[steamid.SID64]*PlayerStats{
 					steamid.SID64FromString("76561198011558250"): {Kills: 1},
 				},
@@ -139,7 +142,7 @@ func TestLogFile_ExtractPlayerStats(t *testing.T) {
 			},
 			want: []interface{}{
 				GameStats{
-					Player:   requests.PickupPlayer{SteamID: "76561198011558250"},
+					Player:   &PickupPlayer{SteamID: "76561198011558250", Class: "soldier", PlayerID: "0"},
 					Stats:    PlayerStats{Kills: 1},
 					PickupID: 123,
 					Server: ServerInfo{
@@ -153,7 +156,7 @@ func TestLogFile_ExtractPlayerStats(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ExtractPlayerStats(tt.args.gameStats, tt.args.server, tt.args.pickupID); !cmp.Equal(got, tt.want) {
+			if got := ExtractPlayerStats(tt.args.players, tt.args.gameStats, tt.args.server, tt.args.pickupID); !cmp.Equal(got, tt.want) {
 				t.Errorf("ExtractPlayerStats() = %v, want %v", got, tt.want)
 			}
 		})

@@ -1,6 +1,7 @@
 package requests
 
 import (
+	"LogWatcher/pkg/stats"
 	"fmt"
 	"io"
 	"time"
@@ -30,12 +31,12 @@ func TestLogFile_ResolvePlayers(t *testing.T) {
 	type args struct {
 		client  HTTPDoer
 		domain  string
-		players []*PickupPlayer
+		players []*stats.PickupPlayer
 	}
 	tests := []struct {
 		name    string
 		args    args
-		want    []*PickupPlayer
+		want    []*stats.PickupPlayer
 		wantErr bool
 	}{
 		{
@@ -44,11 +45,11 @@ func TestLogFile_ResolvePlayers(t *testing.T) {
 				client: NewHTTPDoerMock(mc).DoMock.Return(
 					&http.Response{StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader(playersRawJSON))}, nil),
 				domain: "test",
-				players: []*PickupPlayer{
+				players: []*stats.PickupPlayer{
 					{SteamID: "76561198011558250", Class: "soldier"},
 				},
 			},
-			want: []*PickupPlayer{{PlayerID: "6133487c4573f9001cdc0abb", Class: "soldier", SteamID: "76561198011558250"}},
+			want: []*stats.PickupPlayer{{PlayerID: "6133487c4573f9001cdc0abb", Class: "soldier", SteamID: "76561198011558250"}},
 		},
 	}
 	for _, tt := range tests {

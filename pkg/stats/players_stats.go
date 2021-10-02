@@ -1,9 +1,6 @@
 package stats
 
 import (
-	"LogWatcher/pkg/requests"
-
-	//"LogWatcher/pkg/app"
 	"context"
 	"regexp"
 	"strconv"
@@ -33,7 +30,7 @@ type PlayerStats struct {
 }
 
 type GameStats struct {
-	Player   *requests.PickupPlayer
+	Player   *PickupPlayer
 	Stats    PlayerStats
 	Server   ServerInfo
 	PickupID int
@@ -95,7 +92,7 @@ func UpdatePlayerStats(msg string, stats map[steamid.SID64]*PlayerStats) error {
 	return nil
 }
 
-func ExtractPlayerStats(players []*requests.PickupPlayer, gameStats map[steamid.SID64]*PlayerStats, server ServerInfo, pickupID int) []interface{} {
+func ExtractPlayerStats(players []*PickupPlayer, gameStats map[steamid.SID64]*PlayerStats, server ServerInfo, pickupID int) []interface{} {
 	s := make([]interface{}, 0)
 	for _, player := range players {
 		for steamID, stats := range gameStats {
@@ -125,4 +122,11 @@ type ServerInfo struct {
 	ID     int
 	Domain string
 	IP     string
+}
+
+// PickupPlayer represents information about player in single game
+type PickupPlayer struct {
+	PlayerID string `bson:"player_id"`
+	Class    string `bson:"class"`
+	SteamID  string `bson:"steam_id"`
 }

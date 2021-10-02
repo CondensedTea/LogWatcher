@@ -60,7 +60,7 @@ func (s *Router) Listen() {
 			"app":       lf.Origin(),
 			"state":     lf.State.String(),
 			"pickup_id": lf.Game.PickupID,
-		}).Infof(cleanMsg)
+		}).Debugf(cleanMsg)
 		lf.Channel <- cleanMsg
 	}
 }

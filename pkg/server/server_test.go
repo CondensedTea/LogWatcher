@@ -2,6 +2,7 @@ package server
 
 import (
 	"LogWatcher/pkg/requests"
+	"LogWatcher/pkg/stats"
 	"io/ioutil"
 	"net/http"
 	"strings"
@@ -37,13 +38,13 @@ func TestServer_updatePickupInfo(t *testing.T) {
 				Game: &GameInfo{Map: "cp_granary_pro_rc8"},
 			},
 			args: args{
-				client: requests.NewHTTPDoerMock(mc).DoMock.Return(&http.Response{
+				client: NewHTTPDoerMock(mc).DoMock.Return(&http.Response{
 					StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader(gamesRawJSON)),
 				}, nil),
 			},
 			want: &GameInfo{
 				Map: "cp_granary_pro_rc8",
-				Players: []*requests.PickupPlayer{
+				Players: []*stats.PickupPlayer{
 					{PlayerID: "6133487c4573f9001cdc0abb", Class: "soldier"},
 				},
 				PickupID: 391,
@@ -61,6 +62,38 @@ func TestServer_updatePickupInfo(t *testing.T) {
 			}
 			if !cmp.Equal(s.Game, tt.want) {
 				t.Errorf("updatePickupInfo() got = %v, want = %v", s.Game, tt.want)
+			}
+		})
+	}
+}
+
+func TestServer_Origin(t *testing.T) {
+	type fields struct {
+		Server stats.ServerInfo
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		{
+			name: "default",
+			fields: fields{
+				Server: stats.ServerInfo{
+					ID:     1,
+					Domain: "test",
+				},
+			},
+			want: "test#1",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			s := &Server{
+				Server: tt.fields.Server,
+			}
+			if got := s.Origin(); got != tt.want {
+				t.Errorf("Origin() = %v, want %v", got, tt.want)
 			}
 		})
 	}

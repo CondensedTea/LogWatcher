@@ -1,7 +1,7 @@
 package requests
 
 import (
-	//"LogWatcher/pkg/stats"
+	"LogWatcher/pkg/stats"
 	"bytes"
 	"encoding/json"
 	"fmt"
@@ -20,13 +20,6 @@ const (
 // HTTPDoer is interface for doing http requests
 type HTTPDoer interface {
 	Do(r *http.Request) (*http.Response, error)
-}
-
-// PickupPlayer represents information about player in single game
-type PickupPlayer struct {
-	PlayerID string `bson:"player_id"`
-	Class    string `bson:"class"`
-	SteamID  string `bson:"steam_id"`
 }
 
 // PlayersResponse represents single player entry from api.tf2pickup.*/players
@@ -150,7 +143,7 @@ func GetPickupGames(client HTTPDoer, domain string) (GamesResponse, error) {
 }
 
 // ResolvePlayers is used for populating PickupPlayer entries with correct Steam ids
-func ResolvePlayers(client HTTPDoer, domain string, players []*PickupPlayer) error {
+func ResolvePlayers(client HTTPDoer, domain string, players []*stats.PickupPlayer) error {
 	var responses []PlayersResponse
 	url := fmt.Sprintf(PickupAPITemplateUrl+"/players", domain)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
