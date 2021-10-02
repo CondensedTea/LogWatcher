@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/gojuno/minimock/v3"
 	"github.com/google/go-cmp/cmp"
@@ -45,7 +46,7 @@ func TestServer_updatePickupInfo(t *testing.T) {
 			want: &GameInfo{
 				Map: "cp_granary_pro_rc8",
 				Players: []*stats.PickupPlayer{
-					{PlayerID: "6133487c4573f9001cdc0abb", Class: "soldier"},
+					{PlayerID: "6133487c4573f9001cdc0abb", Class: "soldier", Team: "red"},
 				},
 				PickupID: 391,
 			},
@@ -94,6 +95,32 @@ func TestServer_Origin(t *testing.T) {
 			}
 			if got := s.Origin(); got != tt.want {
 				t.Errorf("Origin() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_parseTimeStamp(t *testing.T) {
+	type args struct {
+		msg string
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    time.Time
+		wantErr bool
+	}{
+		{
+			name: "default",
+			args: args{msg: `L 10/02/2021 - 23:31:56: \"Eshka<72><[U:1:183918108]><Red>\" triggered \"damage\" against \"slowtown<77><[U:1:148548823]><Blue>\"`},
+			want: time.Unix(1612989116, 0).UTC(),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := parseTimeStamp(tt.args.msg)
+			if got.Equal(tt.want) {
+				t.Errorf("parseTimeStamp() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

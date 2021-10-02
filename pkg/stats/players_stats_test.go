@@ -7,6 +7,7 @@ import (
 	//"reflect"
 	//"sync"
 	"testing"
+	"time"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/leighmacdonald/steamid/steamid"
@@ -118,6 +119,7 @@ func TestLogFile_ExtractPlayerStats(t *testing.T) {
 		gameStats map[steamid.SID64]*PlayerStats
 		server    ServerInfo
 		pickupID  int
+		Length    time.Duration
 	}
 	tests := []struct {
 		name string
@@ -139,24 +141,22 @@ func TestLogFile_ExtractPlayerStats(t *testing.T) {
 					IP:     "test",
 				},
 				pickupID: 123,
+				Length:   time.Second,
 			},
 			want: []interface{}{
 				GameStats{
 					Player:   &PickupPlayer{SteamID: "76561198011558250", Class: "soldier", PlayerID: "0"},
 					Stats:    PlayerStats{Kills: 1},
 					PickupID: 123,
-					Server: ServerInfo{
-						ID:     1,
-						Domain: "test",
-						IP:     "test",
-					},
+					Domain:   "test",
+					Length:   1,
 				},
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := ExtractPlayerStats(tt.args.players, tt.args.gameStats, tt.args.server, tt.args.pickupID); !cmp.Equal(got, tt.want) {
+			if got := ExtractPlayerStats(tt.args.players, tt.args.gameStats, tt.args.server, tt.args.pickupID, tt.args.Length); !cmp.Equal(got, tt.want) {
 				t.Errorf("ExtractPlayerStats() = %v, want %v", got, tt.want)
 			}
 		})

@@ -4,6 +4,7 @@ import (
 	"context"
 	"regexp"
 	"strconv"
+	"time"
 
 	"github.com/leighmacdonald/steamid/steamid"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -32,8 +33,9 @@ type PlayerStats struct {
 type GameStats struct {
 	Player   *PickupPlayer
 	Stats    PlayerStats
-	Server   ServerInfo
+	Domain   string
 	PickupID int
+	Length   int
 }
 
 func UpdatePlayerStats(msg string, stats map[steamid.SID64]*PlayerStats) error {
@@ -92,7 +94,13 @@ func UpdatePlayerStats(msg string, stats map[steamid.SID64]*PlayerStats) error {
 	return nil
 }
 
-func ExtractPlayerStats(players []*PickupPlayer, gameStats map[steamid.SID64]*PlayerStats, server ServerInfo, pickupID int) []interface{} {
+func ExtractPlayerStats(
+	players []*PickupPlayer,
+	gameStats map[steamid.SID64]*PlayerStats,
+	server ServerInfo,
+	pickupID int,
+	Length time.Duration,
+) []interface{} {
 	s := make([]interface{}, 0)
 	for _, player := range players {
 		for steamID, stats := range gameStats {
@@ -100,8 +108,9 @@ func ExtractPlayerStats(players []*PickupPlayer, gameStats map[steamid.SID64]*Pl
 				gs := GameStats{
 					Player:   player,
 					Stats:    *stats,
-					Server:   server,
+					Domain:   server.Domain,
 					PickupID: pickupID,
+					Length:   int(Length.Seconds()),
 				}
 				s = append(s, gs)
 			}
@@ -129,4 +138,5 @@ type PickupPlayer struct {
 	PlayerID string `bson:"player_id"`
 	Class    string `bson:"class"`
 	SteamID  string `bson:"steam_id"`
+	Team     string `bson:"team"`
 }

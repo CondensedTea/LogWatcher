@@ -48,7 +48,17 @@ var (
 	gameOver   = regexp.MustCompile(`: World triggered "Game_Over" reason "`)
 	logClosed  = regexp.MustCompile(`: Log file closed.`)
 	mapLoaded  = regexp.MustCompile(`: Loading map "(.+?)"`)
+	timeStamp  = regexp.MustCompile(`\d{2}\/\d{2}\/\d{4} - \d{2}:\d{2}:\d{2}`)
 )
+
+type GameInfo struct {
+	PickupID    int
+	Map         string
+	Players     []*stats.PickupPlayer
+	Stats       map[steamid.SID64]*stats.PlayerStats
+	LaunchedAt  time.Time
+	MatchLength time.Duration
+}
 
 type Server struct {
 	log *logrus.Logger
@@ -81,6 +91,7 @@ func (s *Server) processLogLine(msg string, client requests.HTTPDoer) {
 	case Pregame:
 		s.tryParseGameMap(msg)
 		if roundStart.MatchString(msg) {
+			s.Game.LaunchedAt = parseTimeStamp(msg)
 			_, err := s.buffer.WriteString(msg + "\n")
 			if err != nil {
 				s.log.WithFields(logrus.Fields{"server": s.Origin()}).
@@ -123,12 +134,14 @@ func (s *Server) processLogLine(msg string, client requests.HTTPDoer) {
 		}
 		if logClosed.MatchString(msg) || gameOver.MatchString(msg) {
 			s.State = Pregame
+			ts := parseTimeStamp(msg)
+			s.Game.MatchLength = ts.Sub(s.Game.LaunchedAt)
 			payload := s.MakeMultipartMap()
 			if err = requests.UploadLogFile(client, payload); err != nil {
 				s.log.WithFields(logrus.Fields{"app": s.Origin()}).
 					Errorf("Failed to upload file to logs.tf: %s", err)
 			}
-			playersStats := stats.ExtractPlayerStats(s.Game.Players, s.Game.Stats, s.Server, s.Game.PickupID)
+			playersStats := stats.ExtractPlayerStats(s.Game.Players, s.Game.Stats, s.Server, s.Game.PickupID, s.Game.MatchLength)
 			if err = stats.InsertGameStats(s.ctx, s.conn, playersStats); err != nil {
 				s.log.WithFields(logrus.Fields{"app": s.Origin()}).
 					Errorf("Failed to insert stats to db: %s", err)
@@ -203,7 +216,7 @@ func (s *Server) updatePickupInfo(client requests.HTTPDoer) error {
 		if result.State == StartedState && result.Map == s.Game.Map {
 			players := make([]*stats.PickupPlayer, 0)
 			for _, player := range result.Slots {
-				p := &stats.PickupPlayer{PlayerID: player.Player, Class: player.GameClass}
+				p := &stats.PickupPlayer{PlayerID: player.Player, Class: player.GameClass, Team: player.Team}
 				players = append(players, p)
 			}
 			s.Game.Players = players
@@ -214,9 +227,8 @@ func (s *Server) updatePickupInfo(client requests.HTTPDoer) error {
 	return nil
 }
 
-type GameInfo struct {
-	PickupID int
-	Map      string
-	Players  []*stats.PickupPlayer
-	Stats    map[steamid.SID64]*stats.PlayerStats
+func parseTimeStamp(msg string) time.Time {
+	match := timeStamp.FindString(msg)
+	t, _ := time.Parse(`2/01/2006 - 15:04:05`, match) // err is always nil
+	return t
 }
