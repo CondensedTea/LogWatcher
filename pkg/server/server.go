@@ -117,9 +117,6 @@ func (s *Server) processLogLine(msg string, client requests.ClientInterface) {
 				"msg":   msg,
 			}).Errorf("Error on updating player stats: %s", err)
 		}
-		for k, v := range s.Game.Stats {
-			s.log.Infof("STATS: %#v, %#v", k, v)
-		}
 		if logClosed.MatchString(msg) || gameOver.MatchString(msg) {
 			s.State = Pregame
 			payload := s.MakeMultipartMap()
