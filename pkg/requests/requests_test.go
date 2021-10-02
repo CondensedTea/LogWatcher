@@ -19,13 +19,13 @@ import (
 
 const (
 	playersRawJSON = `[{"steamId":"76561198011558250","name":"supra","avatar":{"small":""},"id":"6133487c4573f9001cdc0abb","_links":[{"href":"/players/6133487c4573f9001cdc0abb/linked-profiles","title":"Linked profiles"}]}]`
-	gamesRawJSON   = `{"results":[{"connectInfoVersion":1,"state":"started","number":391,"map":"cp_granary_pro_rc8","slots":[{"connectionStatus":"","status":"","gameClass":"soldier","team":"red","player":"6133487c4573f9001cdc0abb"}],"launchedAt":"2021-09-29T21:42:54.745Z","gameServer":"","stvConnectString":"","logsUrl":"","id":"6154dddef56b5b0013b269a3"}]}`
+	gamesRawJSON   = `{"results":[{"connectInfoVersion":1,"state":"started","number":391,"map":"cp_granary_pro_rc8","slots":[{"connectionStatus":"","status":"","gameClass":"soldier","team":"red","player":"6133487c4573f9001cdc0abb"}],"launchedAt":"","gameServer":"","stvConnectString":"","logsUrl":"","id":"6154dddef56b5b0013b269a3"}]}`
 )
 
 func TestLogFile_ResolvePlayers(t *testing.T) {
 	mc := minimock.NewController(t)
 	type args struct {
-		client  ClientInterface
+		client  HTTPDoer
 		domain  string
 		players []*PickupPlayer
 	}
@@ -38,7 +38,7 @@ func TestLogFile_ResolvePlayers(t *testing.T) {
 		{
 			name: "default",
 			args: args{
-				client: NewClientInterfaceMock(mc).DoMock.Return(
+				client: NewHTTPDoerMock(mc).DoMock.Return(
 					&http.Response{StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader(playersRawJSON))}, nil),
 				domain: "test",
 				players: []*PickupPlayer{
@@ -64,7 +64,7 @@ func TestLogFile_ResolvePlayers(t *testing.T) {
 func TestUploadLogFile(t *testing.T) {
 	mc := minimock.NewController(t)
 	type args struct {
-		client  ClientInterface
+		client  HTTPDoer
 		payload map[string]io.Reader
 	}
 	tests := []struct {
@@ -75,8 +75,8 @@ func TestUploadLogFile(t *testing.T) {
 		{
 			name: "default",
 			args: args{
-				client: NewClientInterfaceMock(mc).DoMock.Return(
-					&http.Response{StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader(gamesRawJSON))}, nil,
+				client: NewHTTPDoerMock(mc).DoMock.Return(
+					&http.Response{StatusCode: 200}, nil,
 				),
 				payload: map[string]io.Reader{
 					"logfile": strings.NewReader("file"),

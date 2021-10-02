@@ -14,19 +14,22 @@ import (
 
 const (
 	logsTFURL            = "http://logs.tf/upload"
-	pickupAPITemplateUrl = "https://api.tf2pickup.%s"
+	PickupAPITemplateUrl = "https://api.tf2pickup.%s"
 )
 
-type ClientInterface interface {
+// HTTPDoer is interface for doing http requests
+type HTTPDoer interface {
 	Do(r *http.Request) (*http.Response, error)
 }
 
+// PickupPlayer represents information about player in single game
 type PickupPlayer struct {
 	PlayerID string `bson:"player_id"`
 	Class    string
 	SteamID  string `bson:"steam_id"`
 }
 
+// PlayersResponse represents single player entry from api.tf2pickup.*/players
 type PlayersResponse struct {
 	SteamId string `json:"steamId"`
 	Name    string `json:"name"`
@@ -45,6 +48,7 @@ type PlayersResponse struct {
 	} `json:"_links"`
 }
 
+// GamesResponse represents response from api.tf2pickup.*/games
 type GamesResponse struct {
 	Results []struct {
 		ConnectInfoVersion int    `json:"connectInfoVersion"`
@@ -72,7 +76,8 @@ type GamesResponse struct {
 	ItemCount int `json:"itemCount"`
 }
 
-func UploadLogFile(client ClientInterface, payload map[string]io.Reader) error {
+// UploadLogFile is used for uploading multipart payload to logs.tf/upload endpoint
+func UploadLogFile(client HTTPDoer, payload map[string]io.Reader) error {
 	var b bytes.Buffer
 	w := multipart.NewWriter(&b)
 	for key, reader := range payload {
@@ -114,9 +119,11 @@ func UploadLogFile(client ClientInterface, payload map[string]io.Reader) error {
 	return nil
 }
 
-func GetPickupGames(client ClientInterface, domain string) (GamesResponse, error) {
+// GetPickupGames is making http request to pickup API and returns GamesResponse,
+// containing list of games
+func GetPickupGames(client HTTPDoer, domain string) (GamesResponse, error) {
 	var gr GamesResponse
-	url := fmt.Sprintf(pickupAPITemplateUrl+"/games", domain)
+	url := fmt.Sprintf(PickupAPITemplateUrl+"/games", domain)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return gr, err
@@ -136,9 +143,10 @@ func GetPickupGames(client ClientInterface, domain string) (GamesResponse, error
 	return gr, nil
 }
 
-func ResolvePlayers(client ClientInterface, domain string, players []*PickupPlayer) error {
+// ResolvePlayers is used for populating PickupPlayer entries with correct Steam ids
+func ResolvePlayers(client HTTPDoer, domain string, players []*PickupPlayer) error {
 	var responses []PlayersResponse
-	url := fmt.Sprintf(pickupAPITemplateUrl+"/players", domain)
+	url := fmt.Sprintf(PickupAPITemplateUrl+"/players", domain)
 	req, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return err
