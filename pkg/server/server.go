@@ -131,8 +131,8 @@ func (s *Server) processLogLine(msg string, client requests.HTTPDoer) {
 			playersJSON, _ := json.Marshal(s.Game.Players)
 			gameStatsJSON, _ := json.Marshal(s.Game.Stats)
 			s.log.WithFields(logrus.Fields{
-				"players":   playersJSON,
-				"gameStats": gameStatsJSON,
+				"players":   string(playersJSON),
+				"gameStats": string(gameStatsJSON),
 			}).Info("Preparing to extract player stats")
 			playersStats := stats.ExtractPlayerStats(s.Game.Players, s.Game.Stats, s.Server, s.Game.PickupID, s.Game.MatchLength)
 			if err := stats.InsertGameStats(s.ctx, s.conn, playersStats); err != nil {
