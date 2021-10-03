@@ -4,6 +4,7 @@ import (
 	"LogWatcher/pkg/config"
 	"LogWatcher/pkg/requests"
 	"LogWatcher/pkg/stats"
+	"encoding/json"
 
 	"bytes"
 	"context"
@@ -127,9 +128,11 @@ func (s *Server) processLogLine(msg string, client requests.HTTPDoer) {
 				s.log.WithFields(logrus.Fields{"app": s.Origin()}).
 					Errorf("Failed to upload file to logs.tf: %s", err)
 			}
+			playersJSON, _ := json.Marshal(s.Game.Players)
+			gameStatsJSON, _ := json.Marshal(s.Game.Stats)
 			s.log.WithFields(logrus.Fields{
-				"players":   fmt.Sprintf("%+v", s.Game.Players),
-				"gameStats": fmt.Sprintf("%+v", s.Game.Stats),
+				"players":   playersJSON,
+				"gameStats": gameStatsJSON,
 			}).Info("Preparing to extract player stats")
 			playersStats := stats.ExtractPlayerStats(s.Game.Players, s.Game.Stats, s.Server, s.Game.PickupID, s.Game.MatchLength)
 			if err := stats.InsertGameStats(s.ctx, s.conn, playersStats); err != nil {
