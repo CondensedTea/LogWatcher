@@ -48,7 +48,7 @@ var (
 	gameOver   = regexp.MustCompile(`: World triggered "Game_Over" reason "`)
 	logClosed  = regexp.MustCompile(`: Log file closed.`)
 	mapLoaded  = regexp.MustCompile(`: Loading map "(.+?)"`)
-	timeStamp  = regexp.MustCompile(`\d{2}\/\d{2}\/\d{4} - \d{2}:\d{2}:\d{2}`)
+	timeStamp  = regexp.MustCompile(`\d{2}/\d{2}/\d{4} - \d{2}:\d{2}:\d{2}`)
 )
 
 type GameInfo struct {
@@ -92,44 +92,30 @@ func (s *Server) processLogLine(msg string, client requests.HTTPDoer) {
 		s.tryParseGameMap(msg)
 		if roundStart.MatchString(msg) {
 			s.Game.LaunchedAt = parseTimeStamp(msg)
-			_, err := s.buffer.WriteString(msg + "\n")
-			if err != nil {
-				s.log.WithFields(logrus.Fields{"server": s.Origin()}).
-					Errorf("Failed to write to Server buffer: %s", err)
-			}
-			if err = s.updatePickupInfo(client); err != nil {
+			s.buffer.WriteString(msg + "\n")
+			if err := s.updatePickupInfo(client); err != nil {
 				s.log.WithFields(logrus.Fields{"server": s.Origin()}).
 					Errorf("Failed to get pickup id from API: %s", err)
 			}
-			err = requests.ResolvePlayers(client, s.Server.Domain, s.Game.Players)
+			err := requests.ResolvePlayers(client, s.Server.Domain, s.Game.Players)
 			if err != nil {
 				s.log.WithFields(logrus.Fields{"server": s.Origin()}).
 					Errorf("Failed to resolve pickup player ids through API: %s", err)
 			}
 			s.State = Game
-			if s.Game.Map != "" {
-				s.log.WithFields(logrus.Fields{
-					"server":    s.Origin(),
-					"pickup_id": s.Game.PickupID,
-					"map":       s.Game.Map,
-				}).Infof("Succesifully parsed pickup ID")
-			} else {
-				s.log.Errorf("Failed to get map, pickup id is 0")
-			}
+			s.log.WithFields(logrus.Fields{
+				"server":    s.Origin(),
+				"pickup_id": s.Game.PickupID,
+				"map":       s.Game.Map,
+			}).Infof("Pickup has started")
 		}
 	case Game:
-		_, err := s.buffer.WriteString(msg + "\n")
-		if err != nil {
+		s.buffer.WriteString(msg + "\n")
+		if err := stats.UpdatePlayerStats(msg, s.Game.Stats); err != nil {
 			s.log.WithFields(logrus.Fields{
-				"app":   s.Origin(),
-				"state": s.State.String(),
-			}).Errorf("Failed to write to Server buffer: %s", err)
-		}
-		if err = stats.UpdatePlayerStats(msg, s.Game.Stats); err != nil {
-			s.log.WithFields(logrus.Fields{
-				"app":   s.Origin(),
-				"state": s.State.String(),
-				"msg":   msg,
+				"server": s.Origin(),
+				"state":  s.State.String(),
+				"msg":    msg,
 			}).Errorf("Error on updating player stats: %s", err)
 		}
 		if logClosed.MatchString(msg) || gameOver.MatchString(msg) {
@@ -137,15 +123,24 @@ func (s *Server) processLogLine(msg string, client requests.HTTPDoer) {
 			ts := parseTimeStamp(msg)
 			s.Game.MatchLength = ts.Sub(s.Game.LaunchedAt)
 			payload := s.MakeMultipartMap()
-			if err = requests.UploadLogFile(client, payload); err != nil {
+			if err := requests.UploadLogFile(client, payload); err != nil {
 				s.log.WithFields(logrus.Fields{"app": s.Origin()}).
 					Errorf("Failed to upload file to logs.tf: %s", err)
 			}
+			s.log.WithFields(logrus.Fields{
+				"players":   fmt.Sprintf("%+v", s.Game.Players),
+				"gameStats": fmt.Sprintf("%+v", s.Game.Stats),
+			}).Info("Preparing to extract player stats")
 			playersStats := stats.ExtractPlayerStats(s.Game.Players, s.Game.Stats, s.Server, s.Game.PickupID, s.Game.MatchLength)
-			if err = stats.InsertGameStats(s.ctx, s.conn, playersStats); err != nil {
+			if err := stats.InsertGameStats(s.ctx, s.conn, playersStats); err != nil {
 				s.log.WithFields(logrus.Fields{"app": s.Origin()}).
 					Errorf("Failed to insert stats to db: %s", err)
 			}
+			s.log.WithFields(logrus.Fields{
+				"server":    s.Origin(),
+				"pickup_id": s.Game.PickupID,
+				"map":       s.Game.Map,
+			}).Info("Pickup has ended")
 			s.flush()
 		}
 	}
