@@ -210,15 +210,13 @@ func (s *Server) updatePickupInfo(client requests.HTTPDoer) error {
 		return err
 	}
 	s.log.Debugf("Got list of games from pickup API with length of %d", gr.ItemCount)
-	for _, result := range gr.Results {
-		s.log.WithFields(logrus.Fields{
-			"state":      result.State,
-			"map":        result.Map,
-			"pickup_map": s.Game.Map,
-		}).Debugf("Processing result")
-		if result.State == StartedState && result.Map == s.Game.Map {
+	for _, game := range gr.Results {
+		if game.State == StartedState && game.Map == s.Game.Map {
 			players := make([]*stats.PickupPlayer, 0)
-			for _, player := range result.Slots {
+			s.log.WithFields(logrus.Fields{
+				"len of slots": len(game.Slots),
+			}).Debugf("Processing matched result")
+			for _, player := range game.Slots {
 				s.log.WithFields(logrus.Fields{
 					"id":    player.Player,
 					"class": player.GameClass,
@@ -228,7 +226,7 @@ func (s *Server) updatePickupInfo(client requests.HTTPDoer) error {
 				players = append(players, p)
 			}
 			s.Game.Players = players
-			s.Game.PickupID = result.Number
+			s.Game.PickupID = game.Number
 			break
 		}
 	}
