@@ -2,7 +2,6 @@ package router
 
 import (
 	"LogWatcher/pkg/config"
-
 	"LogWatcher/pkg/server"
 	"net"
 	"regexp"
@@ -25,7 +24,6 @@ func NewRouter(cfg *config.Config, conn *mongo.Client, log *logrus.Logger) (*Rou
 		return nil, err
 	}
 	m := server.MakeRouterMap(cfg.Clients, cfg.Server.APIKey, conn, log)
-
 	return &Router{
 		address:   udpAddr,
 		routerMap: m,

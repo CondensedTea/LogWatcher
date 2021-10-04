@@ -33,9 +33,9 @@ func main() {
 	if err = conn.Ping(ctx, nil); err != nil {
 		l.Warnf("Failed to ping mongodb: %s", err)
 	}
-	server, err := router.NewRouter(cfg, conn, l)
+	r, err := router.NewRouter(cfg, conn, l)
 	if err != nil {
 		l.Fatalf("Failed to create Router instance: %s", err)
 	}
-	server.Listen()
+	r.Listen()
 }

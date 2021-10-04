@@ -27,9 +27,11 @@ const (
 )
 
 const (
-	StartedState = "started"
-	uploaderSign = "LogWatcher"
+	StartedState         = "started"
+	uploaderSignTemplate = "LogWatcher (%s)"
 )
+
+var Version = "testing"
 
 type StateType int
 
@@ -171,7 +173,7 @@ func (s *Server) MakeMultipartMap() map[string]io.Reader {
 	m["map"] = strings.NewReader(s.Game.Map)
 	m["key"] = strings.NewReader(s.apiKey)
 	m["logfile"] = &s.buffer
-	m["uploader"] = strings.NewReader(uploaderSign)
+	m["uploader"] = strings.NewReader(fmt.Sprintf(uploaderSignTemplate, Version))
 	return m
 }
 

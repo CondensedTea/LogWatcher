@@ -2,6 +2,7 @@ LOCAL_BIN ?= ./bin
 
 version=v1.0.0
 container_name=LogWatcher
+LDFLAGS = "-X 'LogWatcher/pkg/server.Version=$(version)'"
 
 .DEFAULT_GOAL := default
 
@@ -13,8 +14,12 @@ build:
 	docker build -t condensedtea/logwatcher:latest -t condensedtea/logwatcher:$(version) .
 
 .PHONY: build-local
-build-local:
-	CGO_ENABLED=0 go build -o "$(LOCAL_BIN)/LogWatcher" ./app
+	build-app build-e2e
+
+build-app:
+	CGO_ENABLED=0 go build -ldflags=$(LDFLAGS) -o "$(LOCAL_BIN)/LogWatcher" ./app
+
+build-e2e:
 	CGO_ENABLED=0 go build -o "$(LOCAL_BIN)/TestClient" ./e2e
 
 PHONY: run
