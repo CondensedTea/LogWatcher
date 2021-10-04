@@ -112,7 +112,7 @@ func (s *Server) processLogLine(msg string, client requests.HTTPDoer) {
 		}
 	case Game:
 		s.buffer.WriteString(msg + "\n")
-		if err := stats.UpdatePlayerStats(msg, s.Game.Stats); err != nil {
+		if err := stats.UpdateStatsMap(msg, s.Game.Stats); err != nil {
 			s.log.WithFields(logrus.Fields{
 				"server": s.Origin(),
 				"state":  s.State.String(),
@@ -125,7 +125,7 @@ func (s *Server) processLogLine(msg string, client requests.HTTPDoer) {
 			s.Game.MatchLength = ts.Sub(s.Game.LaunchedAt)
 			payload := s.MakeMultipartMap()
 			if err := requests.UploadLogFile(client, payload); err != nil {
-				s.log.WithFields(logrus.Fields{"app": s.Origin()}).
+				s.log.WithFields(logrus.Fields{"server": s.Origin()}).
 					Errorf("Failed to upload file to logs.tf: %s", err)
 			}
 			playersJSON, _ := json.Marshal(s.Game.Players)

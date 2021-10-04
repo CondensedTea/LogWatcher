@@ -164,8 +164,8 @@ func ResolvePlayers(client HTTPDoer, domain string, players []*stats.PickupPlaye
 	}
 	for _, pickupPlayer := range players {
 		for _, pr := range responses {
-			if pickupPlayer.SteamID == pr.SteamId {
-				pickupPlayer.PlayerID = pr.Id
+			if pickupPlayer.PlayerID == pr.Id {
+				pickupPlayer.SteamID = pr.SteamId
 			}
 		}
 	}

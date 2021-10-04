@@ -38,7 +38,8 @@ type GameStats struct {
 	Length   int
 }
 
-func UpdatePlayerStats(msg string, stats map[steamid.SID64]*PlayerStats) error {
+// UpdateStatsMap is used for accumulating players stats in a map with their steamid64 as a key
+func UpdateStatsMap(msg string, stats map[steamid.SID64]*PlayerStats) error {
 	switch {
 	case killRegexp.MatchString(msg):
 		match := killRegexp.FindStringSubmatch(msg)

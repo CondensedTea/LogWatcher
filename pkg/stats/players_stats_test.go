@@ -103,7 +103,7 @@ func TestGameInfo_UpdatePlayerStats(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := UpdatePlayerStats(tt.args.msg, tt.args.stats); (err != nil) != tt.wantErr {
+			if err := UpdateStatsMap(tt.args.msg, tt.args.stats); (err != nil) != tt.wantErr {
 				t.Errorf("updatePlayerStats() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if !cmp.Equal(tt.args.stats, tt.want) {
