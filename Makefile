@@ -1,6 +1,6 @@
 LOCAL_BIN ?= ./bin
 
-version=v1.0.0
+version=v1.0.1
 container_name=LogWatcher
 LDFLAGS = "-X 'LogWatcher/pkg/server.Version=$(version)'"
 
