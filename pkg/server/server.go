@@ -237,6 +237,6 @@ func (s *Server) updatePickupInfo(client requests.HTTPDoer) error {
 
 func parseTimeStamp(msg string) time.Time {
 	match := timeStamp.FindString(msg)
-	t, _ := time.Parse(`2/01/2006 - 15:04:05`, match) // err is always nil
+	t, _ := time.Parse(`01/2/2006 - 15:04:05`, match) // err is always nil
 	return t
 }

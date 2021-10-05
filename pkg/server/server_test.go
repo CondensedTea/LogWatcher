@@ -113,13 +113,13 @@ func Test_parseTimeStamp(t *testing.T) {
 		{
 			name: "default",
 			args: args{msg: `L 10/02/2021 - 23:31:56: \"Eshka<72><[U:1:183918108]><Red>\" triggered \"damage\" against \"slowtown<77><[U:1:148548823]><Blue>\"`},
-			want: time.Unix(1612989116, 0).UTC(),
+			want: time.Unix(1633217516, 0).UTC(),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := parseTimeStamp(tt.args.msg)
-			if got.Equal(tt.want) {
+			if got.Sub(tt.want) != 0 {
 				t.Errorf("parseTimeStamp() got = %v, want %v", got, tt.want)
 			}
 		})
