@@ -81,19 +81,12 @@ func UploadLogFile(client HTTPDoer, payload map[string]io.Reader) error {
 	w := multipart.NewWriter(&b)
 	for key, reader := range payload {
 		var writer io.Writer
-		var err error
 		if key == "logfile" {
-			if writer, err = w.CreateFormFile(key, "upload.log"); err != nil {
-				return err
-			}
+			writer, _ = w.CreateFormFile(key, "upload.log") // err is almost always nil
 		} else {
-			if writer, err = w.CreateFormField(key); err != nil {
-				return err
-			}
+			writer, _ = w.CreateFormField(key) // err is almost always nil
 		}
-		if _, err = io.Copy(writer, reader); err != nil {
-			return err
-		}
+		io.Copy(writer, reader) // err is almost always nil
 	}
 	w.Close()
 
@@ -109,10 +102,7 @@ func UploadLogFile(client HTTPDoer, payload map[string]io.Reader) error {
 	}
 
 	if res.StatusCode != http.StatusOK {
-		bodyBytes, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			return fmt.Errorf("failed to read buffer: %s", err)
-		}
+		bodyBytes, _ := ioutil.ReadAll(res.Body) // err is almost always nil
 		return fmt.Errorf("logs.tf returned code: %d, body: %s", res.StatusCode, string(bodyBytes))
 	}
 	return nil
@@ -123,10 +113,7 @@ func UploadLogFile(client HTTPDoer, payload map[string]io.Reader) error {
 func GetPickupGames(client HTTPDoer, domain string) (GamesResponse, error) {
 	var gr GamesResponse
 	url := fmt.Sprintf(PickupAPITemplateUrl+"/games", domain)
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return gr, err
-	}
+	req, _ := http.NewRequest(http.MethodGet, url, nil) // err is always nil
 	resp, err := client.Do(req)
 	if err != nil {
 		return gr, err
@@ -146,10 +133,7 @@ func GetPickupGames(client HTTPDoer, domain string) (GamesResponse, error) {
 func ResolvePlayers(client HTTPDoer, domain string, players []*stats.PickupPlayer) error {
 	var responses []PlayersResponse
 	url := fmt.Sprintf(PickupAPITemplateUrl+"/players", domain)
-	req, err := http.NewRequest(http.MethodGet, url, nil)
-	if err != nil {
-		return err
-	}
+	req, _ := http.NewRequest(http.MethodGet, url, nil) // err is always nil
 	resp, err := client.Do(req)
 	if err != nil {
 		return err

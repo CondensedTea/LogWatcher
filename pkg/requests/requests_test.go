@@ -2,6 +2,7 @@ package requests
 
 import (
 	"LogWatcher/pkg/stats"
+	"errors"
 	"io"
 	"time"
 
@@ -50,10 +51,43 @@ func TestLogFile_ResolvePlayers(t *testing.T) {
 			},
 			want: []*stats.PickupPlayer{{PlayerID: "6133487c4573f9001cdc0abb", Class: "soldier", SteamID: "76561198011558250"}},
 		},
+		{
+			name: "non 200 http response",
+			args: args{
+				client: NewHTTPDoerMock(mc).DoMock.Return(
+					&http.Response{StatusCode: 404, Body: nil}, nil),
+				domain:  "test",
+				players: []*stats.PickupPlayer{},
+			},
+			want:    []*stats.PickupPlayer{},
+			wantErr: true,
+		},
+		{
+			name: "error on client.Do",
+			args: args{
+				client:  NewHTTPDoerMock(mc).DoMock.Return(nil, errors.New("test error")),
+				domain:  "test",
+				players: []*stats.PickupPlayer{},
+			},
+			want:    []*stats.PickupPlayer{},
+			wantErr: true,
+		},
+		{
+			name: "invalid json response",
+			args: args{
+				client: NewHTTPDoerMock(mc).DoMock.Return(
+					&http.Response{StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader(`{"bad: `))}, nil),
+				domain:  "test",
+				players: []*stats.PickupPlayer{},
+			},
+			want:    []*stats.PickupPlayer{},
+			wantErr: true,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if err := ResolvePlayers(tt.args.client, tt.args.domain, tt.args.players); (err != nil) != tt.wantErr {
+			err := ResolvePlayers(tt.args.client, tt.args.domain, tt.args.players)
+			if (err != nil) != tt.wantErr {
 				t.Errorf("resolvePlayers() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if !cmp.Equal(tt.args.players, tt.want) {
@@ -85,6 +119,24 @@ func TestUploadLogFile(t *testing.T) {
 					"map":     strings.NewReader("map"),
 				},
 			},
+		},
+		{
+			name: "non 200 http status",
+			args: args{
+				client: NewHTTPDoerMock(mc).DoMock.Return(
+					&http.Response{StatusCode: 404, Body: ioutil.NopCloser(strings.NewReader(`{"error": "yes"}`))}, nil,
+				),
+				payload: map[string]io.Reader{},
+			},
+			wantErr: true,
+		},
+		{
+			name: "error on http.Do",
+			args: args{
+				client:  NewHTTPDoerMock(mc).DoMock.Return(nil, errors.New("test error")),
+				payload: map[string]io.Reader{},
+			},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
@@ -137,6 +189,35 @@ func TestGetPickupGames(t *testing.T) {
 				},
 				ItemCount: 0,
 			},
+		},
+		{
+			name: "non 200 http response",
+			args: args{
+				client: NewHTTPDoerMock(mc).DoMock.Return(
+					&http.Response{StatusCode: 404, Body: nil}, nil),
+				domain: "test",
+			},
+			want:    GamesResponse{},
+			wantErr: true,
+		},
+		{
+			name: "error on client.Do",
+			args: args{
+				client: NewHTTPDoerMock(mc).DoMock.Return(nil, errors.New("test error")),
+				domain: "test",
+			},
+			want:    GamesResponse{},
+			wantErr: true,
+		},
+		{
+			name: "invalid json response",
+			args: args{
+				client: NewHTTPDoerMock(mc).DoMock.Return(
+					&http.Response{StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader(`{"bad: "json"`))}, nil),
+				domain: "test",
+			},
+			want:    GamesResponse{},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
