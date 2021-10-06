@@ -7,10 +7,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"io"
 	"net/http"
 	"regexp"
-	"strings"
 	"sync"
 	"time"
 
@@ -26,12 +24,7 @@ const (
 	Game
 )
 
-const (
-	StartedState         = "started"
-	uploaderSignTemplate = "LogWatcher %s"
-)
-
-var Version = "dev"
+const StartedState = "started"
 
 func (st *StateType) String() string {
 	switch *st {
@@ -65,13 +58,13 @@ type Server struct {
 	log *logrus.Logger
 	ctx context.Context
 	sync.Mutex
-	Server  stats.ServerInfo
-	State   StateType
-	Channel chan string
-	buffer  bytes.Buffer
-	Game    *GameInfo
-	apiKey  string
-	conn    *mongo.Client
+	Server    stats.ServerInfo
+	requester requests.Requester
+	State     StateType
+	Channel   chan string
+	buffer    bytes.Buffer
+	Game      *GameInfo
+	conn      *mongo.Client
 }
 
 func (s *Server) String() string {
@@ -79,67 +72,78 @@ func (s *Server) String() string {
 }
 
 func (s *Server) StartWorker() {
-	client := http.Client{Timeout: 10 * time.Second}
 	for msg := range s.Channel {
-		s.processLogLine(msg, &client)
+		s.processLogLine(msg)
 	}
 }
 
-func (s *Server) processLogLine(msg string, client requests.HTTPDoer) {
+func (s *Server) processLogLine(msg string) {
 	s.Lock()
 	defer s.Unlock()
 	switch s.State {
 	case Pregame:
-		s.tryParseGameMap(msg)
-		if roundStart.MatchString(msg) {
-			s.Game.LaunchedAt = parseTimeStamp(msg)
-			s.buffer.WriteString(msg + "\n")
-			if err := s.updatePickupInfo(client); err != nil {
-				s.log.WithFields(logrus.Fields{"server": s.String()}).
-					Errorf("Failed to get pickup id from API: %s", err)
-			}
-			err := requests.ResolvePlayers(client, s.Server.Domain, s.Game.Players)
-			if err != nil {
-				s.log.WithFields(logrus.Fields{"server": s.String()}).
-					Errorf("Failed to resolve pickup player ids through API: %s", err)
-			}
-			s.State = Game
-			s.log.WithFields(logrus.Fields{
-				"server":    s.String(),
-				"pickup_id": s.Game.PickupID,
-				"map":       s.Game.Map,
-			}).Infof("Pickup has started")
-		}
+		s.processPregameLogLine(msg)
 	case Game:
-		s.buffer.WriteString(msg + "\n")
-		if err := stats.UpdateStatsMap(msg, s.Game.Stats); err != nil {
-			s.log.WithFields(logrus.Fields{
-				"server": s.String(),
-				"state":  s.State.String(),
-				"msg":    msg,
-			}).Errorf("Error on updating player stats: %s", err)
-		}
+		s.processGameLogLine(msg)
 		if logClosed.MatchString(msg) || gameOver.MatchString(msg) {
-			s.State = Pregame
-			ts := parseTimeStamp(msg)
-			s.Game.MatchLength = ts.Sub(s.Game.LaunchedAt)
-			payload := s.MakeMultipartMap()
-			if err := requests.UploadLogFile(client, payload); err != nil {
-				s.log.WithFields(logrus.Fields{"server": s.String()}).
-					Errorf("Failed to upload file to logs.tf: %s", err)
-			}
-			playersStats := stats.ExtractPlayerStats(s.Game.Players, s.Game.Stats, s.Server, s.Game.PickupID, s.Game.MatchLength)
-			if err := stats.InsertGameStats(s.ctx, s.conn, playersStats); err != nil {
-				s.log.WithFields(logrus.Fields{"app": s.String()}).
-					Errorf("Failed to insert stats to db: %s", err)
-			}
-			s.log.WithFields(logrus.Fields{
-				"server":    s.String(),
-				"pickup_id": s.Game.PickupID,
-				"map":       s.Game.Map,
-			}).Info("Pickup has ended")
-			s.flush()
+			s.processGameOverLogLine(msg)
 		}
+	}
+}
+
+func (s *Server) processGameOverLogLine(msg string) {
+	s.State = Pregame
+	ts := parseTimeStamp(msg)
+	s.Game.MatchLength = ts.Sub(s.Game.LaunchedAt)
+	payload := s.requester.MakeMultipartMap(s.Game.Map, s.Server.Domain, s.Game.PickupID, s.buffer)
+	if err := s.requester.UploadLogFile(payload); err != nil {
+		s.log.WithFields(logrus.Fields{"server": s.String()}).
+			Errorf("Failed to upload file to logs.tf: %s", err)
+	}
+	playersStats := stats.ExtractPlayerStats(s.Game.Players, s.Game.Stats, s.Server, s.Game.PickupID, s.Game.MatchLength)
+	if err := stats.InsertGameStats(s.ctx, s.conn, playersStats); err != nil {
+		s.log.WithFields(logrus.Fields{"app": s.String()}).
+			Errorf("Failed to insert stats to db: %s", err)
+	}
+	s.log.WithFields(logrus.Fields{
+		"server":    s.String(),
+		"pickup_id": s.Game.PickupID,
+		"map":       s.Game.Map,
+	}).Info("Pickup has ended")
+	s.flush()
+}
+
+func (s *Server) processGameLogLine(msg string) {
+	s.buffer.WriteString(msg + "\n")
+	if err := stats.UpdateStatsMap(msg, s.Game.Stats); err != nil {
+		s.log.WithFields(logrus.Fields{
+			"server": s.String(),
+			"state":  s.State.String(),
+			"msg":    msg,
+		}).Errorf("Error on updating player stats: %s", err)
+	}
+}
+
+func (s *Server) processPregameLogLine(msg string) {
+	s.tryParseGameMap(msg)
+	if roundStart.MatchString(msg) {
+		s.Game.LaunchedAt = parseTimeStamp(msg)
+		s.buffer.WriteString(msg + "\n")
+		if err := s.updatePickupInfo(); err != nil {
+			s.log.WithFields(logrus.Fields{"server": s.String()}).
+				Errorf("Failed to get pickup id from API: %s", err)
+		}
+		err := s.requester.ResolvePlayers(s.Server.Domain, s.Game.Players)
+		if err != nil {
+			s.log.WithFields(logrus.Fields{"server": s.String()}).
+				Errorf("Failed to resolve pickup player ids through API: %s", err)
+		}
+		s.State = Game
+		s.log.WithFields(logrus.Fields{
+			"server":    s.String(),
+			"pickup_id": s.Game.PickupID,
+			"map":       s.Game.Map,
+		}).Infof("Pickup has started")
 	}
 }
 
@@ -159,19 +163,11 @@ func (s *Server) flush() {
 	s.Game.Stats = make(map[steamid.SID64]*stats.PlayerStats)
 }
 
-func (s *Server) MakeMultipartMap() map[string]io.Reader {
-	m := make(map[string]io.Reader)
-	m["title"] = strings.NewReader(fmt.Sprintf("tf2pickup.%s #%d", s.Server.Domain, s.Game.PickupID))
-	m["map"] = strings.NewReader(s.Game.Map)
-	m["key"] = strings.NewReader(s.apiKey)
-	m["logfile"] = &s.buffer
-	m["uploader"] = strings.NewReader(fmt.Sprintf(uploaderSignTemplate, Version))
-	return m
-}
-
 func MakeRouterMap(hosts []config.Client, apiKey string, conn *mongo.Client, log *logrus.Logger) map[string]*Server {
 	serverMap := make(map[string]*Server)
+	client := http.Client{Timeout: 10 * time.Second}
 	for _, h := range hosts {
+		r := requests.NewRequest(apiKey, &client)
 		s := &Server{
 			log: log,
 			ctx: context.Background(),
@@ -186,8 +182,8 @@ func MakeRouterMap(hosts []config.Client, apiKey string, conn *mongo.Client, log
 				Players: make([]*stats.PickupPlayer, 0),
 				Stats:   make(map[steamid.SID64]*stats.PlayerStats),
 			},
-			apiKey: apiKey,
-			conn:   conn,
+			requester: r,
+			conn:      conn,
 		}
 		go s.StartWorker()
 		serverMap[h.Address] = s
@@ -198,8 +194,8 @@ func MakeRouterMap(hosts []config.Client, apiKey string, conn *mongo.Client, log
 
 // updatePickupInfo is used for finding current game on tf2pickup API
 // and loading to Server list of its players and pickup ID
-func (s *Server) updatePickupInfo(client requests.HTTPDoer) error {
-	gr, err := requests.GetPickupGames(client, s.Server.Domain)
+func (s *Server) updatePickupInfo() error {
+	gr, err := s.requester.GetPickupGames(s.Server.Domain)
 	if err != nil {
 		return err
 	}
@@ -207,7 +203,9 @@ func (s *Server) updatePickupInfo(client requests.HTTPDoer) error {
 		if game.State == StartedState && game.Map == s.Game.Map {
 			players := make([]*stats.PickupPlayer, 0)
 			for _, player := range game.Slots {
-				p := &stats.PickupPlayer{PlayerID: player.Player, Class: player.GameClass, Team: player.Team}
+				p := &stats.PickupPlayer{
+					PlayerID: player.Player, Class: player.GameClass, Team: player.Team,
+				}
 				players = append(players, p)
 			}
 			s.Game.Players = players
