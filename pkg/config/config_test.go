@@ -1,8 +1,15 @@
-package main
+package config
 
 import (
-	"reflect"
 	"testing"
+
+	"github.com/google/go-cmp/cmp"
+)
+
+const (
+	testCfgPath = `test_config.yaml`
+	fakeCfgPath = `fake_config.yaml`
+	badCfgPath  = `bad_config.yaml`
 )
 
 func Test_LoadConfig(t *testing.T) {
@@ -17,28 +24,28 @@ func Test_LoadConfig(t *testing.T) {
 	}{
 		{
 			name: "default",
-			args: args{"../config.template.yaml"},
+			args: args{testCfgPath},
 			want: &Config{
 				Server: struct {
 					Host   string `yaml:"Host"`
 					APIKey string `yaml:"APIKey"`
-					DryRun bool   `yaml:"DryRun,omitempty"`
-				}{Host: "<host>:<port>", APIKey: "<logstf-api-key>", DryRun: false},
+					DSN    string `yaml:"DSN"`
+				}{Host: "localhost:27100", APIKey: "fake", DSN: "fake"},
 				Clients: []Client{
-					{Server: 1, Domain: "<your-domain>", Address: "<ip>:<port>"},
+					{Server: 1, Domain: "test", Address: "127.0.0.1:27150"},
 				},
 			},
 			wantErr: false,
 		},
 		{
 			name:    "no file",
-			args:    args{"../fake-e2e_config.yaml"},
+			args:    args{fakeCfgPath},
 			want:    nil,
 			wantErr: true,
 		},
 		{
 			name:    "bad yaml",
-			args:    args{"../Dockerfile"},
+			args:    args{badCfgPath},
 			want:    nil,
 			wantErr: true,
 		},
@@ -50,7 +57,7 @@ func Test_LoadConfig(t *testing.T) {
 				t.Errorf("loadConfig() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
-			if !reflect.DeepEqual(got, tt.want) {
+			if !cmp.Equal(got, tt.want) {
 				t.Errorf("loadConfig() got = %v, want %v", got, tt.want)
 			}
 		})

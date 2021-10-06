@@ -1,18 +1,9 @@
-L 09/17/2021 - 00:36:37: World triggered "Round_Start"
-L 09/17/2021 - 00:36:37: "Tea<267><[U:1:101559606]><Red>" spawned as "Medic"
-L 09/17/2021 - 00:36:37: "Tea<267><[U:1:101559606]><Red>" triggered "empty_uber"
-L 09/17/2021 - 00:36:37: "Tea<267><[U:1:101559606]><Red>" triggered "empty_uber"
-L 09/17/2021 - 00:36:37: "Tea<267><[U:1:101559606]><Red>" triggered "empty_uber"
-L 09/17/2021 - 00:36:37: "Tea<267><[U:1:101559606]><Red>" triggered "empty_uber"
-L 09/17/2021 - 00:36:37: "дробовиктор<268><[U:1:467371097]><Blue>" spawned as "Soldier"
-L 09/17/2021 - 00:36:37: "ZOOM<270><[U:1:1160906215]><Blue>" spawned as "Scout"
-L 09/17/2021 - 00:36:37: "rana<279><[U:1:113575586]><Red>" spawned as "Scout"
-L 09/17/2021 - 00:36:37: "RAMA<273><[U:1:80157890]><Blue>" spawned as "Scout"
-L 09/17/2021 - 00:36:37: "Silvermaster<274><[U:1:25305114]><Blue>" spawned as "Soldier"
-L 09/17/2021 - 00:36:39: "Tea<267><[U:1:101559606]><Red>" triggered "healed" against "rana<279><[U:1:113575586]><Red>" (healing "25")
-L 09/17/2021 - 00:36:40: "Tea<267><[U:1:101559606]><Red>" triggered "healed" against "rana<279><[U:1:113575586]><Red>" (healing "35")
-L 09/17/2021 - 00:36:42: World triggered "Round_Win" (winner "Red")
-L 09/17/2021 - 00:36:42: World triggered "Round_Length" (seconds "5.02")
-L 09/17/2021 - 00:36:42: Team "Red" current score "3" with "2" players
-L 09/17/2021 - 00:36:42: Team "Blue" current score "1" with "4" players
-L 09/18/2021 - 08:10:23: Log file closed.
+L 09/17/2021 - 00:00:00: World triggered "Round_Start"
+L 09/17/2021 - 00:00:01: "Tea<267><[U:1:101559606]><Red>" triggered "healed" against "rana<279><[U:1:113575586]><Red>" (healing "25")
+L 10/02/2021 - 00:00:02: "Tea<267><[U:1:101559606]><Red>" triggered "damage" against "rana<279><[U:1:113575586]><Red>" (damage "43") (weapon "crusaders_crossbow")
+L 10/02/2021 - 00:00:03: "Tea<267><[U:1:101559606]><Red>" killed "rana<279><[U:1:113575586]><Red>" with "crusaders_crossbow" (attacker_position "1591 -77 139") (victim_position "1754 -8 219")
+L 09/17/2021 - 00:00:04: World triggered "Round_Win" (winner "Red")
+L 09/17/2021 - 00:00:05: World triggered "Round_Length" (seconds "5.02")
+L 09/17/2021 - 00:00:06: Team "Red" current score "1" with "1" players
+L 09/17/2021 - 00:00:07: Team "Blue" current score "0" with "1" players
+L 09/18/2021 - 08:00:08: Log file closed.

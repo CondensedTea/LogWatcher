@@ -1,18 +1,21 @@
 FROM golang:1.16-alpine as builder
 
-RUN mkdir app
-WORKDIR app/
+RUN mkdir -p LogWatcher/bin/
+WORKDIR LogWatcher/
+RUN apk add --no-cache make
 
 COPY go.mod .
 COPY go.sum .
-COPY server/ ./server/
+COPY Makefile .
+COPY app/ ./app
+COPY pkg/ ./pkg
 
-RUN CGO_ENABLED=0 GOOS=linux go build -o ./LogWatcher ./server/
+RUN make build-app
 
 FROM scratch
 
 COPY --from=builder /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/
-COPY --from=builder /go/app/LogWatcher .
+COPY --from=builder /go/LogWatcher/bin/LogWatcher .
 COPY config.yaml .
 
 EXPOSE 27100/udp

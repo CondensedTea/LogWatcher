@@ -1,6 +1,7 @@
 Server:
   Host: <host>:<port>
   APIKey: <logstf-api-key>
+  DSN: <mongo-dsn>
 Clients:
   - ID: 1
     Domain: <your-domain>
