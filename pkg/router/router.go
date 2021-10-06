@@ -50,12 +50,12 @@ func (s *Router) Listen() {
 		if !ok {
 			s.log.WithFields(logrus.Fields{
 				"address": clientAddr.String(),
-				"app":     "unknown",
+				"server":  "unknown",
 			}).Debugf(cleanMsg)
 			continue
 		}
 		s.log.WithFields(logrus.Fields{
-			"app":       lf.Origin(),
+			"server":    lf.String(),
 			"state":     lf.State.String(),
 			"pickup_id": lf.Game.PickupID,
 		}).Debugf(cleanMsg)

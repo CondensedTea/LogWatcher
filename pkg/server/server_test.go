@@ -93,8 +93,8 @@ func TestServer_Origin(t *testing.T) {
 			s := &Server{
 				Server: tt.fields.Server,
 			}
-			if got := s.Origin(); got != tt.want {
-				t.Errorf("Origin() = %v, want %v", got, tt.want)
+			if got := s.String(); got != tt.want {
+				t.Errorf("String() = %v, want %v", got, tt.want)
 			}
 		})
 	}

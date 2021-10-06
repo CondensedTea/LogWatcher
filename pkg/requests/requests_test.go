@@ -2,7 +2,6 @@ package requests
 
 import (
 	"LogWatcher/pkg/stats"
-	"fmt"
 	"io"
 	"time"
 
@@ -46,7 +45,7 @@ func TestLogFile_ResolvePlayers(t *testing.T) {
 					&http.Response{StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader(playersRawJSON))}, nil),
 				domain: "test",
 				players: []*stats.PickupPlayer{
-					{SteamID: "76561198011558250", Class: "soldier"},
+					{PlayerID: "6133487c4573f9001cdc0abb", Class: "soldier"},
 				},
 			},
 			want: []*stats.PickupPlayer{{PlayerID: "6133487c4573f9001cdc0abb", Class: "soldier", SteamID: "76561198011558250"}},
@@ -57,9 +56,8 @@ func TestLogFile_ResolvePlayers(t *testing.T) {
 			if err := ResolvePlayers(tt.args.client, tt.args.domain, tt.args.players); (err != nil) != tt.wantErr {
 				t.Errorf("resolvePlayers() error = %v, wantErr %v", err, tt.wantErr)
 			}
-			fmt.Println("tt: ", tt.args.players[0])
 			if !cmp.Equal(tt.args.players, tt.want) {
-				t.Errorf("resolvePlayers() got = %v, want = %v", tt.args.players, tt.want)
+				t.Errorf("resolvePlayers() got = %#v, want = %#v", tt.args.players, tt.want)
 			}
 		})
 	}

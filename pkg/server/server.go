@@ -4,8 +4,6 @@ import (
 	"LogWatcher/pkg/config"
 	"LogWatcher/pkg/requests"
 	"LogWatcher/pkg/stats"
-	"encoding/json"
-
 	"bytes"
 	"context"
 	"fmt"
@@ -21,6 +19,8 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+type StateType int
+
 const (
 	Pregame StateType = iota
 	Game
@@ -28,12 +28,10 @@ const (
 
 const (
 	StartedState         = "started"
-	uploaderSignTemplate = "LogWatcher (%s)"
+	uploaderSignTemplate = "LogWatcher %s"
 )
 
-var Version = "testing"
-
-type StateType int
+var Version = "dev"
 
 func (st *StateType) String() string {
 	switch *st {
@@ -76,7 +74,7 @@ type Server struct {
 	conn    *mongo.Client
 }
 
-func (s *Server) Origin() string {
+func (s *Server) String() string {
 	return fmt.Sprintf("%s#%d", s.Server.Domain, s.Server.ID)
 }
 
@@ -97,17 +95,17 @@ func (s *Server) processLogLine(msg string, client requests.HTTPDoer) {
 			s.Game.LaunchedAt = parseTimeStamp(msg)
 			s.buffer.WriteString(msg + "\n")
 			if err := s.updatePickupInfo(client); err != nil {
-				s.log.WithFields(logrus.Fields{"server": s.Origin()}).
+				s.log.WithFields(logrus.Fields{"server": s.String()}).
 					Errorf("Failed to get pickup id from API: %s", err)
 			}
 			err := requests.ResolvePlayers(client, s.Server.Domain, s.Game.Players)
 			if err != nil {
-				s.log.WithFields(logrus.Fields{"server": s.Origin()}).
+				s.log.WithFields(logrus.Fields{"server": s.String()}).
 					Errorf("Failed to resolve pickup player ids through API: %s", err)
 			}
 			s.State = Game
 			s.log.WithFields(logrus.Fields{
-				"server":    s.Origin(),
+				"server":    s.String(),
 				"pickup_id": s.Game.PickupID,
 				"map":       s.Game.Map,
 			}).Infof("Pickup has started")
@@ -116,7 +114,7 @@ func (s *Server) processLogLine(msg string, client requests.HTTPDoer) {
 		s.buffer.WriteString(msg + "\n")
 		if err := stats.UpdateStatsMap(msg, s.Game.Stats); err != nil {
 			s.log.WithFields(logrus.Fields{
-				"server": s.Origin(),
+				"server": s.String(),
 				"state":  s.State.String(),
 				"msg":    msg,
 			}).Errorf("Error on updating player stats: %s", err)
@@ -127,22 +125,16 @@ func (s *Server) processLogLine(msg string, client requests.HTTPDoer) {
 			s.Game.MatchLength = ts.Sub(s.Game.LaunchedAt)
 			payload := s.MakeMultipartMap()
 			if err := requests.UploadLogFile(client, payload); err != nil {
-				s.log.WithFields(logrus.Fields{"server": s.Origin()}).
+				s.log.WithFields(logrus.Fields{"server": s.String()}).
 					Errorf("Failed to upload file to logs.tf: %s", err)
 			}
-			playersJSON, _ := json.Marshal(s.Game.Players)
-			gameStatsJSON, _ := json.Marshal(s.Game.Stats)
-			s.log.WithFields(logrus.Fields{
-				"players":   string(playersJSON),
-				"gameStats": string(gameStatsJSON),
-			}).Info("Preparing to extract player stats")
 			playersStats := stats.ExtractPlayerStats(s.Game.Players, s.Game.Stats, s.Server, s.Game.PickupID, s.Game.MatchLength)
 			if err := stats.InsertGameStats(s.ctx, s.conn, playersStats); err != nil {
-				s.log.WithFields(logrus.Fields{"app": s.Origin()}).
+				s.log.WithFields(logrus.Fields{"app": s.String()}).
 					Errorf("Failed to insert stats to db: %s", err)
 			}
 			s.log.WithFields(logrus.Fields{
-				"server":    s.Origin(),
+				"server":    s.String(),
 				"pickup_id": s.Game.PickupID,
 				"map":       s.Game.Map,
 			}).Info("Pickup has ended")
@@ -211,19 +203,10 @@ func (s *Server) updatePickupInfo(client requests.HTTPDoer) error {
 	if err != nil {
 		return err
 	}
-	s.log.Debugf("Got list of games from pickup API with length of %d", gr.ItemCount)
 	for _, game := range gr.Results {
 		if game.State == StartedState && game.Map == s.Game.Map {
 			players := make([]*stats.PickupPlayer, 0)
-			s.log.WithFields(logrus.Fields{
-				"len of slots": len(game.Slots),
-			}).Debugf("Processing matched result")
 			for _, player := range game.Slots {
-				s.log.WithFields(logrus.Fields{
-					"id":    player.Player,
-					"class": player.GameClass,
-					"team":  player.Team,
-				}).Debugf("Processing result's player")
 				p := &stats.PickupPlayer{PlayerID: player.Player, Class: player.GameClass, Team: player.Team}
 				players = append(players, p)
 			}
