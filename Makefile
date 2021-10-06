@@ -14,12 +14,12 @@ build:
 	docker build -t condensedtea/logwatcher:latest -t condensedtea/logwatcher:$(version) .
 
 .PHONY: build-local
-	build-app build-e2e
+	app e2e
 
-build-app:
+app:
 	CGO_ENABLED=0 go build -ldflags=$(LDFLAGS) -o "$(LOCAL_BIN)/LogWatcher" ./app
 
-build-e2e:
+e2e:
 	CGO_ENABLED=0 go build -o "$(LOCAL_BIN)/TestClient" ./e2e
 
 PHONY: run
@@ -30,8 +30,8 @@ PHONY: down
 down:
 	docker kill $(container_name)
 
-PHONY: e2e
-e2e:
+PHONY: e2e-test
+e2e-test:
 	./bin/TestClient -log $(E2E_LOG_FILE)
 
 PHONY: test
