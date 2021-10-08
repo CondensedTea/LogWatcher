@@ -1,6 +1,7 @@
 package stats
 
 import (
+	"fmt"
 	"reflect"
 	//"LogWatcher/pkg/app"
 	//"bytes"
@@ -338,118 +339,103 @@ func TestMatchData_SetPlayers(t *testing.T) {
 	}
 }
 
-//
-//func TestMatchData_SetStartTime(t *testing.T) {
-//	type fields struct {
-//		pickupID    int
-//		serverID    int
-//		domain      string
-//		_map        string
-//		players     []*PickupPlayer
-//		stats       map[steamid.SID64]*PlayerGameStats
-//		launchedAt  time.Time
-//		matchLength time.Duration
-//	}
-//	type args struct {
-//		msg string
-//	}
-//	tests := []struct {
-//		name   string
-//		fields fields
-//		args   args
-//	}{
-//		// TODO: Add test cases.
-//	}
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			gi := &MatchData{
-//				pickupID:    tt.fields.pickupID,
-//				serverID:    tt.fields.serverID,
-//				domain:      tt.fields.domain,
-//				_map:        tt.fields._map,
-//				players:     tt.fields.players,
-//				stats:       tt.fields.stats,
-//				launchedAt:  tt.fields.launchedAt,
-//				matchLength: tt.fields.matchLength,
-//			}
-//		})
-//	}
-//}
-//
-//func TestMatchData_String(t *testing.T) {
-//	type fields struct {
-//		pickupID    int
-//		serverID    int
-//		domain      string
-//		_map        string
-//		players     []*PickupPlayer
-//		stats       map[steamid.SID64]*PlayerGameStats
-//		launchedAt  time.Time
-//		matchLength time.Duration
-//	}
-//	tests := []struct {
-//		name   string
-//		fields fields
-//		want   string
-//	}{
-//		// TODO: Add test cases.
-//	}
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			gi := &MatchData{
-//				pickupID:    tt.fields.pickupID,
-//				serverID:    tt.fields.serverID,
-//				domain:      tt.fields.domain,
-//				_map:        tt.fields._map,
-//				players:     tt.fields.players,
-//				stats:       tt.fields.stats,
-//				launchedAt:  tt.fields.launchedAt,
-//				matchLength: tt.fields.matchLength,
-//			}
-//			if got := gi.String(); got != tt.want {
-//				t.Errorf("String() = %v, want %v", got, tt.want)
-//			}
-//		})
-//	}
-//}
-//
-//func TestMatchData_TryParseGameMap(t *testing.T) {
-//	type fields struct {
-//		pickupID    int
-//		serverID    int
-//		domain      string
-//		_map        string
-//		players     []*PickupPlayer
-//		stats       map[steamid.SID64]*PlayerGameStats
-//		launchedAt  time.Time
-//		matchLength time.Duration
-//	}
-//	type args struct {
-//		msg string
-//	}
-//	tests := []struct {
-//		name   string
-//		fields fields
-//		args   args
-//	}{
-//		// TODO: Add test cases.
-//	}
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			gi := MatchData{
-//				pickupID:    tt.fields.pickupID,
-//				serverID:    tt.fields.serverID,
-//				domain:      tt.fields.domain,
-//				_map:        tt.fields._map,
-//				players:     tt.fields.players,
-//				stats:       tt.fields.stats,
-//				launchedAt:  tt.fields.launchedAt,
-//				matchLength: tt.fields.matchLength,
-//			}
-//		})
-//	}
-//}
-//
+func TestMatchData_SetStartTime(t *testing.T) {
+	type fields struct {
+		launchedAt time.Time
+	}
+	type args struct {
+		msg string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   time.Time
+	}{
+		{
+			name:   "default",
+			fields: fields{launchedAt: time.Time{}},
+			args:   args{msg: `L 10/02/2021 - 23:31:56: \"Eshka<72><[U:1:183918108]><Red>\" triggered \"damage\" against \"slowtown<77><[U:1:148548823]><Blue>\"`},
+			want:   time.Unix(1633217516, 0).UTC(),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gi := &MatchData{
+				launchedAt: tt.fields.launchedAt,
+			}
+			gi.SetStartTime(tt.args.msg)
+			if gi.launchedAt != tt.want {
+				t.Errorf("SetStartTime() = %v, want %v", gi.launchedAt, tt.want)
+
+			}
+		})
+	}
+}
+
+func TestMatchData_String(t *testing.T) {
+	type fields struct {
+		serverID int
+		domain   string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		{
+			name:   "default",
+			fields: fields{serverID: 1, domain: "test"},
+			want:   "test#1",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gi := &MatchData{
+				serverID: tt.fields.serverID,
+				domain:   tt.fields.domain,
+			}
+			if got := gi.String(); got != tt.want {
+				t.Errorf("String() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMatchData_TryParseGameMap(t *testing.T) {
+	type fields struct {
+		_map string
+	}
+	type args struct {
+		msg string
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   string
+	}{
+		{
+			name:   "default",
+			fields: fields{_map: ""},
+			args:   args{msg: `: Loading map "cp_granary_pro_rc8"`},
+			want:   "cp_granary_pro_rc8",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			gi := MatchData{
+				_map: tt.fields._map,
+			}
+			gi.TryParseGameMap(tt.args.msg)
+			fmt.Println("M" + gi._map)
+			if gi._map != tt.want {
+				t.Errorf("TryParseGameMap() = %v, want %v", gi._map, tt.want)
+			}
+		})
+	}
+}
+
 //func TestNewMatchData(t *testing.T) {
 //	type args struct {
 //		domain   string

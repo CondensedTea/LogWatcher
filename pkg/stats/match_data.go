@@ -13,9 +13,7 @@ const (
 	mongoCollection = "player_stats"
 )
 
-var (
-	mapLoaded = regexp.MustCompile(`: Loading map "(.+?)"`)
-)
+var mapLoaded = regexp.MustCompile(`: Loading map "(.+?)"`)
 
 // PlayerGameStats represents stats set
 // from one player from one game
@@ -141,7 +139,7 @@ func (gi *MatchData) FlushPlayerStatsMap() {
 
 // TryParseGameMap tries to find "Loading map" with regexp in message
 // and sets it to go._map if succeed
-func (gi MatchData) TryParseGameMap(msg string) {
+func (gi *MatchData) TryParseGameMap(msg string) {
 	if match := mapLoaded.FindStringSubmatch(msg); len(match) > 0 {
 		gi._map = match[1]
 	}
