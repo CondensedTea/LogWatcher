@@ -10,7 +10,6 @@ import (
 	"mime/multipart"
 	"net/http"
 	"strings"
-	"time"
 )
 
 const (
@@ -22,12 +21,12 @@ const uploaderSignTemplate = "LogWatcher %s"
 
 var Version = "dev"
 
-type Request struct {
-	client HTTPDoer
-	apiKey string
+type LogsClient struct {
+	Client HTTPDoer
+	ApiKey string
 }
 
-type Requester interface {
+type LogProcessor interface {
 	MakeMultipartMap(_map, domain string, pickupID int, buf bytes.Buffer) map[string]io.Reader
 	UploadLogFile(payload map[string]io.Reader) error
 	GetPickupGames(domain string) (GamesResponse, error)
@@ -39,78 +38,25 @@ type HTTPDoer interface {
 	Do(r *http.Request) (*http.Response, error)
 }
 
-// PlayersResponse represents single player entry from api.tf2pickup.*/players
-type PlayersResponse struct {
-	SteamId string `json:"steamId"`
-	Name    string `json:"name"`
-	Avatar  struct {
-		Small  string `json:"small"`
-		Medium string `json:"medium"`
-		Large  string `json:"large"`
-	} `json:"avatar,omitempty"`
-	Roles          []string  `json:"roles"`
-	Etf2LProfileId int       `json:"etf2lProfileId"`
-	JoinedAt       time.Time `json:"joinedAt"`
-	Id             string    `json:"id"`
-	Links          []struct {
-		Href  string `json:"href"`
-		Title string `json:"title"`
-	} `json:"_links"`
-}
-
-type Score struct {
-	Red int `json:"red"`
-	Blu int `json:"blu"`
-}
-
-type Slot struct {
-	ConnectionStatus string `json:"connectionStatus"`
-	Status           string `json:"status"`
-	GameClass        string `json:"gameClass"`
-	Team             string `json:"team"`
-	Player           string `json:"player"`
-}
-
-type Result struct {
-	ConnectInfoVersion int       `json:"connectInfoVersion"`
-	State              string    `json:"state"`
-	Number             int       `json:"number"`
-	Map                string    `json:"map"`
-	Slots              []Slot    `json:"slots"`
-	LaunchedAt         time.Time `json:"launchedAt"`
-	GameServer         string    `json:"gameServer"`
-	StvConnectString   string    `json:"stvConnectString"`
-	ID                 string    `json:"id"`
-	LogsUrl            string    `json:"logsUrl,omitempty"`
-	Score              Score     `json:"score,omitempty"`
-	DemoUrl            string    `json:"demoUrl,omitempty"`
-}
-
-// GamesResponse represents response from api.tf2pickup.*/games
-type GamesResponse struct {
-	Results   []Result `json:"results"`
-	ItemCount int      `json:"itemCount"`
-}
-
-func NewRequest(apiKey string, client HTTPDoer) *Request {
-	return &Request{
-		apiKey: apiKey,
-		client: client,
+func NewRequester(apiKey string, client HTTPDoer) *LogsClient {
+	return &LogsClient{
+		ApiKey: apiKey,
+		Client: client,
 	}
 }
 
-func (r *Request) MakeMultipartMap(_map, domain string, pickupID int, buf bytes.Buffer) map[string]io.Reader {
+func (r *LogsClient) MakeMultipartMap(Map, domain string, pickupID int, buf bytes.Buffer) map[string]io.Reader {
 	m := make(map[string]io.Reader)
 	m["title"] = strings.NewReader(fmt.Sprintf("tf2pickup.%s #%d", domain, pickupID))
-	m["map"] = strings.NewReader(_map)
-	m["key"] = strings.NewReader(r.apiKey)
+	m["map"] = strings.NewReader(Map)
+	m["key"] = strings.NewReader(r.ApiKey)
 	m["logfile"] = &buf
 	m["uploader"] = strings.NewReader(fmt.Sprintf(uploaderSignTemplate, Version))
 	return m
 }
 
 // UploadLogFile is used for uploading multipart payload to logs.tf/upload endpoint
-func (r *Request) UploadLogFile(payload map[string]io.Reader) error {
+func (r *LogsClient) UploadLogFile(payload map[string]io.Reader) error {
 	var b bytes.Buffer
 	w := multipart.NewWriter(&b)
 	for key, reader := range payload {
@@ -130,7 +76,7 @@ func (r *Request) UploadLogFile(payload map[string]io.Reader) error {
 	}
 	req.Header.Set("Content-Type", w.FormDataContentType())
 
-	res, err := r.client.Do(req)
+	res, err := r.Client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -144,11 +90,11 @@ func (r *Request) UploadLogFile(payload map[string]io.Reader) error {
 
 // GetPickupGames is making http request to pickup API and returns GamesResponse,
 // containing list of games
-func (r *Request) GetPickupGames(domain string) (GamesResponse, error) {
+func (r *LogsClient) GetPickupGames(domain string) (GamesResponse, error) {
 	var gr GamesResponse
 	url := fmt.Sprintf(PickupAPITemplateUrl+"/games", domain)
 	req, _ := http.NewRequest(http.MethodGet, url, nil) // err is always nil
-	resp, err := r.client.Do(req)
+	resp, err := r.Client.Do(req)
 	if err != nil {
 		return gr, err
 	}
@@ -164,11 +110,11 @@ func (r *Request) GetPickupGames(domain string) (GamesResponse, error) {
 }
 
 // ResolvePlayers is used for populating PickupPlayer entries with correct Steam ids
-func (r *Request) ResolvePlayers(domain string, players []*stats.PickupPlayer) error {
+func (r *LogsClient) ResolvePlayers(domain string, players []*stats.PickupPlayer) error {
 	var responses []PlayersResponse
 	url := fmt.Sprintf(PickupAPITemplateUrl+"/players", domain)
 	req, _ := http.NewRequest(http.MethodGet, url, nil) // err is always nil
-	resp, err := r.client.Do(req)
+	resp, err := r.Client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -180,6 +126,7 @@ func (r *Request) ResolvePlayers(domain string, players []*stats.PickupPlayer) e
 	if err = json.NewDecoder(resp.Body).Decode(&responses); err != nil {
 		return err
 	}
+	fmt.Println(players)
 	for _, pickupPlayer := range players {
 		for _, pr := range responses {
 			if pickupPlayer.PlayerID == pr.Id {
