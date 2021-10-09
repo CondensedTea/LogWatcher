@@ -105,3 +105,37 @@ func TestStateType_String(t *testing.T) {
 		})
 	}
 }
+
+func TestFlush(t *testing.T) {
+	mc := minimock.NewController(t)
+	defer mc.Finish()
+
+	logProcessorMock := mocks.NewLogFilerMock(mc)
+	matchDaterMock := mocks.NewMatchDaterMock(mc)
+
+	type args struct {
+		lf server.LogFiler
+		md stats.MatchDater
+	}
+	tests := []struct {
+		name string
+		args args
+	}{
+		{
+			name: "default",
+			args: args{
+				lf: logProcessorMock.FlushBufferMock.
+					Return(),
+				md: matchDaterMock.
+					SetPickupIDMock.Expect(0).Return().
+					SetMapMock.Expect("").Return().
+					FlushPlayerStatsMapMock.Return(),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			server.Flush(tt.args.lf, tt.args.md)
+		})
+	}
+}
