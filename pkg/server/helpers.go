@@ -25,22 +25,22 @@ func (st StateType) String() string {
 }
 
 // Flush is used to empty all game data
-func Flush(lf LogFiler, gi stats.MatchDater) {
+func Flush(lf LogFiler, md stats.MatchDater) {
 	lf.FlushBuffer()
-	gi.SetPickupID(0)
-	gi.SetMap("")
-	gi.FlushPlayerStatsMap()
+	md.SetPickupID(0)
+	md.SetMap("")
+	md.FlushPlayerStatsMap()
 }
 
 // UpdatePickupInfo is used for finding current game on tf2pickup API
 // and loading to LogFile list of its players and pickup ID
-func UpdatePickupInfo(r requests.LogProcessor, gi stats.MatchDater) error {
-	gr, err := r.GetPickupGames(gi.Domain())
+func UpdatePickupInfo(lp requests.LogProcessor, md stats.MatchDater) error {
+	gr, err := lp.GetPickupGames(md.Domain())
 	if err != nil {
 		return err
 	}
 	for _, game := range gr.Results {
-		if game.State == StartedState && game.Map == gi.Map() {
+		if game.State == StartedState && game.Map == md.Map() {
 			players := make([]*stats.PickupPlayer, 0)
 			for _, player := range game.Slots {
 				p := &stats.PickupPlayer{
@@ -48,8 +48,8 @@ func UpdatePickupInfo(r requests.LogProcessor, gi stats.MatchDater) error {
 				}
 				players = append(players, p)
 			}
-			gi.SetPlayers(players)
-			gi.SetPickupID(game.Number)
+			md.SetPlayers(players)
+			md.SetPickupID(game.Number)
 			break
 		}
 	}

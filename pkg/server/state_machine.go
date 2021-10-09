@@ -20,14 +20,40 @@ func processLogLine(msg string, log *logrus.Logger, lm LogFiler, r requests.LogP
 	case Pregame:
 		gi.TryParseGameMap(msg)
 		if roundStart.MatchString(msg) {
-			processGameStartedEvent(msg, log, lm, r, gi)
+			ProcessGameStartedEvent(msg, log, lm, r, gi)
 		}
 	case Game:
-		processGameLogLine(msg, log, lm, gi)
+		ProcessGameLogLine(msg, lm, gi)
 		if logClosed.MatchString(msg) || gameOver.MatchString(msg) {
 			processGameOverEvent(msg, log, lm, r, gi)
 		}
 	}
+}
+
+func ProcessGameStartedEvent(msg string, log *logrus.Logger, lm LogFiler, lp requests.LogProcessor, md stats.MatchDater) {
+	lm.SetState(Game)
+	md.SetStartTime(msg)
+	lm.WriteLine(msg)
+	err := UpdatePickupInfo(lp, md)
+	if err != nil {
+		log.WithFields(logrus.Fields{"server": md.String()}).
+			Errorf("Failed to get pickup id from API: %s", err)
+	}
+	err = lp.ResolvePlayers(md.Domain(), md.PickupPlayers())
+	if err != nil {
+		log.WithFields(logrus.Fields{"server": md.String()}).
+			Errorf("Failed to resolve pickup player ids through API: %s", err)
+	}
+	log.WithFields(logrus.Fields{
+		"server":    md.String(),
+		"pickup_id": md.PickupID(),
+		"map":       md.Map(),
+	}).Infof("Pickup has started")
+}
+
+func ProcessGameLogLine(msg string, lm LogFiler, gi stats.MatchDater) {
+	lm.WriteLine(msg)
+	stats.UpdateStatsMap(msg, gi.PlayerStatsMap())
 }
 
 func processGameOverEvent(msg string, log *logrus.Logger, lm LogFiler, r requests.LogProcessor, gi stats.MatchDater) {
@@ -49,35 +75,4 @@ func processGameOverEvent(msg string, log *logrus.Logger, lm LogFiler, r request
 		"map":       gi.Map(),
 	}).Info("Pickup has ended")
 	Flush(lm, gi)
-}
-
-func processGameLogLine(msg string, log *logrus.Logger, lm LogFiler, gi stats.MatchDater) {
-	lm.WriteLine(msg)
-	if err := stats.UpdateStatsMap(msg, gi.PlayerStatsMap()); err != nil {
-		log.WithFields(logrus.Fields{
-			"server": gi.String(),
-			"state":  lm.State().String(),
-			"msg":    msg,
-		}).Errorf("Error on updating player stats: %s", err)
-	}
-}
-
-func processGameStartedEvent(msg string, log *logrus.Logger, lm LogFiler, r requests.LogProcessor, gi stats.MatchDater) {
-	lm.SetState(Game)
-	gi.SetStartTime(msg)
-	lm.WriteLine(msg)
-	if err := UpdatePickupInfo(r, gi); err != nil {
-		log.WithFields(logrus.Fields{"server": gi.String()}).
-			Errorf("Failed to get pickup id from API: %s", err)
-	}
-	err := r.ResolvePlayers(gi.Domain(), gi.PickupPlayers())
-	if err != nil {
-		log.WithFields(logrus.Fields{"server": gi.String()}).
-			Errorf("Failed to resolve pickup player ids through API: %s", err)
-	}
-	log.WithFields(logrus.Fields{
-		"server":    gi.String(),
-		"pickup_id": gi.PickupID(),
-		"map":       gi.Map(),
-	}).Infof("Pickup has started")
 }

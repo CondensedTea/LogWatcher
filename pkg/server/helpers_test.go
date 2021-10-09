@@ -13,6 +13,11 @@ import (
 
 func TestUpdatePickupInfo(t *testing.T) {
 	mc := minimock.NewController(t)
+	defer mc.Finish()
+
+	logProcessorMock := mocks.NewLogProcessorMock(mc)
+	matchDaterMock := mocks.NewMatchDaterMock(mc)
+
 	type args struct {
 		r  requests.LogProcessor
 		gi stats.MatchDater
@@ -25,7 +30,7 @@ func TestUpdatePickupInfo(t *testing.T) {
 		{
 			name: "default",
 			args: args{
-				r: mocks.NewLogProcessorMock(mc).
+				r: logProcessorMock.
 					GetPickupGamesMock.Expect("test").Return(requests.GamesResponse{
 					Results: []requests.Result{
 						{
@@ -43,7 +48,7 @@ func TestUpdatePickupInfo(t *testing.T) {
 						},
 					},
 				}, nil),
-				gi: mocks.NewMatchDaterMock(mc).
+				gi: matchDaterMock.
 					DomainMock.Return("test").
 					MapMock.Return("cp_granary_pro_rc8").
 					SetPlayersMock.Expect([]*stats.PickupPlayer{

@@ -18,7 +18,7 @@ var (
 )
 
 // UpdateStatsMap is used for accumulating players stats in a map
-func UpdateStatsMap(msg string, stats map[steamid.SID64]*PlayerGameStats) error {
+func UpdateStatsMap(msg string, stats map[steamid.SID64]*PlayerGameStats) {
 	switch {
 	case killRegexp.MatchString(msg):
 		match := killRegexp.FindStringSubmatch(msg)
@@ -71,7 +71,6 @@ func UpdateStatsMap(msg string, stats map[steamid.SID64]*PlayerGameStats) error 
 			h.HealsReceived += heals
 		}
 	}
-	return nil
 }
 
 func ExtractPlayerStats(gi MatchDater) []interface{} {
