@@ -126,7 +126,6 @@ func (r *LogsClient) ResolvePlayers(domain string, players []*stats.PickupPlayer
 	if err = json.NewDecoder(resp.Body).Decode(&responses); err != nil {
 		return err
 	}
-	fmt.Println(players)
 	for _, pickupPlayer := range players {
 		for _, pr := range responses {
 			if pickupPlayer.PlayerID == pr.Id {

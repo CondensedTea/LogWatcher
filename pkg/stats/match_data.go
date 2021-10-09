@@ -80,6 +80,7 @@ func NewMatchData(domain string, serverID int) *MatchData {
 	return &MatchData{
 		domain:   domain,
 		serverID: serverID,
+		stats:    make(map[steamid.SID64]*PlayerGameStats),
 	}
 }
 

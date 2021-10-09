@@ -1,16 +1,9 @@
 package stats
 
 import (
-	"fmt"
 	"reflect"
-	//"LogWatcher/pkg/app"
-	//"bytes"
-	//"context"
-	//"reflect"
-	//"sync"
 	"testing"
 	"time"
-	//"go.mongodb.org/mongo-driver/mongo"
 
 	"github.com/google/go-cmp/cmp"
 	"github.com/leighmacdonald/steamid/steamid"
@@ -428,7 +421,6 @@ func TestMatchData_TryParseGameMap(t *testing.T) {
 				_map: tt.fields._map,
 			}
 			gi.TryParseGameMap(tt.args.msg)
-			fmt.Println("M" + gi._map)
 			if gi._map != tt.want {
 				t.Errorf("TryParseGameMap() = %v, want %v", gi._map, tt.want)
 			}

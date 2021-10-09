@@ -70,11 +70,11 @@ func MakeRouterMap(hosts []config.Client, apiKey string, conn *mongo.Client, log
 	serverMap := make(map[string]*server.LogFile)
 	client := &http.Client{Timeout: 10 * time.Second}
 	for _, h := range hosts {
-		s := server.NewLogFile(log, conn, h.Domain, h.Server)
+		lf := server.NewLogFile(log, conn, h.Domain, h.Server)
 		r := requests.NewRequester(apiKey, client)
-		gi := stats.NewMatchData(h.Domain, h.Server)
-		go server.StartWorker(log, s, r, gi)
-		serverMap[h.Address] = s
+		md := stats.NewMatchData(h.Domain, h.Server)
+		go server.StartWorker(log, lf, r, md)
+		serverMap[h.Address] = lf
 		log.Infof("Started worker for %s#%d with host %s", h.Domain, h.Server, h.Address)
 	}
 	return serverMap
