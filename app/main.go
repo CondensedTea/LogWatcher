@@ -22,10 +22,16 @@ func main() {
 	if err != nil {
 		log.Fatalf("Failed to create logrus logger: %s", err)
 	}
+
+	l.Info("Launching LogWatcher")
+
 	cfg, err := config.LoadConfig(*configPath)
 	if err != nil {
 		l.Fatalf("Failed to parse config: %s", err)
 	}
+
+	l.Info("Connecting to MongoDB")
+
 	conn, err := mongo.Connect(ctx, options.Client().ApplyURI(cfg.Server.DSN))
 	if err != nil {
 		l.Fatalf("Failed to connect to mongodb: %s", err)
@@ -33,6 +39,7 @@ func main() {
 	if err = conn.Ping(ctx, nil); err != nil {
 		l.Warnf("Failed to ping mongodb: %s", err)
 	}
+
 	r, err := router.NewRouter(cfg, conn, l)
 	if err != nil {
 		l.Fatalf("Failed to create Router instance: %s", err)

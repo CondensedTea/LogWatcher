@@ -2,9 +2,13 @@ package router
 
 import (
 	"LogWatcher/pkg/config"
+	"LogWatcher/pkg/requests"
 	"LogWatcher/pkg/server"
+	"LogWatcher/pkg/stats"
 	"net"
+	"net/http"
 	"regexp"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -14,7 +18,7 @@ var logLineRegexp = regexp.MustCompile(`L \d{2}/\d{2}/\d{4} - \d{2}:\d{2}:\d{2}:
 
 type Router struct {
 	address   *net.UDPAddr
-	routerMap map[string]*server.Server
+	routerMap map[string]*server.LogFile
 	log       *logrus.Logger
 }
 
@@ -23,7 +27,7 @@ func NewRouter(cfg *config.Config, conn *mongo.Client, log *logrus.Logger) (*Rou
 	if err != nil {
 		return nil, err
 	}
-	m := server.MakeRouterMap(cfg.Clients, cfg.Server.APIKey, conn, log)
+	m := MakeRouterMap(cfg.Clients, cfg.Server.APIKey, conn, log)
 	return &Router{
 		address:   udpAddr,
 		routerMap: m,
@@ -31,34 +35,47 @@ func NewRouter(cfg *config.Config, conn *mongo.Client, log *logrus.Logger) (*Rou
 	}, nil
 }
 
-func (s *Router) Listen() {
-	conn, err := net.ListenUDP("udp", s.address)
+func (r *Router) Listen() {
+	conn, err := net.ListenUDP("udp", r.address)
 	if err != nil {
-		s.log.Fatalf("failed to listen UDP port: %s", err)
+		r.log.Fatalf("failed to listen UDP port: %s", err)
 	}
-	s.log.Infof("LogWatcher is listening on %s", s.address.String())
+	r.log.Infof("LogWatcher is listening on %s", r.address.String())
 	for {
 		message := make([]byte, 1024)
 		msgLen, clientAddr, err := conn.ReadFromUDP(message)
 		if err != nil {
-			s.log.Errorf("Failed to read from UDP socket: %s", err)
+			r.log.Errorf("Failed to read from UDP socket: %s", err)
 			return
 		}
 		cleanMsg := logLineRegexp.FindString(string(message[:msgLen]))
 
-		lf, ok := s.routerMap[clientAddr.String()]
+		logFile, ok := r.routerMap[clientAddr.String()]
 		if !ok {
-			s.log.WithFields(logrus.Fields{
+			r.log.WithFields(logrus.Fields{
 				"address": clientAddr.String(),
 				"server":  "unknown",
 			}).Debugf(cleanMsg)
 			continue
 		}
-		s.log.WithFields(logrus.Fields{
-			"server":    lf.String(),
-			"state":     lf.State.String(),
-			"pickup_id": lf.Game.PickupID,
+		r.log.WithFields(logrus.Fields{
+			"server": logFile.Name(),
+			"state":  logFile.State(),
 		}).Debugf(cleanMsg)
-		lf.Channel <- cleanMsg
+		logFile.Channel() <- cleanMsg
 	}
+}
+
+func MakeRouterMap(hosts []config.Client, apiKey string, conn *mongo.Client, log *logrus.Logger) map[string]*server.LogFile {
+	serverMap := make(map[string]*server.LogFile)
+	client := &http.Client{Timeout: 10 * time.Second}
+	for _, h := range hosts {
+		lf := server.NewLogFile(log, conn, h.Domain, h.Server)
+		r := requests.NewRequester(apiKey, client)
+		md := stats.NewMatchData(h.Domain, h.Server)
+		go server.StartWorker(log, lf, r, md)
+		serverMap[h.Address] = lf
+		log.Infof("Started worker for %s#%d with host %s", h.Domain, h.Server, h.Address)
+	}
+	return serverMap
 }
