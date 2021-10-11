@@ -16,9 +16,11 @@ build:
 .PHONY: build-local
 	app e2e
 
+.PHONY: app
 app:
 	CGO_ENABLED=0 go build -ldflags=$(LDFLAGS) -o "$(LOCAL_BIN)/LogWatcher" ./app
 
+.PHONY: e2e
 e2e:
 	CGO_ENABLED=0 go build -o "$(LOCAL_BIN)/TestClient" ./e2e
 

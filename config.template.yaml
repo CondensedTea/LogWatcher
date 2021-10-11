@@ -1,5 +1,5 @@
 Server:
-  Host: <host>:<port>
+  Host: <host>:27100
   APIKey: <logstf-api-key>
   DSN: <mongo-dsn>
 Clients:

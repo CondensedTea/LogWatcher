@@ -51,8 +51,8 @@ func ProcessGameStartedEvent(msg string, log *logrus.Logger, lm LogFiler, lp req
 	}).Infof("Pickup has started")
 }
 
-func ProcessGameLogLine(msg string, lm LogFiler, gi stats.MatchDater) {
-	lm.WriteLine(msg)
+func ProcessGameLogLine(msg string, lf LogFiler, gi stats.MatchDater) {
+	lf.WriteLine(msg)
 	stats.UpdateStatsMap(msg, gi.PlayerStatsMap())
 }
 
