@@ -10,7 +10,7 @@ COPY Makefile .
 COPY app/ ./app
 COPY pkg/ ./pkg
 
-RUN make build-app
+RUN make app
 
 FROM scratch
 
