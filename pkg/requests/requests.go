@@ -19,13 +19,17 @@ const (
 
 const uploaderSignTemplate = "LogWatcher %s"
 
+// Version is build version, used in logs.tf uploader field
 var Version = "dev"
 
-type LogsClient struct {
+// Client holding http client and logs.tf API key
+type Client struct {
 	Client HTTPDoer
 	ApiKey string
 }
 
+// LogProcessor provides methods for processing logs
+// and interacting with logs.tf and tf2pickup APIs
 type LogProcessor interface {
 	MakeMultipartMap(_map, domain string, pickupID int, buf bytes.Buffer) map[string]io.Reader
 	UploadLogFile(payload map[string]io.Reader) error
@@ -38,14 +42,16 @@ type HTTPDoer interface {
 	Do(r *http.Request) (*http.Response, error)
 }
 
-func NewRequester(apiKey string, client HTTPDoer) *LogsClient {
-	return &LogsClient{
+// NewRequester is client factory
+func NewRequester(apiKey string, client HTTPDoer) *Client {
+	return &Client{
 		ApiKey: apiKey,
 		Client: client,
 	}
 }
 
-func (r *LogsClient) MakeMultipartMap(Map, domain string, pickupID int, buf bytes.Buffer) map[string]io.Reader {
+// MakeMultipartMap constructs logs.tf/upload multipart payload from provided values
+func (r *Client) MakeMultipartMap(Map, domain string, pickupID int, buf bytes.Buffer) map[string]io.Reader {
 	m := make(map[string]io.Reader)
 	m["title"] = strings.NewReader(fmt.Sprintf("tf2pickup.%s #%d", domain, pickupID))
 	m["map"] = strings.NewReader(Map)
@@ -56,7 +62,7 @@ func (r *LogsClient) MakeMultipartMap(Map, domain string, pickupID int, buf byte
 }
 
 // UploadLogFile is used for uploading multipart payload to logs.tf/upload endpoint
-func (r *LogsClient) UploadLogFile(payload map[string]io.Reader) error {
+func (r *Client) UploadLogFile(payload map[string]io.Reader) error {
 	var b bytes.Buffer
 	w := multipart.NewWriter(&b)
 	for key, reader := range payload {
@@ -64,16 +70,13 @@ func (r *LogsClient) UploadLogFile(payload map[string]io.Reader) error {
 		if key == "logfile" {
 			writer, _ = w.CreateFormFile(key, "upload.log") // err is almost always nil
 		} else {
-			writer, _ = w.CreateFormField(key) // err is almost always nil
+			writer, _ = w.CreateFormField(key)
 		}
-		io.Copy(writer, reader) // err is almost always nil
+		io.Copy(writer, reader)
 	}
 	w.Close()
 
-	req, err := http.NewRequest(http.MethodPost, logsTFURL, &b)
-	if err != nil {
-		return err
-	}
+	req, _ := http.NewRequest(http.MethodPost, logsTFURL, &b) // err is always nil
 	req.Header.Set("Content-Type", w.FormDataContentType())
 
 	res, err := r.Client.Do(req)
@@ -88,9 +91,8 @@ func (r *LogsClient) UploadLogFile(payload map[string]io.Reader) error {
 	return nil
 }
 
-// GetPickupGames is making http request to pickup API and returns GamesResponse,
-// containing list of games
-func (r *LogsClient) GetPickupGames(domain string) (GamesResponse, error) {
+// GetPickupGames makes http request to pickup API and returns GamesResponse, containing list of games
+func (r *Client) GetPickupGames(domain string) (GamesResponse, error) {
 	var gr GamesResponse
 	url := fmt.Sprintf(PickupAPITemplateUrl+"/games", domain)
 	req, _ := http.NewRequest(http.MethodGet, url, nil) // err is always nil
@@ -109,8 +111,8 @@ func (r *LogsClient) GetPickupGames(domain string) (GamesResponse, error) {
 	return gr, nil
 }
 
-// ResolvePlayers is used for populating PickupPlayer entries with correct Steam ids
-func (r *LogsClient) ResolvePlayers(domain string, players []*stats.PickupPlayer) error {
+// ResolvePlayers populating PickupPlayer entries with correct SteamIDs
+func (r *Client) ResolvePlayers(domain string, players []*stats.PickupPlayer) error {
 	var responses []PlayersResponse
 	url := fmt.Sprintf(PickupAPITemplateUrl+"/players", domain)
 	req, _ := http.NewRequest(http.MethodGet, url, nil) // err is always nil

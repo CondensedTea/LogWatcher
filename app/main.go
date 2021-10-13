@@ -5,44 +5,31 @@ import (
 	"LogWatcher/pkg/logger"
 	"LogWatcher/pkg/router"
 	"context"
-	"flag"
 	"log"
+)
 
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
+var (
+	LogLevel   = "debug"
+	ConfigPath = "config.yaml"
 )
 
 func main() {
-	configPath := flag.String("config", "config.yaml", "Path to config file")
-	logLevel := flag.String("log", "debug", "Logging level")
-	flag.Parse()
 	ctx := context.Background()
 
-	l, err := logger.NewLogger(*logLevel)
+	l, err := logger.NewLogger(LogLevel)
 	if err != nil {
 		log.Fatalf("Failed to create logrus logger: %s", err)
 	}
 
-	l.Info("Launching LogWatcher")
+	l.Infof("Launching LogWatcher, log level is %s", LogLevel)
 
-	cfg, err := config.LoadConfig(*configPath)
+	cfg, err := config.LoadConfig(ConfigPath)
 	if err != nil {
-		l.Fatalf("Failed to parse config: %s", err)
+		l.Fatalf("Failed to load config: %s", err)
 	}
-
-	l.Info("Connecting to MongoDB")
-
-	conn, err := mongo.Connect(ctx, options.Client().ApplyURI(cfg.Server.DSN))
+	r, err := router.NewRouter(ctx, cfg, l)
 	if err != nil {
-		l.Fatalf("Failed to connect to mongodb: %s", err)
-	}
-	if err = conn.Ping(ctx, nil); err != nil {
-		l.Warnf("Failed to ping mongodb: %s", err)
-	}
-
-	r, err := router.NewRouter(cfg, conn, l)
-	if err != nil {
-		l.Fatalf("Failed to create Router instance: %s", err)
+		l.Fatalf("Failed to create Router: %s", err)
 	}
 	r.Listen()
 }

@@ -2,7 +2,10 @@ LOCAL_BIN ?= ./bin
 
 version=v1.1.3
 container_name=LogWatcher
-LDFLAGS = "-X 'LogWatcher/pkg/requests.Version=$(version)'"
+loglevel=info
+config_path=config.yaml
+
+LDFLAGS = "-X 'LogWatcher/pkg/requests.Version=$(version)' -X 'main.LogLevel=$(loglevel)' -X 'main.ConfigPath=$(config_path)'"
 
 .DEFAULT_GOAL := default
 

@@ -1,19 +1,27 @@
 package server
 
 import (
+	"LogWatcher/pkg/mongo"
 	"LogWatcher/pkg/requests"
 	"LogWatcher/pkg/stats"
 
 	"github.com/sirupsen/logrus"
 )
 
-func StartWorker(log *logrus.Logger, lm LogFiler, r requests.LogProcessor, gi stats.MatchDater) {
+func StartWorker(log *logrus.Logger, lm LogFiler, r requests.LogProcessor, gi stats.MatchDater, i mongo.Inserter) {
 	for msg := range lm.Channel() {
-		processLogLine(msg, log, lm, r, gi)
+		processLogLine(msg, log, lm, r, gi, i)
 	}
 }
 
-func processLogLine(msg string, log *logrus.Logger, lm LogFiler, r requests.LogProcessor, gi stats.MatchDater) {
+func processLogLine(
+	msg string,
+	log *logrus.Logger,
+	lm LogFiler,
+	r requests.LogProcessor,
+	gi stats.MatchDater,
+	i mongo.Inserter,
+) {
 	lm.Lock()
 	defer lm.Unlock()
 	switch lm.State() {
@@ -25,7 +33,7 @@ func processLogLine(msg string, log *logrus.Logger, lm LogFiler, r requests.LogP
 	case Game:
 		ProcessGameLogLine(msg, lm, gi)
 		if logClosed.MatchString(msg) || gameOver.MatchString(msg) {
-			processGameOverEvent(msg, log, lm, r, gi)
+			processGameOverEvent(msg, log, lm, r, gi, i)
 		}
 	}
 }
@@ -53,21 +61,26 @@ func ProcessGameStartedEvent(msg string, log *logrus.Logger, lm LogFiler, lp req
 
 func ProcessGameLogLine(msg string, lf LogFiler, gi stats.MatchDater) {
 	lf.WriteLine(msg)
-	stats.UpdateStatsMap(msg, gi.PlayerStatsMap())
+	stats.UpdateStatsMap(msg, gi.PlayerStatsCollection())
 }
 
-func processGameOverEvent(msg string, log *logrus.Logger, lm LogFiler, r requests.LogProcessor, gi stats.MatchDater) {
+func processGameOverEvent(
+	msg string,
+	log *logrus.Logger,
+	lm LogFiler,
+	r requests.LogProcessor,
+	gi stats.MatchDater,
+	i mongo.Inserter,
+) {
 	lm.SetState(Pregame)
 	gi.SetLength(msg)
 	payload := r.MakeMultipartMap(gi.Map(), gi.Domain(), gi.PickupID(), lm.Buffer())
 	if err := r.UploadLogFile(payload); err != nil {
-		log.WithFields(logrus.Fields{"server": gi.String()}).
-			Errorf("Failed to upload file to logs.tf: %s", err)
+		log.WithFields(logrus.Fields{"server": gi.String()}).Errorf("Failed to upload file to logs.tf: %s", err)
 	}
 	playersStats := stats.ExtractPlayerStats(gi)
-	if err := stats.InsertGameStats(lm.GetConn(), playersStats); err != nil { // need to make databaser interface
-		log.WithFields(logrus.Fields{"server": gi.String()}).
-			Errorf("Failed to insert stats to db: %s", err)
+	if err := i.InsertGameStats(playersStats); err != nil {
+		log.WithFields(logrus.Fields{"server": gi.String()}).Errorf("Failed to insert stats to db: %s", err)
 	}
 	log.WithFields(logrus.Fields{
 		"server":    gi.String(),

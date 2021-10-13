@@ -31,7 +31,7 @@ func TestNewRequestManager(t *testing.T) {
 	tests := []struct {
 		name string
 		args args
-		want *requests.LogsClient
+		want *requests.Client
 	}{
 		{
 			name: "default",
@@ -39,7 +39,7 @@ func TestNewRequestManager(t *testing.T) {
 				apiKey: "test",
 				client: &http.Client{},
 			},
-			want: &requests.LogsClient{
+			want: &requests.Client{
 				Client: &http.Client{},
 				ApiKey: "test",
 			},
@@ -136,7 +136,7 @@ func TestRequester_GetPickupGames(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := &requests.LogsClient{
+			r := &requests.Client{
 				Client: tt.fields.client,
 				ApiKey: tt.fields.apiKey,
 			}
@@ -189,7 +189,7 @@ func TestRequester_MakeMultipartMap(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := &requests.LogsClient{
+			r := &requests.Client{
 				Client: tt.fields.client,
 				ApiKey: tt.fields.apiKey,
 			}
@@ -276,7 +276,7 @@ func TestRequester_ResolvePlayers(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := &requests.LogsClient{
+			r := &requests.Client{
 				Client: tt.fields.client,
 				ApiKey: tt.fields.apiKey,
 			}
@@ -348,7 +348,7 @@ func TestRequester_UploadLogFile(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := &requests.LogsClient{
+			r := &requests.Client{
 				Client: tt.fields.client,
 				ApiKey: tt.fields.apiKey,
 			}

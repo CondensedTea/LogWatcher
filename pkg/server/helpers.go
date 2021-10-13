@@ -29,7 +29,7 @@ func Flush(lf LogFiler, md stats.MatchDater) {
 	lf.FlushBuffer()
 	md.SetPickupID(0)
 	md.SetMap("")
-	md.FlushPlayerStatsMap()
+	md.FlushPlayerStatsCollection()
 }
 
 // UpdatePickupInfo is used for finding current game on tf2pickup API

@@ -2,17 +2,20 @@ package router
 
 import (
 	"LogWatcher/pkg/config"
+	"LogWatcher/pkg/mongo"
 	"LogWatcher/pkg/requests"
 	"LogWatcher/pkg/server"
 	"LogWatcher/pkg/stats"
+	"context"
 	"net"
 	"net/http"
 	"regexp"
 	"time"
 
 	"github.com/sirupsen/logrus"
-	"go.mongodb.org/mongo-driver/mongo"
 )
+
+const timeout = 10
 
 var logLineRegexp = regexp.MustCompile(`L \d{2}/\d{2}/\d{4} - \d{2}:\d{2}:\d{2}: .+`)
 
@@ -22,12 +25,21 @@ type Router struct {
 	log       *logrus.Logger
 }
 
-func NewRouter(cfg *config.Config, conn *mongo.Client, log *logrus.Logger) (*Router, error) {
+func NewRouter(ctx context.Context, cfg *config.Config, log *logrus.Logger) (*Router, error) {
 	udpAddr, err := net.ResolveUDPAddr("udp4", cfg.Server.Host)
 	if err != nil {
 		return nil, err
 	}
-	m := MakeRouterMap(cfg.Clients, cfg.Server.APIKey, conn, log)
+
+	mongoClient, err := mongo.NewMongo(ctx, cfg.Server.DSN, cfg.Server.MongoDatabase, cfg.Server.MongoCollection)
+	if err != nil {
+		return nil, err
+	}
+
+	client := &http.Client{Timeout: timeout * time.Second}
+	r := requests.NewRequester(cfg.Server.APIKey, client)
+
+	m := MakeRouterMap(cfg.Clients, log, mongoClient, r)
 	return &Router{
 		address:   udpAddr,
 		routerMap: m,
@@ -66,14 +78,12 @@ func (r *Router) Listen() {
 	}
 }
 
-func MakeRouterMap(hosts []config.Client, apiKey string, conn *mongo.Client, log *logrus.Logger) map[string]*server.LogFile {
+func MakeRouterMap(hosts []config.Client, log *logrus.Logger, i mongo.Inserter, r requests.LogProcessor) map[string]*server.LogFile {
 	serverMap := make(map[string]*server.LogFile)
-	client := &http.Client{Timeout: 10 * time.Second}
 	for _, h := range hosts {
-		lf := server.NewLogFile(log, conn, h.Domain, h.Server)
-		r := requests.NewRequester(apiKey, client)
+		lf := server.NewLogFile(log, h.Domain, h.Server)
 		md := stats.NewMatchData(h.Domain, h.Server)
-		go server.StartWorker(log, lf, r, md)
+		go server.StartWorker(log, lf, r, md, i)
 		serverMap[h.Address] = lf
 		log.Infof("Started worker for %s#%d with host %s", h.Domain, h.Server, h.Address)
 	}

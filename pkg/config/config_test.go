@@ -26,11 +26,13 @@ func Test_LoadConfig(t *testing.T) {
 			name: "default",
 			args: args{testCfgPath},
 			want: &Config{
-				Server: struct {
-					Host   string `yaml:"Host"`
-					APIKey string `yaml:"APIKey"`
-					DSN    string `yaml:"DSN"`
-				}{Host: "localhost:27100", APIKey: "fake", DSN: "fake"},
+				Server: Server{
+					Host:            "localhost:27100",
+					APIKey:          "apiKey",
+					DSN:             "dsn",
+					MongoDatabase:   "db",
+					MongoCollection: "collection",
+				},
 				Clients: []Client{
 					{Server: 1, Domain: "test", Address: "127.0.0.1:27150"},
 				},

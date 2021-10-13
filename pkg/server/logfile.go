@@ -8,7 +8,6 @@ import (
 	"sync"
 
 	"github.com/sirupsen/logrus"
-	"go.mongodb.org/mongo-driver/mongo"
 )
 
 var (
@@ -24,7 +23,6 @@ type LogFiler interface {
 	State() StateType
 	SetState(state StateType)
 	Channel() chan string
-	GetConn() *mongo.Client
 	WriteLine(msg string)
 	Buffer() bytes.Buffer
 	FlushBuffer()
@@ -38,10 +36,9 @@ type LogFile struct {
 	state   StateType
 	channel chan string
 	buffer  bytes.Buffer
-	conn    *mongo.Client
 }
 
-func NewLogFile(log *logrus.Logger, conn *mongo.Client, domain string, id int) *LogFile {
+func NewLogFile(log *logrus.Logger, domain string, id int) *LogFile {
 	return &LogFile{
 		name:    fmt.Sprintf("%s#%d", domain, id),
 		log:     log,
@@ -49,7 +46,6 @@ func NewLogFile(log *logrus.Logger, conn *mongo.Client, domain string, id int) *
 		state:   Pregame,
 		buffer:  bytes.Buffer{},
 		channel: make(chan string),
-		conn:    conn,
 	}
 }
 
@@ -67,10 +63,6 @@ func (s *LogFile) SetState(state StateType) {
 
 func (s *LogFile) Channel() chan string {
 	return s.channel
-}
-
-func (s *LogFile) GetConn() *mongo.Client {
-	return s.conn
 }
 
 func (s *LogFile) WriteLine(msg string) {

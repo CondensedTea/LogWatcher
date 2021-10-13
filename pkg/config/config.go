@@ -12,12 +12,16 @@ type Client struct {
 	Address string `yaml:"Address"`
 }
 
+type Server struct {
+	Host            string `yaml:"Host"`
+	APIKey          string `yaml:"APIKey"`
+	DSN             string `yaml:"DSN"`
+	MongoDatabase   string `yaml:"MongoDatabase"`
+	MongoCollection string `yaml:"MongoCollection"`
+}
+
 type Config struct {
-	Server struct {
-		Host   string `yaml:"Host"`
-		APIKey string `yaml:"APIKey"`
-		DSN    string `yaml:"DSN"`
-	} `yaml:"Server"`
+	Server  Server   `yaml:"Server"`
 	Clients []Client `yaml:"Clients"`
 }
 

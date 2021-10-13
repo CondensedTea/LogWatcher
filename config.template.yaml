@@ -2,6 +2,10 @@ Server:
   Host: <host>:27100
   APIKey: <logstf-api-key>
   DSN: <mongo-dsn>
+  MongoDatabase: <mongo-database>
+  MongoCollection: <mongo-collection>
+  LogLevel: <logrus-loglevel>
+
 Clients:
   - ID: 1
     Domain: <your-domain>

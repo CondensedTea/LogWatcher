@@ -8,16 +8,10 @@ import (
 	"github.com/leighmacdonald/steamid/steamid"
 )
 
-const (
-	mongoDatabase   = "log_watcher"
-	mongoCollection = "player_stats"
-)
-
 var mapLoaded = regexp.MustCompile(`: Loading map "(.+?)"`)
 
-// PlayerGameStats represents stats set
-// from one player from one game
-type PlayerGameStats struct {
+// PlayerStats represents game stats from one player from single game
+type PlayerStats struct {
 	Kills         int
 	Deaths        int
 	DamageDone    int `bson:"damage_done"`
@@ -26,7 +20,7 @@ type PlayerGameStats struct {
 	HealsReceived int `bson:"heals_received"`
 }
 
-// PickupPlayer represents information about player in single game
+// PickupPlayer represents player's information from single game
 type PickupPlayer struct {
 	PlayerID string `bson:"player_id"`
 	Class    string `bson:"class"`
@@ -34,11 +28,11 @@ type PickupPlayer struct {
 	Team     string `bson:"team"`
 }
 
-// MongoPlayerInfo represents single player's data from one game,
+// MongoPlayerInfo represents single player's data from single game,
 // used as model for mongo entries
 type MongoPlayerInfo struct {
 	Player   *PickupPlayer
-	Stats    PlayerGameStats
+	Stats    PlayerStats
 	Domain   string
 	PickupID int
 	Length   int
@@ -52,7 +46,7 @@ type MatchData struct {
 	domain      string
 	_map        string
 	players     []*PickupPlayer
-	stats       map[steamid.SID64]*PlayerGameStats
+	stats       PlayerStatsCollection
 	launchedAt  time.Time
 	matchLength time.Duration
 }
@@ -61,7 +55,7 @@ type MatchData struct {
 type MatchDater interface {
 	String() string
 	PickupPlayers() []*PickupPlayer
-	PlayerStatsMap() map[steamid.SID64]*PlayerGameStats
+	PlayerStatsCollection() PlayerStatsCollection
 	Domain() string
 	PickupID() int
 	SetPickupID(id int)
@@ -71,77 +65,80 @@ type MatchDater interface {
 	SetMap(m string)
 	Map() string
 	SetPlayers(players []*PickupPlayer)
-	FlushPlayerStatsMap()
+	FlushPlayerStatsCollection()
 	TryParseGameMap(msg string)
 }
+
+// PlayerStatsCollection represents game stats for all players from single game
+type PlayerStatsCollection map[steamid.SID64]*PlayerStats
 
 // NewMatchData is a factory for MatchData
 func NewMatchData(domain string, serverID int) *MatchData {
 	return &MatchData{
 		domain:   domain,
 		serverID: serverID,
-		stats:    make(map[steamid.SID64]*PlayerGameStats),
+		stats:    make(PlayerStatsCollection),
 	}
 }
 
-func (gi *MatchData) PickupPlayers() []*PickupPlayer {
-	return gi.players
+func (md *MatchData) PickupPlayers() []*PickupPlayer {
+	return md.players
 }
 
-func (gi *MatchData) PlayerStatsMap() map[steamid.SID64]*PlayerGameStats {
-	return gi.stats
+func (md *MatchData) PlayerStatsCollection() PlayerStatsCollection {
+	return md.stats
 }
 
-func (gi *MatchData) PickupID() int {
-	return gi.pickupID
+func (md *MatchData) PickupID() int {
+	return md.pickupID
 }
 
-func (gi *MatchData) SetLength(msg string) {
+func (md *MatchData) SetLength(msg string) {
 	ts := ParseTimeStamp(msg)
-	gi.matchLength = ts.Sub(gi.launchedAt)
+	md.matchLength = ts.Sub(md.launchedAt)
 }
 
-func (gi *MatchData) LengthSeconds() int {
-	return int(gi.matchLength.Seconds())
+func (md *MatchData) LengthSeconds() int {
+	return int(md.matchLength.Seconds())
 }
 
-func (gi *MatchData) Domain() string {
-	return gi.domain
+func (md *MatchData) Domain() string {
+	return md.domain
 }
 
-func (gi *MatchData) String() string {
-	return fmt.Sprintf("%s#%d", gi.domain, gi.serverID)
+func (md *MatchData) String() string {
+	return fmt.Sprintf("%s#%d", md.domain, md.serverID)
 }
 
-func (gi *MatchData) SetPickupID(id int) {
-	gi.pickupID = id
+func (md *MatchData) SetPickupID(id int) {
+	md.pickupID = id
 }
 
-func (gi *MatchData) SetPlayers(players []*PickupPlayer) {
-	gi.players = players
+func (md *MatchData) SetPlayers(players []*PickupPlayer) {
+	md.players = players
 }
 
-func (gi *MatchData) SetStartTime(msg string) {
+func (md *MatchData) SetStartTime(msg string) {
 	ts := ParseTimeStamp(msg)
-	gi.launchedAt = ts
+	md.launchedAt = ts
 }
 
-func (gi *MatchData) SetMap(m string) {
-	gi._map = m
+func (md *MatchData) SetMap(m string) {
+	md._map = m
 }
 
-func (gi *MatchData) Map() string {
-	return gi._map
+func (md *MatchData) Map() string {
+	return md._map
 }
 
-func (gi *MatchData) FlushPlayerStatsMap() {
-	gi.stats = make(map[steamid.SID64]*PlayerGameStats)
+func (md *MatchData) FlushPlayerStatsCollection() {
+	md.stats = make(PlayerStatsCollection)
 }
 
 // TryParseGameMap tries to find "Loading map" with regexp in message
 // and sets it to go._map if succeed
-func (gi *MatchData) TryParseGameMap(msg string) {
+func (md *MatchData) TryParseGameMap(msg string) {
 	if match := mapLoaded.FindStringSubmatch(msg); len(match) > 0 {
-		gi._map = match[1]
+		md._map = match[1]
 	}
 }
