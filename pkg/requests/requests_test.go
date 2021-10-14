@@ -47,8 +47,8 @@ func TestNewRequestManager(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := requests.NewRequester(tt.args.apiKey, tt.args.client); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewRequester() = %v, want %v", got, tt.want)
+			if got := requests.NewClient(tt.args.apiKey, tt.args.client); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NewClient() = %v, want %v", got, tt.want)
 			}
 		})
 	}

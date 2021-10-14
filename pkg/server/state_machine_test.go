@@ -28,7 +28,7 @@ func TestProcessGameStartedEvent(t *testing.T) {
 		msg string
 		log *logrus.Logger
 		lf  server.LogFiler
-		lp  requests.LogProcessor
+		lp  requests.LogUploader
 		md  stats.MatchDater
 	}
 	tests := []struct {

@@ -37,7 +37,7 @@ func NewRouter(ctx context.Context, cfg *config.Config, log *logrus.Logger) (*Ro
 	}
 
 	client := &http.Client{Timeout: timeout * time.Second}
-	r := requests.NewRequester(cfg.Server.APIKey, client)
+	r := requests.NewClient(cfg.Server.APIKey, client)
 
 	m := MakeRouterMap(cfg.Clients, log, mongoClient, r)
 	return &Router{
@@ -78,7 +78,7 @@ func (r *Router) Listen() {
 	}
 }
 
-func MakeRouterMap(hosts []config.Client, log *logrus.Logger, i mongo.Inserter, r requests.LogProcessor) map[string]*server.LogFile {
+func MakeRouterMap(hosts []config.Client, log *logrus.Logger, i mongo.Inserter, r requests.LogUploader) map[string]*server.LogFile {
 	serverMap := make(map[string]*server.LogFile)
 	for _, h := range hosts {
 		lf := server.NewLogFile(log, h.Domain, h.Server)

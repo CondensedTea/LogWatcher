@@ -28,9 +28,9 @@ type Client struct {
 	ApiKey string
 }
 
-// LogProcessor provides methods for processing logs
+// LogUploader provides methods for processing logs
 // and interacting with logs.tf and tf2pickup APIs
-type LogProcessor interface {
+type LogUploader interface {
 	MakeMultipartMap(_map, domain string, pickupID int, buf bytes.Buffer) map[string]io.Reader
 	UploadLogFile(payload map[string]io.Reader) error
 	GetPickupGames(domain string) (GamesResponse, error)
@@ -42,8 +42,8 @@ type HTTPDoer interface {
 	Do(r *http.Request) (*http.Response, error)
 }
 
-// NewRequester is client factory
-func NewRequester(apiKey string, client HTTPDoer) *Client {
+// NewClient is client factory
+func NewClient(apiKey string, client HTTPDoer) *Client {
 	return &Client{
 		ApiKey: apiKey,
 		Client: client,
@@ -51,18 +51,18 @@ func NewRequester(apiKey string, client HTTPDoer) *Client {
 }
 
 // MakeMultipartMap constructs logs.tf/upload multipart payload from provided values
-func (r *Client) MakeMultipartMap(Map, domain string, pickupID int, buf bytes.Buffer) map[string]io.Reader {
+func (c *Client) MakeMultipartMap(Map, domain string, pickupID int, buf bytes.Buffer) map[string]io.Reader {
 	m := make(map[string]io.Reader)
 	m["title"] = strings.NewReader(fmt.Sprintf("tf2pickup.%s #%d", domain, pickupID))
 	m["map"] = strings.NewReader(Map)
-	m["key"] = strings.NewReader(r.ApiKey)
+	m["key"] = strings.NewReader(c.ApiKey)
 	m["logfile"] = &buf
 	m["uploader"] = strings.NewReader(fmt.Sprintf(uploaderSignTemplate, Version))
 	return m
 }
 
 // UploadLogFile is used for uploading multipart payload to logs.tf/upload endpoint
-func (r *Client) UploadLogFile(payload map[string]io.Reader) error {
+func (c *Client) UploadLogFile(payload map[string]io.Reader) error {
 	var b bytes.Buffer
 	w := multipart.NewWriter(&b)
 	for key, reader := range payload {
@@ -79,7 +79,7 @@ func (r *Client) UploadLogFile(payload map[string]io.Reader) error {
 	req, _ := http.NewRequest(http.MethodPost, logsTFURL, &b) // err is always nil
 	req.Header.Set("Content-Type", w.FormDataContentType())
 
-	res, err := r.Client.Do(req)
+	res, err := c.Client.Do(req)
 	if err != nil {
 		return err
 	}
@@ -92,11 +92,11 @@ func (r *Client) UploadLogFile(payload map[string]io.Reader) error {
 }
 
 // GetPickupGames makes http request to pickup API and returns GamesResponse, containing list of games
-func (r *Client) GetPickupGames(domain string) (GamesResponse, error) {
+func (c *Client) GetPickupGames(domain string) (GamesResponse, error) {
 	var gr GamesResponse
 	url := fmt.Sprintf(PickupAPITemplateUrl+"/games", domain)
 	req, _ := http.NewRequest(http.MethodGet, url, nil) // err is always nil
-	resp, err := r.Client.Do(req)
+	resp, err := c.Client.Do(req)
 	if err != nil {
 		return gr, err
 	}
@@ -112,11 +112,11 @@ func (r *Client) GetPickupGames(domain string) (GamesResponse, error) {
 }
 
 // ResolvePlayers populating PickupPlayer entries with correct SteamIDs
-func (r *Client) ResolvePlayers(domain string, players []*stats.PickupPlayer) error {
+func (c *Client) ResolvePlayers(domain string, players []*stats.PickupPlayer) error {
 	var responses []PlayersResponse
 	url := fmt.Sprintf(PickupAPITemplateUrl+"/players", domain)
 	req, _ := http.NewRequest(http.MethodGet, url, nil) // err is always nil
-	resp, err := r.Client.Do(req)
+	resp, err := c.Client.Do(req)
 	if err != nil {
 		return err
 	}

@@ -34,7 +34,7 @@ func Flush(lf LogFiler, md stats.MatchDater) {
 
 // UpdatePickupInfo is used for finding current game on tf2pickup API
 // and loading to LogFile list of its players and pickup ID
-func UpdatePickupInfo(lp requests.LogProcessor, md stats.MatchDater) error {
+func UpdatePickupInfo(lp requests.LogUploader, md stats.MatchDater) error {
 	gr, err := lp.GetPickupGames(md.Domain())
 	if err != nil {
 		return err
