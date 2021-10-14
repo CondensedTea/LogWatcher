@@ -28,7 +28,7 @@ func TestProcessGameStartedEvent(t *testing.T) {
 		msg string
 		log *logrus.Logger
 		lf  server.LogFiler
-		lp  requests.LogProcessor
+		lp  requests.LogUploader
 		md  stats.MatchDater
 	}
 	tests := []struct {
@@ -122,7 +122,7 @@ func Test_processGameLogLine(t *testing.T) {
 				lm: logFilerMock.
 					WriteLineMock.Expect("test").Return(),
 				gi: matchDaterMock.
-					PlayerStatsMapMock.Return(map[steamid.SID64]*stats.PlayerGameStats{
+					PlayerStatsMapMock.Return(stats.PlayerStatsCollection{
 					steamid.SID64FromString("76561198439712695"): {Kills: 1},
 				}),
 			},

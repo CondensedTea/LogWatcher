@@ -2,10 +2,12 @@ package server
 
 import (
 	"bytes"
+	"context"
 	"reflect"
 	"testing"
 
-	"go.mongodb.org/mongo-driver/mongo"
+	"github.com/google/go-cmp/cmp"
+	"github.com/sirupsen/logrus"
 )
 
 func TestLogFile_Buffer(t *testing.T) {
@@ -22,6 +24,10 @@ func TestLogFile_Buffer(t *testing.T) {
 			name:   "default",
 			fields: fields{buffer: buf},
 			want:   buf,
+		},
+		{
+			name:   "sigsegv",
+			fields: fields{},
 		},
 	}
 	for _, tt := range tests {
@@ -91,34 +97,6 @@ func TestLogFile_FlushBuffer(t *testing.T) {
 			s.FlushBuffer()
 			if !reflect.DeepEqual(s.buffer, tt.want) {
 				t.Errorf("FlushBuffer(), got = %v, want %v", tt.fields.buffer, tt.want)
-			}
-		})
-	}
-}
-
-func TestLogFile_GetConn(t *testing.T) {
-	client := &mongo.Client{}
-	type fields struct {
-		conn *mongo.Client
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   *mongo.Client
-	}{
-		{
-			name:   "default",
-			fields: fields{conn: client},
-			want:   client,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &LogFile{
-				conn: tt.fields.conn,
-			}
-			if got := s.GetConn(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetConn() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -242,6 +220,40 @@ func TestLogFile_Name(t *testing.T) {
 			}
 			if got := s.Name(); got != tt.want {
 				t.Errorf("Name() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNewLogFile(t *testing.T) {
+	ctx := context.Background()
+	type args struct {
+		log    *logrus.Logger
+		domain string
+		id     int
+	}
+	tests := []struct {
+		name string
+		args args
+		want *LogFile
+	}{
+		{
+			name: "default",
+			args: args{
+				domain: "test",
+				id:     1,
+			},
+			want: &LogFile{
+				name: "test#1",
+				ctx:  ctx,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := NewLogFile(tt.args.log, tt.args.domain, tt.args.id)
+			if !cmp.Equal(tt.want.name, got.name) {
+				t.Errorf("NewLogFile() = %v, want %v", got, tt.want)
 			}
 		})
 	}

@@ -19,7 +19,7 @@ func TestUpdatePickupInfo(t *testing.T) {
 	matchDaterMock := mocks.NewMatchDaterMock(mc)
 
 	type args struct {
-		r  requests.LogProcessor
+		r  requests.LogUploader
 		gi stats.MatchDater
 	}
 	tests := []struct {

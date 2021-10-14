@@ -1,7 +1,11 @@
 Server:
   Host: localhost:27100
-  APIKey: fake
-  DSN: fake
+  APIKey: apiKey
+  DSN: dsn
+  MongoDatabase: db
+  MongoCollection: collection
+  LogLevel: level
+
 Clients:
   - ID: 1
     Domain: test

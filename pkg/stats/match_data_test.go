@@ -37,28 +37,28 @@ func TestMatchData_Domain(t *testing.T) {
 }
 
 func TestMatchData_FlushPlayerStatsMap(t *testing.T) {
-	s := make(map[steamid.SID64]*PlayerGameStats)
-	s[steamid.SID64FromString("")] = &PlayerGameStats{Kills: 1}
+	s := make(PlayerStatsCollection)
+	s[steamid.SID64FromString("")] = &PlayerStats{Kills: 1}
 	type fields struct {
-		stats map[steamid.SID64]*PlayerGameStats
+		stats PlayerStatsCollection
 	}
 	tests := []struct {
 		name   string
 		fields fields
-		want   map[steamid.SID64]*PlayerGameStats
+		want   PlayerStatsCollection
 	}{
 		{
 			name:   "default",
 			fields: fields{stats: s},
-			want:   make(map[steamid.SID64]*PlayerGameStats),
+			want:   make(PlayerStatsCollection),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gi := &MatchData{stats: tt.fields.stats}
-			gi.FlushPlayerStatsMap()
+			gi.FlushPlayerStatsCollection()
 			if !reflect.DeepEqual(gi.stats, tt.want) {
-				t.Errorf("FlushPlayerStatsMap(), got = %#v, want = %#v", gi.stats, tt.want)
+				t.Errorf("FlushPlayerStatsCollection(), got = %#v, want = %#v", gi.stats, tt.want)
 			}
 		})
 	}
@@ -176,19 +176,19 @@ func TestMatchData_PickupPlayers(t *testing.T) {
 
 func TestMatchData_PlayerStatsMap(t *testing.T) {
 	type fields struct {
-		stats map[steamid.SID64]*PlayerGameStats
+		stats PlayerStatsCollection
 	}
 	tests := []struct {
 		name   string
 		fields fields
-		want   map[steamid.SID64]*PlayerGameStats
+		want   PlayerStatsCollection
 	}{
 		{
 			name: "default",
-			fields: fields{map[steamid.SID64]*PlayerGameStats{
+			fields: fields{PlayerStatsCollection{
 				steamid.SID64FromString("76561198061825334"): {Kills: 1},
 			}},
-			want: map[steamid.SID64]*PlayerGameStats{
+			want: PlayerStatsCollection{
 				steamid.SID64FromString("76561198061825334"): {Kills: 1},
 			},
 		},
@@ -198,8 +198,8 @@ func TestMatchData_PlayerStatsMap(t *testing.T) {
 			gi := &MatchData{
 				stats: tt.fields.stats,
 			}
-			if got := gi.PlayerStatsMap(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("PlayerStatsMap() = %v, want %v", got, tt.want)
+			if got := gi.PlayerStatsCollection(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("PlayerStatsCollection() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -428,23 +428,34 @@ func TestMatchData_TryParseGameMap(t *testing.T) {
 	}
 }
 
-//func TestNewMatchData(t *testing.T) {
-//	type args struct {
-//		domain   string
-//		serverID int
-//	}
-//	tests := []struct {
-//		name string
-//		args args
-//		want *MatchData
-//	}{
-//		// TODO: Add test cases.
-//	}
-//	for _, tt := range tests {
-//		t.Run(tt.name, func(t *testing.T) {
-//			if got := NewMatchData(tt.args.domain, tt.args.serverID); !reflect.DeepEqual(got, tt.want) {
-//				t.Errorf("NewMatchData() = %v, want %v", got, tt.want)
-//			}
-//		})
-//	}
-//}
+func TestNewMatchData(t *testing.T) {
+	type args struct {
+		domain   string
+		serverID int
+	}
+	tests := []struct {
+		name string
+		args args
+		want *MatchData
+	}{
+		{
+			name: "default",
+			args: args{
+				domain:   "test",
+				serverID: 1,
+			},
+			want: &MatchData{
+				domain:   "test",
+				serverID: 1,
+				stats:    PlayerStatsCollection{},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := NewMatchData(tt.args.domain, tt.args.serverID); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NewMatchData() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
