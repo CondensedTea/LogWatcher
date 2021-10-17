@@ -461,3 +461,36 @@ func TestNewMatchData(t *testing.T) {
 		})
 	}
 }
+
+func TestMatch_SetPlayerStats(t *testing.T) {
+	type fields struct {
+		stats PlayerStatsCollection
+	}
+	type args struct {
+		stats PlayerStatsCollection
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+	}{
+		{
+			name:   "default",
+			fields: fields{map[steamid.SID64]*PlayerStats{}},
+			args: args{map[steamid.SID64]*PlayerStats{
+				steamid.SID64FromString("76561198439712695"): {Kills: 1},
+			}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			md := &Match{
+				stats: tt.fields.stats,
+			}
+			md.SetPlayerStats(tt.args.stats)
+			if !cmp.Equal(md.stats, tt.args.stats) {
+				t.Errorf("NewMatch() = %v, want %v", tt.fields.stats, tt.args.stats)
+			}
+		})
+	}
+}
