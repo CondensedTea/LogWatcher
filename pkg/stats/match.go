@@ -1,6 +1,7 @@
 package stats
 
 import (
+	"LogWatcher/pkg/config"
 	"fmt"
 	"regexp"
 	"time"
@@ -38,9 +39,9 @@ type MongoPlayerInfo struct {
 	Length   int
 }
 
-// MatchData represents data from all players in single game,
+// Match represents data from all players in single game,
 // including game info and player stats
-type MatchData struct {
+type Match struct {
 	pickupID    int
 	serverID    int
 	domain      string
@@ -51,11 +52,12 @@ type MatchData struct {
 	matchLength time.Duration
 }
 
-// MatchDater is interface for MatchData object
-type MatchDater interface {
+// Matcher is interface for Match object
+type Matcher interface {
 	String() string
 	PickupPlayers() []*PickupPlayer
-	PlayerStatsCollection() PlayerStatsCollection
+	PlayerStats() PlayerStatsCollection
+	SetPlayerStats(stats PlayerStatsCollection)
 	Domain() string
 	PickupID() int
 	SetPickupID(id int)
@@ -65,80 +67,86 @@ type MatchDater interface {
 	SetMap(m string)
 	Map() string
 	SetPlayers(players []*PickupPlayer)
-	FlushPlayerStatsCollection()
+	Flush()
 	TryParseGameMap(msg string)
 }
 
 // PlayerStatsCollection represents game stats for all players from single game
 type PlayerStatsCollection map[steamid.SID64]*PlayerStats
 
-// NewMatchData is a factory for MatchData
-func NewMatchData(domain string, serverID int) *MatchData {
-	return &MatchData{
-		domain:   domain,
-		serverID: serverID,
+// NewMatch is a factory for Match
+func NewMatch(host config.Client) *Match {
+	return &Match{
+		domain:   host.Domain,
+		serverID: host.Server,
 		stats:    make(PlayerStatsCollection),
 	}
 }
 
-func (md *MatchData) PickupPlayers() []*PickupPlayer {
+func (md *Match) PickupPlayers() []*PickupPlayer {
 	return md.players
 }
 
-func (md *MatchData) PlayerStatsCollection() PlayerStatsCollection {
+func (md *Match) PlayerStats() PlayerStatsCollection {
 	return md.stats
 }
 
-func (md *MatchData) PickupID() int {
+func (md *Match) PickupID() int {
 	return md.pickupID
 }
 
-func (md *MatchData) SetLength(msg string) {
+func (md *Match) SetLength(msg string) {
 	ts := ParseTimeStamp(msg)
 	md.matchLength = ts.Sub(md.launchedAt)
 }
 
-func (md *MatchData) LengthSeconds() int {
+func (md *Match) LengthSeconds() int {
 	return int(md.matchLength.Seconds())
 }
 
-func (md *MatchData) Domain() string {
+func (md *Match) Domain() string {
 	return md.domain
 }
 
-func (md *MatchData) String() string {
+func (md *Match) String() string {
 	return fmt.Sprintf("%s#%d", md.domain, md.serverID)
 }
 
-func (md *MatchData) SetPickupID(id int) {
+func (md *Match) SetPickupID(id int) {
 	md.pickupID = id
 }
 
-func (md *MatchData) SetPlayers(players []*PickupPlayer) {
+func (md *Match) SetPlayers(players []*PickupPlayer) {
 	md.players = players
 }
 
-func (md *MatchData) SetStartTime(msg string) {
+func (md *Match) SetStartTime(msg string) {
 	ts := ParseTimeStamp(msg)
 	md.launchedAt = ts
 }
 
-func (md *MatchData) SetMap(m string) {
+func (md *Match) SetMap(m string) {
 	md._map = m
 }
 
-func (md *MatchData) Map() string {
+func (md *Match) Map() string {
 	return md._map
 }
 
-func (md *MatchData) FlushPlayerStatsCollection() {
+func (md *Match) Flush() {
+	md.pickupID = 0
+	md._map = ""
 	md.stats = make(PlayerStatsCollection)
 }
 
 // TryParseGameMap tries to find "Loading map" with regexp in message
 // and sets it to go._map if succeed
-func (md *MatchData) TryParseGameMap(msg string) {
+func (md *Match) TryParseGameMap(msg string) {
 	if match := mapLoaded.FindStringSubmatch(msg); len(match) > 0 {
 		md._map = match[1]
 	}
+}
+
+func (md *Match) SetPlayerStats(stats PlayerStatsCollection) {
+	md.stats = stats
 }

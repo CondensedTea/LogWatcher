@@ -16,96 +16,96 @@ import (
 	"github.com/gojuno/minimock/v3"
 )
 
-// LogProcessorMock implements requests.LogUploader
-type LogProcessorMock struct {
+// LogUploaderMock implements requests.LogUploader
+type LogUploaderMock struct {
 	t minimock.Tester
 
 	funcGetPickupGames          func(domain string) (g1 mm_requests.GamesResponse, err error)
 	inspectFuncGetPickupGames   func(domain string)
 	afterGetPickupGamesCounter  uint64
 	beforeGetPickupGamesCounter uint64
-	GetPickupGamesMock          mLogProcessorMockGetPickupGames
+	GetPickupGamesMock          mLogUploaderMockGetPickupGames
 
 	funcMakeMultipartMap          func(_map string, domain string, pickupID int, buf bytes.Buffer) (m1 map[string]io.Reader)
 	inspectFuncMakeMultipartMap   func(_map string, domain string, pickupID int, buf bytes.Buffer)
 	afterMakeMultipartMapCounter  uint64
 	beforeMakeMultipartMapCounter uint64
-	MakeMultipartMapMock          mLogProcessorMockMakeMultipartMap
+	MakeMultipartMapMock          mLogUploaderMockMakeMultipartMap
 
 	funcResolvePlayers          func(domain string, players []*stats.PickupPlayer) (err error)
 	inspectFuncResolvePlayers   func(domain string, players []*stats.PickupPlayer)
 	afterResolvePlayersCounter  uint64
 	beforeResolvePlayersCounter uint64
-	ResolvePlayersMock          mLogProcessorMockResolvePlayers
+	ResolvePlayersMock          mLogUploaderMockResolvePlayers
 
 	funcUploadLogFile          func(payload map[string]io.Reader) (err error)
 	inspectFuncUploadLogFile   func(payload map[string]io.Reader)
 	afterUploadLogFileCounter  uint64
 	beforeUploadLogFileCounter uint64
-	UploadLogFileMock          mLogProcessorMockUploadLogFile
+	UploadLogFileMock          mLogUploaderMockUploadLogFile
 }
 
-// NewLogProcessorMock returns a mock for requests.LogUploader
-func NewLogProcessorMock(t minimock.Tester) *LogProcessorMock {
-	m := &LogProcessorMock{t: t}
+// NewLogUploaderMock returns a mock for requests.LogUploader
+func NewLogUploaderMock(t minimock.Tester) *LogUploaderMock {
+	m := &LogUploaderMock{t: t}
 	if controller, ok := t.(minimock.MockController); ok {
 		controller.RegisterMocker(m)
 	}
 
-	m.GetPickupGamesMock = mLogProcessorMockGetPickupGames{mock: m}
-	m.GetPickupGamesMock.callArgs = []*LogProcessorMockGetPickupGamesParams{}
+	m.GetPickupGamesMock = mLogUploaderMockGetPickupGames{mock: m}
+	m.GetPickupGamesMock.callArgs = []*LogUploaderMockGetPickupGamesParams{}
 
-	m.MakeMultipartMapMock = mLogProcessorMockMakeMultipartMap{mock: m}
-	m.MakeMultipartMapMock.callArgs = []*LogProcessorMockMakeMultipartMapParams{}
+	m.MakeMultipartMapMock = mLogUploaderMockMakeMultipartMap{mock: m}
+	m.MakeMultipartMapMock.callArgs = []*LogUploaderMockMakeMultipartMapParams{}
 
-	m.ResolvePlayersMock = mLogProcessorMockResolvePlayers{mock: m}
-	m.ResolvePlayersMock.callArgs = []*LogProcessorMockResolvePlayersParams{}
+	m.ResolvePlayersMock = mLogUploaderMockResolvePlayers{mock: m}
+	m.ResolvePlayersMock.callArgs = []*LogUploaderMockResolvePlayersParams{}
 
-	m.UploadLogFileMock = mLogProcessorMockUploadLogFile{mock: m}
-	m.UploadLogFileMock.callArgs = []*LogProcessorMockUploadLogFileParams{}
+	m.UploadLogFileMock = mLogUploaderMockUploadLogFile{mock: m}
+	m.UploadLogFileMock.callArgs = []*LogUploaderMockUploadLogFileParams{}
 
 	return m
 }
 
-type mLogProcessorMockGetPickupGames struct {
-	mock               *LogProcessorMock
-	defaultExpectation *LogProcessorMockGetPickupGamesExpectation
-	expectations       []*LogProcessorMockGetPickupGamesExpectation
+type mLogUploaderMockGetPickupGames struct {
+	mock               *LogUploaderMock
+	defaultExpectation *LogUploaderMockGetPickupGamesExpectation
+	expectations       []*LogUploaderMockGetPickupGamesExpectation
 
-	callArgs []*LogProcessorMockGetPickupGamesParams
+	callArgs []*LogUploaderMockGetPickupGamesParams
 	mutex    sync.RWMutex
 }
 
-// LogProcessorMockGetPickupGamesExpectation specifies expectation struct of the LogUploader.GetPickupGames
-type LogProcessorMockGetPickupGamesExpectation struct {
-	mock    *LogProcessorMock
-	params  *LogProcessorMockGetPickupGamesParams
-	results *LogProcessorMockGetPickupGamesResults
+// LogUploaderMockGetPickupGamesExpectation specifies expectation struct of the LogUploader.GetPickupGames
+type LogUploaderMockGetPickupGamesExpectation struct {
+	mock    *LogUploaderMock
+	params  *LogUploaderMockGetPickupGamesParams
+	results *LogUploaderMockGetPickupGamesResults
 	Counter uint64
 }
 
-// LogProcessorMockGetPickupGamesParams contains parameters of the LogUploader.GetPickupGames
-type LogProcessorMockGetPickupGamesParams struct {
+// LogUploaderMockGetPickupGamesParams contains parameters of the LogUploader.GetPickupGames
+type LogUploaderMockGetPickupGamesParams struct {
 	domain string
 }
 
-// LogProcessorMockGetPickupGamesResults contains results of the LogUploader.GetPickupGames
-type LogProcessorMockGetPickupGamesResults struct {
+// LogUploaderMockGetPickupGamesResults contains results of the LogUploader.GetPickupGames
+type LogUploaderMockGetPickupGamesResults struct {
 	g1  mm_requests.GamesResponse
 	err error
 }
 
 // Expect sets up expected params for LogUploader.GetPickupGames
-func (mmGetPickupGames *mLogProcessorMockGetPickupGames) Expect(domain string) *mLogProcessorMockGetPickupGames {
+func (mmGetPickupGames *mLogUploaderMockGetPickupGames) Expect(domain string) *mLogUploaderMockGetPickupGames {
 	if mmGetPickupGames.mock.funcGetPickupGames != nil {
-		mmGetPickupGames.mock.t.Fatalf("LogProcessorMock.GetPickupGames mock is already set by Set")
+		mmGetPickupGames.mock.t.Fatalf("LogUploaderMock.GetPickupGames mock is already set by Set")
 	}
 
 	if mmGetPickupGames.defaultExpectation == nil {
-		mmGetPickupGames.defaultExpectation = &LogProcessorMockGetPickupGamesExpectation{}
+		mmGetPickupGames.defaultExpectation = &LogUploaderMockGetPickupGamesExpectation{}
 	}
 
-	mmGetPickupGames.defaultExpectation.params = &LogProcessorMockGetPickupGamesParams{domain}
+	mmGetPickupGames.defaultExpectation.params = &LogUploaderMockGetPickupGamesParams{domain}
 	for _, e := range mmGetPickupGames.expectations {
 		if minimock.Equal(e.params, mmGetPickupGames.defaultExpectation.params) {
 			mmGetPickupGames.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmGetPickupGames.defaultExpectation.params)
@@ -116,9 +116,9 @@ func (mmGetPickupGames *mLogProcessorMockGetPickupGames) Expect(domain string) *
 }
 
 // Inspect accepts an inspector function that has same arguments as the LogUploader.GetPickupGames
-func (mmGetPickupGames *mLogProcessorMockGetPickupGames) Inspect(f func(domain string)) *mLogProcessorMockGetPickupGames {
+func (mmGetPickupGames *mLogUploaderMockGetPickupGames) Inspect(f func(domain string)) *mLogUploaderMockGetPickupGames {
 	if mmGetPickupGames.mock.inspectFuncGetPickupGames != nil {
-		mmGetPickupGames.mock.t.Fatalf("Inspect function is already set for LogProcessorMock.GetPickupGames")
+		mmGetPickupGames.mock.t.Fatalf("Inspect function is already set for LogUploaderMock.GetPickupGames")
 	}
 
 	mmGetPickupGames.mock.inspectFuncGetPickupGames = f
@@ -127,20 +127,20 @@ func (mmGetPickupGames *mLogProcessorMockGetPickupGames) Inspect(f func(domain s
 }
 
 // Return sets up results that will be returned by LogUploader.GetPickupGames
-func (mmGetPickupGames *mLogProcessorMockGetPickupGames) Return(g1 mm_requests.GamesResponse, err error) *LogProcessorMock {
+func (mmGetPickupGames *mLogUploaderMockGetPickupGames) Return(g1 mm_requests.GamesResponse, err error) *LogUploaderMock {
 	if mmGetPickupGames.mock.funcGetPickupGames != nil {
-		mmGetPickupGames.mock.t.Fatalf("LogProcessorMock.GetPickupGames mock is already set by Set")
+		mmGetPickupGames.mock.t.Fatalf("LogUploaderMock.GetPickupGames mock is already set by Set")
 	}
 
 	if mmGetPickupGames.defaultExpectation == nil {
-		mmGetPickupGames.defaultExpectation = &LogProcessorMockGetPickupGamesExpectation{mock: mmGetPickupGames.mock}
+		mmGetPickupGames.defaultExpectation = &LogUploaderMockGetPickupGamesExpectation{mock: mmGetPickupGames.mock}
 	}
-	mmGetPickupGames.defaultExpectation.results = &LogProcessorMockGetPickupGamesResults{g1, err}
+	mmGetPickupGames.defaultExpectation.results = &LogUploaderMockGetPickupGamesResults{g1, err}
 	return mmGetPickupGames.mock
 }
 
 //Set uses given function f to mock the LogUploader.GetPickupGames method
-func (mmGetPickupGames *mLogProcessorMockGetPickupGames) Set(f func(domain string) (g1 mm_requests.GamesResponse, err error)) *LogProcessorMock {
+func (mmGetPickupGames *mLogUploaderMockGetPickupGames) Set(f func(domain string) (g1 mm_requests.GamesResponse, err error)) *LogUploaderMock {
 	if mmGetPickupGames.defaultExpectation != nil {
 		mmGetPickupGames.mock.t.Fatalf("Default expectation is already set for the LogUploader.GetPickupGames method")
 	}
@@ -155,27 +155,27 @@ func (mmGetPickupGames *mLogProcessorMockGetPickupGames) Set(f func(domain strin
 
 // When sets expectation for the LogUploader.GetPickupGames which will trigger the result defined by the following
 // Then helper
-func (mmGetPickupGames *mLogProcessorMockGetPickupGames) When(domain string) *LogProcessorMockGetPickupGamesExpectation {
+func (mmGetPickupGames *mLogUploaderMockGetPickupGames) When(domain string) *LogUploaderMockGetPickupGamesExpectation {
 	if mmGetPickupGames.mock.funcGetPickupGames != nil {
-		mmGetPickupGames.mock.t.Fatalf("LogProcessorMock.GetPickupGames mock is already set by Set")
+		mmGetPickupGames.mock.t.Fatalf("LogUploaderMock.GetPickupGames mock is already set by Set")
 	}
 
-	expectation := &LogProcessorMockGetPickupGamesExpectation{
+	expectation := &LogUploaderMockGetPickupGamesExpectation{
 		mock:   mmGetPickupGames.mock,
-		params: &LogProcessorMockGetPickupGamesParams{domain},
+		params: &LogUploaderMockGetPickupGamesParams{domain},
 	}
 	mmGetPickupGames.expectations = append(mmGetPickupGames.expectations, expectation)
 	return expectation
 }
 
 // Then sets up LogUploader.GetPickupGames return parameters for the expectation previously defined by the When method
-func (e *LogProcessorMockGetPickupGamesExpectation) Then(g1 mm_requests.GamesResponse, err error) *LogProcessorMock {
-	e.results = &LogProcessorMockGetPickupGamesResults{g1, err}
+func (e *LogUploaderMockGetPickupGamesExpectation) Then(g1 mm_requests.GamesResponse, err error) *LogUploaderMock {
+	e.results = &LogUploaderMockGetPickupGamesResults{g1, err}
 	return e.mock
 }
 
 // GetPickupGames implements requests.LogUploader
-func (mmGetPickupGames *LogProcessorMock) GetPickupGames(domain string) (g1 mm_requests.GamesResponse, err error) {
+func (mmGetPickupGames *LogUploaderMock) GetPickupGames(domain string) (g1 mm_requests.GamesResponse, err error) {
 	mm_atomic.AddUint64(&mmGetPickupGames.beforeGetPickupGamesCounter, 1)
 	defer mm_atomic.AddUint64(&mmGetPickupGames.afterGetPickupGamesCounter, 1)
 
@@ -183,7 +183,7 @@ func (mmGetPickupGames *LogProcessorMock) GetPickupGames(domain string) (g1 mm_r
 		mmGetPickupGames.inspectFuncGetPickupGames(domain)
 	}
 
-	mm_params := &LogProcessorMockGetPickupGamesParams{domain}
+	mm_params := &LogUploaderMockGetPickupGamesParams{domain}
 
 	// Record call args
 	mmGetPickupGames.GetPickupGamesMock.mutex.Lock()
@@ -200,40 +200,40 @@ func (mmGetPickupGames *LogProcessorMock) GetPickupGames(domain string) (g1 mm_r
 	if mmGetPickupGames.GetPickupGamesMock.defaultExpectation != nil {
 		mm_atomic.AddUint64(&mmGetPickupGames.GetPickupGamesMock.defaultExpectation.Counter, 1)
 		mm_want := mmGetPickupGames.GetPickupGamesMock.defaultExpectation.params
-		mm_got := LogProcessorMockGetPickupGamesParams{domain}
+		mm_got := LogUploaderMockGetPickupGamesParams{domain}
 		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
-			mmGetPickupGames.t.Errorf("LogProcessorMock.GetPickupGames got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+			mmGetPickupGames.t.Errorf("LogUploaderMock.GetPickupGames got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
 		}
 
 		mm_results := mmGetPickupGames.GetPickupGamesMock.defaultExpectation.results
 		if mm_results == nil {
-			mmGetPickupGames.t.Fatal("No results are set for the LogProcessorMock.GetPickupGames")
+			mmGetPickupGames.t.Fatal("No results are set for the LogUploaderMock.GetPickupGames")
 		}
 		return (*mm_results).g1, (*mm_results).err
 	}
 	if mmGetPickupGames.funcGetPickupGames != nil {
 		return mmGetPickupGames.funcGetPickupGames(domain)
 	}
-	mmGetPickupGames.t.Fatalf("Unexpected call to LogProcessorMock.GetPickupGames. %v", domain)
+	mmGetPickupGames.t.Fatalf("Unexpected call to LogUploaderMock.GetPickupGames. %v", domain)
 	return
 }
 
-// GetPickupGamesAfterCounter returns a count of finished LogProcessorMock.GetPickupGames invocations
-func (mmGetPickupGames *LogProcessorMock) GetPickupGamesAfterCounter() uint64 {
+// GetPickupGamesAfterCounter returns a count of finished LogUploaderMock.GetPickupGames invocations
+func (mmGetPickupGames *LogUploaderMock) GetPickupGamesAfterCounter() uint64 {
 	return mm_atomic.LoadUint64(&mmGetPickupGames.afterGetPickupGamesCounter)
 }
 
-// GetPickupGamesBeforeCounter returns a count of LogProcessorMock.GetPickupGames invocations
-func (mmGetPickupGames *LogProcessorMock) GetPickupGamesBeforeCounter() uint64 {
+// GetPickupGamesBeforeCounter returns a count of LogUploaderMock.GetPickupGames invocations
+func (mmGetPickupGames *LogUploaderMock) GetPickupGamesBeforeCounter() uint64 {
 	return mm_atomic.LoadUint64(&mmGetPickupGames.beforeGetPickupGamesCounter)
 }
 
-// Calls returns a list of arguments used in each call to LogProcessorMock.GetPickupGames.
+// Calls returns a list of arguments used in each call to LogUploaderMock.GetPickupGames.
 // The list is in the same order as the calls were made (i.e. recent calls have a higher index)
-func (mmGetPickupGames *mLogProcessorMockGetPickupGames) Calls() []*LogProcessorMockGetPickupGamesParams {
+func (mmGetPickupGames *mLogUploaderMockGetPickupGames) Calls() []*LogUploaderMockGetPickupGamesParams {
 	mmGetPickupGames.mutex.RLock()
 
-	argCopy := make([]*LogProcessorMockGetPickupGamesParams, len(mmGetPickupGames.callArgs))
+	argCopy := make([]*LogUploaderMockGetPickupGamesParams, len(mmGetPickupGames.callArgs))
 	copy(argCopy, mmGetPickupGames.callArgs)
 
 	mmGetPickupGames.mutex.RUnlock()
@@ -243,7 +243,7 @@ func (mmGetPickupGames *mLogProcessorMockGetPickupGames) Calls() []*LogProcessor
 
 // MinimockGetPickupGamesDone returns true if the count of the GetPickupGames invocations corresponds
 // the number of defined expectations
-func (m *LogProcessorMock) MinimockGetPickupGamesDone() bool {
+func (m *LogUploaderMock) MinimockGetPickupGamesDone() bool {
 	for _, e := range m.GetPickupGamesMock.expectations {
 		if mm_atomic.LoadUint64(&e.Counter) < 1 {
 			return false
@@ -262,68 +262,68 @@ func (m *LogProcessorMock) MinimockGetPickupGamesDone() bool {
 }
 
 // MinimockGetPickupGamesInspect logs each unmet expectation
-func (m *LogProcessorMock) MinimockGetPickupGamesInspect() {
+func (m *LogUploaderMock) MinimockGetPickupGamesInspect() {
 	for _, e := range m.GetPickupGamesMock.expectations {
 		if mm_atomic.LoadUint64(&e.Counter) < 1 {
-			m.t.Errorf("Expected call to LogProcessorMock.GetPickupGames with params: %#v", *e.params)
+			m.t.Errorf("Expected call to LogUploaderMock.GetPickupGames with params: %#v", *e.params)
 		}
 	}
 
 	// if default expectation was set then invocations count should be greater than zero
 	if m.GetPickupGamesMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterGetPickupGamesCounter) < 1 {
 		if m.GetPickupGamesMock.defaultExpectation.params == nil {
-			m.t.Error("Expected call to LogProcessorMock.GetPickupGames")
+			m.t.Error("Expected call to LogUploaderMock.GetPickupGames")
 		} else {
-			m.t.Errorf("Expected call to LogProcessorMock.GetPickupGames with params: %#v", *m.GetPickupGamesMock.defaultExpectation.params)
+			m.t.Errorf("Expected call to LogUploaderMock.GetPickupGames with params: %#v", *m.GetPickupGamesMock.defaultExpectation.params)
 		}
 	}
 	// if func was set then invocations count should be greater than zero
 	if m.funcGetPickupGames != nil && mm_atomic.LoadUint64(&m.afterGetPickupGamesCounter) < 1 {
-		m.t.Error("Expected call to LogProcessorMock.GetPickupGames")
+		m.t.Error("Expected call to LogUploaderMock.GetPickupGames")
 	}
 }
 
-type mLogProcessorMockMakeMultipartMap struct {
-	mock               *LogProcessorMock
-	defaultExpectation *LogProcessorMockMakeMultipartMapExpectation
-	expectations       []*LogProcessorMockMakeMultipartMapExpectation
+type mLogUploaderMockMakeMultipartMap struct {
+	mock               *LogUploaderMock
+	defaultExpectation *LogUploaderMockMakeMultipartMapExpectation
+	expectations       []*LogUploaderMockMakeMultipartMapExpectation
 
-	callArgs []*LogProcessorMockMakeMultipartMapParams
+	callArgs []*LogUploaderMockMakeMultipartMapParams
 	mutex    sync.RWMutex
 }
 
-// LogProcessorMockMakeMultipartMapExpectation specifies expectation struct of the LogUploader.MakeMultipartMap
-type LogProcessorMockMakeMultipartMapExpectation struct {
-	mock    *LogProcessorMock
-	params  *LogProcessorMockMakeMultipartMapParams
-	results *LogProcessorMockMakeMultipartMapResults
+// LogUploaderMockMakeMultipartMapExpectation specifies expectation struct of the LogUploader.MakeMultipartMap
+type LogUploaderMockMakeMultipartMapExpectation struct {
+	mock    *LogUploaderMock
+	params  *LogUploaderMockMakeMultipartMapParams
+	results *LogUploaderMockMakeMultipartMapResults
 	Counter uint64
 }
 
-// LogProcessorMockMakeMultipartMapParams contains parameters of the LogUploader.MakeMultipartMap
-type LogProcessorMockMakeMultipartMapParams struct {
+// LogUploaderMockMakeMultipartMapParams contains parameters of the LogUploader.MakeMultipartMap
+type LogUploaderMockMakeMultipartMapParams struct {
 	_map     string
 	domain   string
 	pickupID int
 	buf      bytes.Buffer
 }
 
-// LogProcessorMockMakeMultipartMapResults contains results of the LogUploader.MakeMultipartMap
-type LogProcessorMockMakeMultipartMapResults struct {
+// LogUploaderMockMakeMultipartMapResults contains results of the LogUploader.MakeMultipartMap
+type LogUploaderMockMakeMultipartMapResults struct {
 	m1 map[string]io.Reader
 }
 
 // Expect sets up expected params for LogUploader.MakeMultipartMap
-func (mmMakeMultipartMap *mLogProcessorMockMakeMultipartMap) Expect(_map string, domain string, pickupID int, buf bytes.Buffer) *mLogProcessorMockMakeMultipartMap {
+func (mmMakeMultipartMap *mLogUploaderMockMakeMultipartMap) Expect(_map string, domain string, pickupID int, buf bytes.Buffer) *mLogUploaderMockMakeMultipartMap {
 	if mmMakeMultipartMap.mock.funcMakeMultipartMap != nil {
-		mmMakeMultipartMap.mock.t.Fatalf("LogProcessorMock.MakeMultipartMap mock is already set by Set")
+		mmMakeMultipartMap.mock.t.Fatalf("LogUploaderMock.MakeMultipartMap mock is already set by Set")
 	}
 
 	if mmMakeMultipartMap.defaultExpectation == nil {
-		mmMakeMultipartMap.defaultExpectation = &LogProcessorMockMakeMultipartMapExpectation{}
+		mmMakeMultipartMap.defaultExpectation = &LogUploaderMockMakeMultipartMapExpectation{}
 	}
 
-	mmMakeMultipartMap.defaultExpectation.params = &LogProcessorMockMakeMultipartMapParams{_map, domain, pickupID, buf}
+	mmMakeMultipartMap.defaultExpectation.params = &LogUploaderMockMakeMultipartMapParams{_map, domain, pickupID, buf}
 	for _, e := range mmMakeMultipartMap.expectations {
 		if minimock.Equal(e.params, mmMakeMultipartMap.defaultExpectation.params) {
 			mmMakeMultipartMap.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmMakeMultipartMap.defaultExpectation.params)
@@ -334,9 +334,9 @@ func (mmMakeMultipartMap *mLogProcessorMockMakeMultipartMap) Expect(_map string,
 }
 
 // Inspect accepts an inspector function that has same arguments as the LogUploader.MakeMultipartMap
-func (mmMakeMultipartMap *mLogProcessorMockMakeMultipartMap) Inspect(f func(_map string, domain string, pickupID int, buf bytes.Buffer)) *mLogProcessorMockMakeMultipartMap {
+func (mmMakeMultipartMap *mLogUploaderMockMakeMultipartMap) Inspect(f func(_map string, domain string, pickupID int, buf bytes.Buffer)) *mLogUploaderMockMakeMultipartMap {
 	if mmMakeMultipartMap.mock.inspectFuncMakeMultipartMap != nil {
-		mmMakeMultipartMap.mock.t.Fatalf("Inspect function is already set for LogProcessorMock.MakeMultipartMap")
+		mmMakeMultipartMap.mock.t.Fatalf("Inspect function is already set for LogUploaderMock.MakeMultipartMap")
 	}
 
 	mmMakeMultipartMap.mock.inspectFuncMakeMultipartMap = f
@@ -345,20 +345,20 @@ func (mmMakeMultipartMap *mLogProcessorMockMakeMultipartMap) Inspect(f func(_map
 }
 
 // Return sets up results that will be returned by LogUploader.MakeMultipartMap
-func (mmMakeMultipartMap *mLogProcessorMockMakeMultipartMap) Return(m1 map[string]io.Reader) *LogProcessorMock {
+func (mmMakeMultipartMap *mLogUploaderMockMakeMultipartMap) Return(m1 map[string]io.Reader) *LogUploaderMock {
 	if mmMakeMultipartMap.mock.funcMakeMultipartMap != nil {
-		mmMakeMultipartMap.mock.t.Fatalf("LogProcessorMock.MakeMultipartMap mock is already set by Set")
+		mmMakeMultipartMap.mock.t.Fatalf("LogUploaderMock.MakeMultipartMap mock is already set by Set")
 	}
 
 	if mmMakeMultipartMap.defaultExpectation == nil {
-		mmMakeMultipartMap.defaultExpectation = &LogProcessorMockMakeMultipartMapExpectation{mock: mmMakeMultipartMap.mock}
+		mmMakeMultipartMap.defaultExpectation = &LogUploaderMockMakeMultipartMapExpectation{mock: mmMakeMultipartMap.mock}
 	}
-	mmMakeMultipartMap.defaultExpectation.results = &LogProcessorMockMakeMultipartMapResults{m1}
+	mmMakeMultipartMap.defaultExpectation.results = &LogUploaderMockMakeMultipartMapResults{m1}
 	return mmMakeMultipartMap.mock
 }
 
 //Set uses given function f to mock the LogUploader.MakeMultipartMap method
-func (mmMakeMultipartMap *mLogProcessorMockMakeMultipartMap) Set(f func(_map string, domain string, pickupID int, buf bytes.Buffer) (m1 map[string]io.Reader)) *LogProcessorMock {
+func (mmMakeMultipartMap *mLogUploaderMockMakeMultipartMap) Set(f func(_map string, domain string, pickupID int, buf bytes.Buffer) (m1 map[string]io.Reader)) *LogUploaderMock {
 	if mmMakeMultipartMap.defaultExpectation != nil {
 		mmMakeMultipartMap.mock.t.Fatalf("Default expectation is already set for the LogUploader.MakeMultipartMap method")
 	}
@@ -373,27 +373,27 @@ func (mmMakeMultipartMap *mLogProcessorMockMakeMultipartMap) Set(f func(_map str
 
 // When sets expectation for the LogUploader.MakeMultipartMap which will trigger the result defined by the following
 // Then helper
-func (mmMakeMultipartMap *mLogProcessorMockMakeMultipartMap) When(_map string, domain string, pickupID int, buf bytes.Buffer) *LogProcessorMockMakeMultipartMapExpectation {
+func (mmMakeMultipartMap *mLogUploaderMockMakeMultipartMap) When(_map string, domain string, pickupID int, buf bytes.Buffer) *LogUploaderMockMakeMultipartMapExpectation {
 	if mmMakeMultipartMap.mock.funcMakeMultipartMap != nil {
-		mmMakeMultipartMap.mock.t.Fatalf("LogProcessorMock.MakeMultipartMap mock is already set by Set")
+		mmMakeMultipartMap.mock.t.Fatalf("LogUploaderMock.MakeMultipartMap mock is already set by Set")
 	}
 
-	expectation := &LogProcessorMockMakeMultipartMapExpectation{
+	expectation := &LogUploaderMockMakeMultipartMapExpectation{
 		mock:   mmMakeMultipartMap.mock,
-		params: &LogProcessorMockMakeMultipartMapParams{_map, domain, pickupID, buf},
+		params: &LogUploaderMockMakeMultipartMapParams{_map, domain, pickupID, buf},
 	}
 	mmMakeMultipartMap.expectations = append(mmMakeMultipartMap.expectations, expectation)
 	return expectation
 }
 
 // Then sets up LogUploader.MakeMultipartMap return parameters for the expectation previously defined by the When method
-func (e *LogProcessorMockMakeMultipartMapExpectation) Then(m1 map[string]io.Reader) *LogProcessorMock {
-	e.results = &LogProcessorMockMakeMultipartMapResults{m1}
+func (e *LogUploaderMockMakeMultipartMapExpectation) Then(m1 map[string]io.Reader) *LogUploaderMock {
+	e.results = &LogUploaderMockMakeMultipartMapResults{m1}
 	return e.mock
 }
 
 // MakeMultipartMap implements requests.LogUploader
-func (mmMakeMultipartMap *LogProcessorMock) MakeMultipartMap(_map string, domain string, pickupID int, buf bytes.Buffer) (m1 map[string]io.Reader) {
+func (mmMakeMultipartMap *LogUploaderMock) MakeMultipartMap(_map string, domain string, pickupID int, buf bytes.Buffer) (m1 map[string]io.Reader) {
 	mm_atomic.AddUint64(&mmMakeMultipartMap.beforeMakeMultipartMapCounter, 1)
 	defer mm_atomic.AddUint64(&mmMakeMultipartMap.afterMakeMultipartMapCounter, 1)
 
@@ -401,7 +401,7 @@ func (mmMakeMultipartMap *LogProcessorMock) MakeMultipartMap(_map string, domain
 		mmMakeMultipartMap.inspectFuncMakeMultipartMap(_map, domain, pickupID, buf)
 	}
 
-	mm_params := &LogProcessorMockMakeMultipartMapParams{_map, domain, pickupID, buf}
+	mm_params := &LogUploaderMockMakeMultipartMapParams{_map, domain, pickupID, buf}
 
 	// Record call args
 	mmMakeMultipartMap.MakeMultipartMapMock.mutex.Lock()
@@ -418,40 +418,40 @@ func (mmMakeMultipartMap *LogProcessorMock) MakeMultipartMap(_map string, domain
 	if mmMakeMultipartMap.MakeMultipartMapMock.defaultExpectation != nil {
 		mm_atomic.AddUint64(&mmMakeMultipartMap.MakeMultipartMapMock.defaultExpectation.Counter, 1)
 		mm_want := mmMakeMultipartMap.MakeMultipartMapMock.defaultExpectation.params
-		mm_got := LogProcessorMockMakeMultipartMapParams{_map, domain, pickupID, buf}
+		mm_got := LogUploaderMockMakeMultipartMapParams{_map, domain, pickupID, buf}
 		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
-			mmMakeMultipartMap.t.Errorf("LogProcessorMock.MakeMultipartMap got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+			mmMakeMultipartMap.t.Errorf("LogUploaderMock.MakeMultipartMap got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
 		}
 
 		mm_results := mmMakeMultipartMap.MakeMultipartMapMock.defaultExpectation.results
 		if mm_results == nil {
-			mmMakeMultipartMap.t.Fatal("No results are set for the LogProcessorMock.MakeMultipartMap")
+			mmMakeMultipartMap.t.Fatal("No results are set for the LogUploaderMock.MakeMultipartMap")
 		}
 		return (*mm_results).m1
 	}
 	if mmMakeMultipartMap.funcMakeMultipartMap != nil {
 		return mmMakeMultipartMap.funcMakeMultipartMap(_map, domain, pickupID, buf)
 	}
-	mmMakeMultipartMap.t.Fatalf("Unexpected call to LogProcessorMock.MakeMultipartMap. %v %v %v %v", _map, domain, pickupID, buf)
+	mmMakeMultipartMap.t.Fatalf("Unexpected call to LogUploaderMock.MakeMultipartMap. %v %v %v %v", _map, domain, pickupID, buf)
 	return
 }
 
-// MakeMultipartMapAfterCounter returns a count of finished LogProcessorMock.MakeMultipartMap invocations
-func (mmMakeMultipartMap *LogProcessorMock) MakeMultipartMapAfterCounter() uint64 {
+// MakeMultipartMapAfterCounter returns a count of finished LogUploaderMock.MakeMultipartMap invocations
+func (mmMakeMultipartMap *LogUploaderMock) MakeMultipartMapAfterCounter() uint64 {
 	return mm_atomic.LoadUint64(&mmMakeMultipartMap.afterMakeMultipartMapCounter)
 }
 
-// MakeMultipartMapBeforeCounter returns a count of LogProcessorMock.MakeMultipartMap invocations
-func (mmMakeMultipartMap *LogProcessorMock) MakeMultipartMapBeforeCounter() uint64 {
+// MakeMultipartMapBeforeCounter returns a count of LogUploaderMock.MakeMultipartMap invocations
+func (mmMakeMultipartMap *LogUploaderMock) MakeMultipartMapBeforeCounter() uint64 {
 	return mm_atomic.LoadUint64(&mmMakeMultipartMap.beforeMakeMultipartMapCounter)
 }
 
-// Calls returns a list of arguments used in each call to LogProcessorMock.MakeMultipartMap.
+// Calls returns a list of arguments used in each call to LogUploaderMock.MakeMultipartMap.
 // The list is in the same order as the calls were made (i.e. recent calls have a higher index)
-func (mmMakeMultipartMap *mLogProcessorMockMakeMultipartMap) Calls() []*LogProcessorMockMakeMultipartMapParams {
+func (mmMakeMultipartMap *mLogUploaderMockMakeMultipartMap) Calls() []*LogUploaderMockMakeMultipartMapParams {
 	mmMakeMultipartMap.mutex.RLock()
 
-	argCopy := make([]*LogProcessorMockMakeMultipartMapParams, len(mmMakeMultipartMap.callArgs))
+	argCopy := make([]*LogUploaderMockMakeMultipartMapParams, len(mmMakeMultipartMap.callArgs))
 	copy(argCopy, mmMakeMultipartMap.callArgs)
 
 	mmMakeMultipartMap.mutex.RUnlock()
@@ -461,7 +461,7 @@ func (mmMakeMultipartMap *mLogProcessorMockMakeMultipartMap) Calls() []*LogProce
 
 // MinimockMakeMultipartMapDone returns true if the count of the MakeMultipartMap invocations corresponds
 // the number of defined expectations
-func (m *LogProcessorMock) MinimockMakeMultipartMapDone() bool {
+func (m *LogUploaderMock) MinimockMakeMultipartMapDone() bool {
 	for _, e := range m.MakeMultipartMapMock.expectations {
 		if mm_atomic.LoadUint64(&e.Counter) < 1 {
 			return false
@@ -480,66 +480,66 @@ func (m *LogProcessorMock) MinimockMakeMultipartMapDone() bool {
 }
 
 // MinimockMakeMultipartMapInspect logs each unmet expectation
-func (m *LogProcessorMock) MinimockMakeMultipartMapInspect() {
+func (m *LogUploaderMock) MinimockMakeMultipartMapInspect() {
 	for _, e := range m.MakeMultipartMapMock.expectations {
 		if mm_atomic.LoadUint64(&e.Counter) < 1 {
-			m.t.Errorf("Expected call to LogProcessorMock.MakeMultipartMap with params: %#v", *e.params)
+			m.t.Errorf("Expected call to LogUploaderMock.MakeMultipartMap with params: %#v", *e.params)
 		}
 	}
 
 	// if default expectation was set then invocations count should be greater than zero
 	if m.MakeMultipartMapMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterMakeMultipartMapCounter) < 1 {
 		if m.MakeMultipartMapMock.defaultExpectation.params == nil {
-			m.t.Error("Expected call to LogProcessorMock.MakeMultipartMap")
+			m.t.Error("Expected call to LogUploaderMock.MakeMultipartMap")
 		} else {
-			m.t.Errorf("Expected call to LogProcessorMock.MakeMultipartMap with params: %#v", *m.MakeMultipartMapMock.defaultExpectation.params)
+			m.t.Errorf("Expected call to LogUploaderMock.MakeMultipartMap with params: %#v", *m.MakeMultipartMapMock.defaultExpectation.params)
 		}
 	}
 	// if func was set then invocations count should be greater than zero
 	if m.funcMakeMultipartMap != nil && mm_atomic.LoadUint64(&m.afterMakeMultipartMapCounter) < 1 {
-		m.t.Error("Expected call to LogProcessorMock.MakeMultipartMap")
+		m.t.Error("Expected call to LogUploaderMock.MakeMultipartMap")
 	}
 }
 
-type mLogProcessorMockResolvePlayers struct {
-	mock               *LogProcessorMock
-	defaultExpectation *LogProcessorMockResolvePlayersExpectation
-	expectations       []*LogProcessorMockResolvePlayersExpectation
+type mLogUploaderMockResolvePlayers struct {
+	mock               *LogUploaderMock
+	defaultExpectation *LogUploaderMockResolvePlayersExpectation
+	expectations       []*LogUploaderMockResolvePlayersExpectation
 
-	callArgs []*LogProcessorMockResolvePlayersParams
+	callArgs []*LogUploaderMockResolvePlayersParams
 	mutex    sync.RWMutex
 }
 
-// LogProcessorMockResolvePlayersExpectation specifies expectation struct of the LogUploader.ResolvePlayers
-type LogProcessorMockResolvePlayersExpectation struct {
-	mock    *LogProcessorMock
-	params  *LogProcessorMockResolvePlayersParams
-	results *LogProcessorMockResolvePlayersResults
+// LogUploaderMockResolvePlayersExpectation specifies expectation struct of the LogUploader.ResolvePlayers
+type LogUploaderMockResolvePlayersExpectation struct {
+	mock    *LogUploaderMock
+	params  *LogUploaderMockResolvePlayersParams
+	results *LogUploaderMockResolvePlayersResults
 	Counter uint64
 }
 
-// LogProcessorMockResolvePlayersParams contains parameters of the LogUploader.ResolvePlayers
-type LogProcessorMockResolvePlayersParams struct {
+// LogUploaderMockResolvePlayersParams contains parameters of the LogUploader.ResolvePlayers
+type LogUploaderMockResolvePlayersParams struct {
 	domain  string
 	players []*stats.PickupPlayer
 }
 
-// LogProcessorMockResolvePlayersResults contains results of the LogUploader.ResolvePlayers
-type LogProcessorMockResolvePlayersResults struct {
+// LogUploaderMockResolvePlayersResults contains results of the LogUploader.ResolvePlayers
+type LogUploaderMockResolvePlayersResults struct {
 	err error
 }
 
 // Expect sets up expected params for LogUploader.ResolvePlayers
-func (mmResolvePlayers *mLogProcessorMockResolvePlayers) Expect(domain string, players []*stats.PickupPlayer) *mLogProcessorMockResolvePlayers {
+func (mmResolvePlayers *mLogUploaderMockResolvePlayers) Expect(domain string, players []*stats.PickupPlayer) *mLogUploaderMockResolvePlayers {
 	if mmResolvePlayers.mock.funcResolvePlayers != nil {
-		mmResolvePlayers.mock.t.Fatalf("LogProcessorMock.ResolvePlayers mock is already set by Set")
+		mmResolvePlayers.mock.t.Fatalf("LogUploaderMock.ResolvePlayers mock is already set by Set")
 	}
 
 	if mmResolvePlayers.defaultExpectation == nil {
-		mmResolvePlayers.defaultExpectation = &LogProcessorMockResolvePlayersExpectation{}
+		mmResolvePlayers.defaultExpectation = &LogUploaderMockResolvePlayersExpectation{}
 	}
 
-	mmResolvePlayers.defaultExpectation.params = &LogProcessorMockResolvePlayersParams{domain, players}
+	mmResolvePlayers.defaultExpectation.params = &LogUploaderMockResolvePlayersParams{domain, players}
 	for _, e := range mmResolvePlayers.expectations {
 		if minimock.Equal(e.params, mmResolvePlayers.defaultExpectation.params) {
 			mmResolvePlayers.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmResolvePlayers.defaultExpectation.params)
@@ -550,9 +550,9 @@ func (mmResolvePlayers *mLogProcessorMockResolvePlayers) Expect(domain string, p
 }
 
 // Inspect accepts an inspector function that has same arguments as the LogUploader.ResolvePlayers
-func (mmResolvePlayers *mLogProcessorMockResolvePlayers) Inspect(f func(domain string, players []*stats.PickupPlayer)) *mLogProcessorMockResolvePlayers {
+func (mmResolvePlayers *mLogUploaderMockResolvePlayers) Inspect(f func(domain string, players []*stats.PickupPlayer)) *mLogUploaderMockResolvePlayers {
 	if mmResolvePlayers.mock.inspectFuncResolvePlayers != nil {
-		mmResolvePlayers.mock.t.Fatalf("Inspect function is already set for LogProcessorMock.ResolvePlayers")
+		mmResolvePlayers.mock.t.Fatalf("Inspect function is already set for LogUploaderMock.ResolvePlayers")
 	}
 
 	mmResolvePlayers.mock.inspectFuncResolvePlayers = f
@@ -561,20 +561,20 @@ func (mmResolvePlayers *mLogProcessorMockResolvePlayers) Inspect(f func(domain s
 }
 
 // Return sets up results that will be returned by LogUploader.ResolvePlayers
-func (mmResolvePlayers *mLogProcessorMockResolvePlayers) Return(err error) *LogProcessorMock {
+func (mmResolvePlayers *mLogUploaderMockResolvePlayers) Return(err error) *LogUploaderMock {
 	if mmResolvePlayers.mock.funcResolvePlayers != nil {
-		mmResolvePlayers.mock.t.Fatalf("LogProcessorMock.ResolvePlayers mock is already set by Set")
+		mmResolvePlayers.mock.t.Fatalf("LogUploaderMock.ResolvePlayers mock is already set by Set")
 	}
 
 	if mmResolvePlayers.defaultExpectation == nil {
-		mmResolvePlayers.defaultExpectation = &LogProcessorMockResolvePlayersExpectation{mock: mmResolvePlayers.mock}
+		mmResolvePlayers.defaultExpectation = &LogUploaderMockResolvePlayersExpectation{mock: mmResolvePlayers.mock}
 	}
-	mmResolvePlayers.defaultExpectation.results = &LogProcessorMockResolvePlayersResults{err}
+	mmResolvePlayers.defaultExpectation.results = &LogUploaderMockResolvePlayersResults{err}
 	return mmResolvePlayers.mock
 }
 
 //Set uses given function f to mock the LogUploader.ResolvePlayers method
-func (mmResolvePlayers *mLogProcessorMockResolvePlayers) Set(f func(domain string, players []*stats.PickupPlayer) (err error)) *LogProcessorMock {
+func (mmResolvePlayers *mLogUploaderMockResolvePlayers) Set(f func(domain string, players []*stats.PickupPlayer) (err error)) *LogUploaderMock {
 	if mmResolvePlayers.defaultExpectation != nil {
 		mmResolvePlayers.mock.t.Fatalf("Default expectation is already set for the LogUploader.ResolvePlayers method")
 	}
@@ -589,27 +589,27 @@ func (mmResolvePlayers *mLogProcessorMockResolvePlayers) Set(f func(domain strin
 
 // When sets expectation for the LogUploader.ResolvePlayers which will trigger the result defined by the following
 // Then helper
-func (mmResolvePlayers *mLogProcessorMockResolvePlayers) When(domain string, players []*stats.PickupPlayer) *LogProcessorMockResolvePlayersExpectation {
+func (mmResolvePlayers *mLogUploaderMockResolvePlayers) When(domain string, players []*stats.PickupPlayer) *LogUploaderMockResolvePlayersExpectation {
 	if mmResolvePlayers.mock.funcResolvePlayers != nil {
-		mmResolvePlayers.mock.t.Fatalf("LogProcessorMock.ResolvePlayers mock is already set by Set")
+		mmResolvePlayers.mock.t.Fatalf("LogUploaderMock.ResolvePlayers mock is already set by Set")
 	}
 
-	expectation := &LogProcessorMockResolvePlayersExpectation{
+	expectation := &LogUploaderMockResolvePlayersExpectation{
 		mock:   mmResolvePlayers.mock,
-		params: &LogProcessorMockResolvePlayersParams{domain, players},
+		params: &LogUploaderMockResolvePlayersParams{domain, players},
 	}
 	mmResolvePlayers.expectations = append(mmResolvePlayers.expectations, expectation)
 	return expectation
 }
 
 // Then sets up LogUploader.ResolvePlayers return parameters for the expectation previously defined by the When method
-func (e *LogProcessorMockResolvePlayersExpectation) Then(err error) *LogProcessorMock {
-	e.results = &LogProcessorMockResolvePlayersResults{err}
+func (e *LogUploaderMockResolvePlayersExpectation) Then(err error) *LogUploaderMock {
+	e.results = &LogUploaderMockResolvePlayersResults{err}
 	return e.mock
 }
 
 // ResolvePlayers implements requests.LogUploader
-func (mmResolvePlayers *LogProcessorMock) ResolvePlayers(domain string, players []*stats.PickupPlayer) (err error) {
+func (mmResolvePlayers *LogUploaderMock) ResolvePlayers(domain string, players []*stats.PickupPlayer) (err error) {
 	mm_atomic.AddUint64(&mmResolvePlayers.beforeResolvePlayersCounter, 1)
 	defer mm_atomic.AddUint64(&mmResolvePlayers.afterResolvePlayersCounter, 1)
 
@@ -617,7 +617,7 @@ func (mmResolvePlayers *LogProcessorMock) ResolvePlayers(domain string, players 
 		mmResolvePlayers.inspectFuncResolvePlayers(domain, players)
 	}
 
-	mm_params := &LogProcessorMockResolvePlayersParams{domain, players}
+	mm_params := &LogUploaderMockResolvePlayersParams{domain, players}
 
 	// Record call args
 	mmResolvePlayers.ResolvePlayersMock.mutex.Lock()
@@ -634,40 +634,40 @@ func (mmResolvePlayers *LogProcessorMock) ResolvePlayers(domain string, players 
 	if mmResolvePlayers.ResolvePlayersMock.defaultExpectation != nil {
 		mm_atomic.AddUint64(&mmResolvePlayers.ResolvePlayersMock.defaultExpectation.Counter, 1)
 		mm_want := mmResolvePlayers.ResolvePlayersMock.defaultExpectation.params
-		mm_got := LogProcessorMockResolvePlayersParams{domain, players}
+		mm_got := LogUploaderMockResolvePlayersParams{domain, players}
 		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
-			mmResolvePlayers.t.Errorf("LogProcessorMock.ResolvePlayers got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+			mmResolvePlayers.t.Errorf("LogUploaderMock.ResolvePlayers got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
 		}
 
 		mm_results := mmResolvePlayers.ResolvePlayersMock.defaultExpectation.results
 		if mm_results == nil {
-			mmResolvePlayers.t.Fatal("No results are set for the LogProcessorMock.ResolvePlayers")
+			mmResolvePlayers.t.Fatal("No results are set for the LogUploaderMock.ResolvePlayers")
 		}
 		return (*mm_results).err
 	}
 	if mmResolvePlayers.funcResolvePlayers != nil {
 		return mmResolvePlayers.funcResolvePlayers(domain, players)
 	}
-	mmResolvePlayers.t.Fatalf("Unexpected call to LogProcessorMock.ResolvePlayers. %v %v", domain, players)
+	mmResolvePlayers.t.Fatalf("Unexpected call to LogUploaderMock.ResolvePlayers. %v %v", domain, players)
 	return
 }
 
-// ResolvePlayersAfterCounter returns a count of finished LogProcessorMock.ResolvePlayers invocations
-func (mmResolvePlayers *LogProcessorMock) ResolvePlayersAfterCounter() uint64 {
+// ResolvePlayersAfterCounter returns a count of finished LogUploaderMock.ResolvePlayers invocations
+func (mmResolvePlayers *LogUploaderMock) ResolvePlayersAfterCounter() uint64 {
 	return mm_atomic.LoadUint64(&mmResolvePlayers.afterResolvePlayersCounter)
 }
 
-// ResolvePlayersBeforeCounter returns a count of LogProcessorMock.ResolvePlayers invocations
-func (mmResolvePlayers *LogProcessorMock) ResolvePlayersBeforeCounter() uint64 {
+// ResolvePlayersBeforeCounter returns a count of LogUploaderMock.ResolvePlayers invocations
+func (mmResolvePlayers *LogUploaderMock) ResolvePlayersBeforeCounter() uint64 {
 	return mm_atomic.LoadUint64(&mmResolvePlayers.beforeResolvePlayersCounter)
 }
 
-// Calls returns a list of arguments used in each call to LogProcessorMock.ResolvePlayers.
+// Calls returns a list of arguments used in each call to LogUploaderMock.ResolvePlayers.
 // The list is in the same order as the calls were made (i.e. recent calls have a higher index)
-func (mmResolvePlayers *mLogProcessorMockResolvePlayers) Calls() []*LogProcessorMockResolvePlayersParams {
+func (mmResolvePlayers *mLogUploaderMockResolvePlayers) Calls() []*LogUploaderMockResolvePlayersParams {
 	mmResolvePlayers.mutex.RLock()
 
-	argCopy := make([]*LogProcessorMockResolvePlayersParams, len(mmResolvePlayers.callArgs))
+	argCopy := make([]*LogUploaderMockResolvePlayersParams, len(mmResolvePlayers.callArgs))
 	copy(argCopy, mmResolvePlayers.callArgs)
 
 	mmResolvePlayers.mutex.RUnlock()
@@ -677,7 +677,7 @@ func (mmResolvePlayers *mLogProcessorMockResolvePlayers) Calls() []*LogProcessor
 
 // MinimockResolvePlayersDone returns true if the count of the ResolvePlayers invocations corresponds
 // the number of defined expectations
-func (m *LogProcessorMock) MinimockResolvePlayersDone() bool {
+func (m *LogUploaderMock) MinimockResolvePlayersDone() bool {
 	for _, e := range m.ResolvePlayersMock.expectations {
 		if mm_atomic.LoadUint64(&e.Counter) < 1 {
 			return false
@@ -696,65 +696,65 @@ func (m *LogProcessorMock) MinimockResolvePlayersDone() bool {
 }
 
 // MinimockResolvePlayersInspect logs each unmet expectation
-func (m *LogProcessorMock) MinimockResolvePlayersInspect() {
+func (m *LogUploaderMock) MinimockResolvePlayersInspect() {
 	for _, e := range m.ResolvePlayersMock.expectations {
 		if mm_atomic.LoadUint64(&e.Counter) < 1 {
-			m.t.Errorf("Expected call to LogProcessorMock.ResolvePlayers with params: %#v", *e.params)
+			m.t.Errorf("Expected call to LogUploaderMock.ResolvePlayers with params: %#v", *e.params)
 		}
 	}
 
 	// if default expectation was set then invocations count should be greater than zero
 	if m.ResolvePlayersMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterResolvePlayersCounter) < 1 {
 		if m.ResolvePlayersMock.defaultExpectation.params == nil {
-			m.t.Error("Expected call to LogProcessorMock.ResolvePlayers")
+			m.t.Error("Expected call to LogUploaderMock.ResolvePlayers")
 		} else {
-			m.t.Errorf("Expected call to LogProcessorMock.ResolvePlayers with params: %#v", *m.ResolvePlayersMock.defaultExpectation.params)
+			m.t.Errorf("Expected call to LogUploaderMock.ResolvePlayers with params: %#v", *m.ResolvePlayersMock.defaultExpectation.params)
 		}
 	}
 	// if func was set then invocations count should be greater than zero
 	if m.funcResolvePlayers != nil && mm_atomic.LoadUint64(&m.afterResolvePlayersCounter) < 1 {
-		m.t.Error("Expected call to LogProcessorMock.ResolvePlayers")
+		m.t.Error("Expected call to LogUploaderMock.ResolvePlayers")
 	}
 }
 
-type mLogProcessorMockUploadLogFile struct {
-	mock               *LogProcessorMock
-	defaultExpectation *LogProcessorMockUploadLogFileExpectation
-	expectations       []*LogProcessorMockUploadLogFileExpectation
+type mLogUploaderMockUploadLogFile struct {
+	mock               *LogUploaderMock
+	defaultExpectation *LogUploaderMockUploadLogFileExpectation
+	expectations       []*LogUploaderMockUploadLogFileExpectation
 
-	callArgs []*LogProcessorMockUploadLogFileParams
+	callArgs []*LogUploaderMockUploadLogFileParams
 	mutex    sync.RWMutex
 }
 
-// LogProcessorMockUploadLogFileExpectation specifies expectation struct of the LogUploader.UploadLogFile
-type LogProcessorMockUploadLogFileExpectation struct {
-	mock    *LogProcessorMock
-	params  *LogProcessorMockUploadLogFileParams
-	results *LogProcessorMockUploadLogFileResults
+// LogUploaderMockUploadLogFileExpectation specifies expectation struct of the LogUploader.UploadLogFile
+type LogUploaderMockUploadLogFileExpectation struct {
+	mock    *LogUploaderMock
+	params  *LogUploaderMockUploadLogFileParams
+	results *LogUploaderMockUploadLogFileResults
 	Counter uint64
 }
 
-// LogProcessorMockUploadLogFileParams contains parameters of the LogUploader.UploadLogFile
-type LogProcessorMockUploadLogFileParams struct {
+// LogUploaderMockUploadLogFileParams contains parameters of the LogUploader.UploadLogFile
+type LogUploaderMockUploadLogFileParams struct {
 	payload map[string]io.Reader
 }
 
-// LogProcessorMockUploadLogFileResults contains results of the LogUploader.UploadLogFile
-type LogProcessorMockUploadLogFileResults struct {
+// LogUploaderMockUploadLogFileResults contains results of the LogUploader.UploadLogFile
+type LogUploaderMockUploadLogFileResults struct {
 	err error
 }
 
 // Expect sets up expected params for LogUploader.UploadLogFile
-func (mmUploadLogFile *mLogProcessorMockUploadLogFile) Expect(payload map[string]io.Reader) *mLogProcessorMockUploadLogFile {
+func (mmUploadLogFile *mLogUploaderMockUploadLogFile) Expect(payload map[string]io.Reader) *mLogUploaderMockUploadLogFile {
 	if mmUploadLogFile.mock.funcUploadLogFile != nil {
-		mmUploadLogFile.mock.t.Fatalf("LogProcessorMock.UploadLogFile mock is already set by Set")
+		mmUploadLogFile.mock.t.Fatalf("LogUploaderMock.UploadLogFile mock is already set by Set")
 	}
 
 	if mmUploadLogFile.defaultExpectation == nil {
-		mmUploadLogFile.defaultExpectation = &LogProcessorMockUploadLogFileExpectation{}
+		mmUploadLogFile.defaultExpectation = &LogUploaderMockUploadLogFileExpectation{}
 	}
 
-	mmUploadLogFile.defaultExpectation.params = &LogProcessorMockUploadLogFileParams{payload}
+	mmUploadLogFile.defaultExpectation.params = &LogUploaderMockUploadLogFileParams{payload}
 	for _, e := range mmUploadLogFile.expectations {
 		if minimock.Equal(e.params, mmUploadLogFile.defaultExpectation.params) {
 			mmUploadLogFile.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmUploadLogFile.defaultExpectation.params)
@@ -765,9 +765,9 @@ func (mmUploadLogFile *mLogProcessorMockUploadLogFile) Expect(payload map[string
 }
 
 // Inspect accepts an inspector function that has same arguments as the LogUploader.UploadLogFile
-func (mmUploadLogFile *mLogProcessorMockUploadLogFile) Inspect(f func(payload map[string]io.Reader)) *mLogProcessorMockUploadLogFile {
+func (mmUploadLogFile *mLogUploaderMockUploadLogFile) Inspect(f func(payload map[string]io.Reader)) *mLogUploaderMockUploadLogFile {
 	if mmUploadLogFile.mock.inspectFuncUploadLogFile != nil {
-		mmUploadLogFile.mock.t.Fatalf("Inspect function is already set for LogProcessorMock.UploadLogFile")
+		mmUploadLogFile.mock.t.Fatalf("Inspect function is already set for LogUploaderMock.UploadLogFile")
 	}
 
 	mmUploadLogFile.mock.inspectFuncUploadLogFile = f
@@ -776,20 +776,20 @@ func (mmUploadLogFile *mLogProcessorMockUploadLogFile) Inspect(f func(payload ma
 }
 
 // Return sets up results that will be returned by LogUploader.UploadLogFile
-func (mmUploadLogFile *mLogProcessorMockUploadLogFile) Return(err error) *LogProcessorMock {
+func (mmUploadLogFile *mLogUploaderMockUploadLogFile) Return(err error) *LogUploaderMock {
 	if mmUploadLogFile.mock.funcUploadLogFile != nil {
-		mmUploadLogFile.mock.t.Fatalf("LogProcessorMock.UploadLogFile mock is already set by Set")
+		mmUploadLogFile.mock.t.Fatalf("LogUploaderMock.UploadLogFile mock is already set by Set")
 	}
 
 	if mmUploadLogFile.defaultExpectation == nil {
-		mmUploadLogFile.defaultExpectation = &LogProcessorMockUploadLogFileExpectation{mock: mmUploadLogFile.mock}
+		mmUploadLogFile.defaultExpectation = &LogUploaderMockUploadLogFileExpectation{mock: mmUploadLogFile.mock}
 	}
-	mmUploadLogFile.defaultExpectation.results = &LogProcessorMockUploadLogFileResults{err}
+	mmUploadLogFile.defaultExpectation.results = &LogUploaderMockUploadLogFileResults{err}
 	return mmUploadLogFile.mock
 }
 
 //Set uses given function f to mock the LogUploader.UploadLogFile method
-func (mmUploadLogFile *mLogProcessorMockUploadLogFile) Set(f func(payload map[string]io.Reader) (err error)) *LogProcessorMock {
+func (mmUploadLogFile *mLogUploaderMockUploadLogFile) Set(f func(payload map[string]io.Reader) (err error)) *LogUploaderMock {
 	if mmUploadLogFile.defaultExpectation != nil {
 		mmUploadLogFile.mock.t.Fatalf("Default expectation is already set for the LogUploader.UploadLogFile method")
 	}
@@ -804,27 +804,27 @@ func (mmUploadLogFile *mLogProcessorMockUploadLogFile) Set(f func(payload map[st
 
 // When sets expectation for the LogUploader.UploadLogFile which will trigger the result defined by the following
 // Then helper
-func (mmUploadLogFile *mLogProcessorMockUploadLogFile) When(payload map[string]io.Reader) *LogProcessorMockUploadLogFileExpectation {
+func (mmUploadLogFile *mLogUploaderMockUploadLogFile) When(payload map[string]io.Reader) *LogUploaderMockUploadLogFileExpectation {
 	if mmUploadLogFile.mock.funcUploadLogFile != nil {
-		mmUploadLogFile.mock.t.Fatalf("LogProcessorMock.UploadLogFile mock is already set by Set")
+		mmUploadLogFile.mock.t.Fatalf("LogUploaderMock.UploadLogFile mock is already set by Set")
 	}
 
-	expectation := &LogProcessorMockUploadLogFileExpectation{
+	expectation := &LogUploaderMockUploadLogFileExpectation{
 		mock:   mmUploadLogFile.mock,
-		params: &LogProcessorMockUploadLogFileParams{payload},
+		params: &LogUploaderMockUploadLogFileParams{payload},
 	}
 	mmUploadLogFile.expectations = append(mmUploadLogFile.expectations, expectation)
 	return expectation
 }
 
 // Then sets up LogUploader.UploadLogFile return parameters for the expectation previously defined by the When method
-func (e *LogProcessorMockUploadLogFileExpectation) Then(err error) *LogProcessorMock {
-	e.results = &LogProcessorMockUploadLogFileResults{err}
+func (e *LogUploaderMockUploadLogFileExpectation) Then(err error) *LogUploaderMock {
+	e.results = &LogUploaderMockUploadLogFileResults{err}
 	return e.mock
 }
 
 // UploadLogFile implements requests.LogUploader
-func (mmUploadLogFile *LogProcessorMock) UploadLogFile(payload map[string]io.Reader) (err error) {
+func (mmUploadLogFile *LogUploaderMock) UploadLogFile(payload map[string]io.Reader) (err error) {
 	mm_atomic.AddUint64(&mmUploadLogFile.beforeUploadLogFileCounter, 1)
 	defer mm_atomic.AddUint64(&mmUploadLogFile.afterUploadLogFileCounter, 1)
 
@@ -832,7 +832,7 @@ func (mmUploadLogFile *LogProcessorMock) UploadLogFile(payload map[string]io.Rea
 		mmUploadLogFile.inspectFuncUploadLogFile(payload)
 	}
 
-	mm_params := &LogProcessorMockUploadLogFileParams{payload}
+	mm_params := &LogUploaderMockUploadLogFileParams{payload}
 
 	// Record call args
 	mmUploadLogFile.UploadLogFileMock.mutex.Lock()
@@ -849,40 +849,40 @@ func (mmUploadLogFile *LogProcessorMock) UploadLogFile(payload map[string]io.Rea
 	if mmUploadLogFile.UploadLogFileMock.defaultExpectation != nil {
 		mm_atomic.AddUint64(&mmUploadLogFile.UploadLogFileMock.defaultExpectation.Counter, 1)
 		mm_want := mmUploadLogFile.UploadLogFileMock.defaultExpectation.params
-		mm_got := LogProcessorMockUploadLogFileParams{payload}
+		mm_got := LogUploaderMockUploadLogFileParams{payload}
 		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
-			mmUploadLogFile.t.Errorf("LogProcessorMock.UploadLogFile got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+			mmUploadLogFile.t.Errorf("LogUploaderMock.UploadLogFile got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
 		}
 
 		mm_results := mmUploadLogFile.UploadLogFileMock.defaultExpectation.results
 		if mm_results == nil {
-			mmUploadLogFile.t.Fatal("No results are set for the LogProcessorMock.UploadLogFile")
+			mmUploadLogFile.t.Fatal("No results are set for the LogUploaderMock.UploadLogFile")
 		}
 		return (*mm_results).err
 	}
 	if mmUploadLogFile.funcUploadLogFile != nil {
 		return mmUploadLogFile.funcUploadLogFile(payload)
 	}
-	mmUploadLogFile.t.Fatalf("Unexpected call to LogProcessorMock.UploadLogFile. %v", payload)
+	mmUploadLogFile.t.Fatalf("Unexpected call to LogUploaderMock.UploadLogFile. %v", payload)
 	return
 }
 
-// UploadLogFileAfterCounter returns a count of finished LogProcessorMock.UploadLogFile invocations
-func (mmUploadLogFile *LogProcessorMock) UploadLogFileAfterCounter() uint64 {
+// UploadLogFileAfterCounter returns a count of finished LogUploaderMock.UploadLogFile invocations
+func (mmUploadLogFile *LogUploaderMock) UploadLogFileAfterCounter() uint64 {
 	return mm_atomic.LoadUint64(&mmUploadLogFile.afterUploadLogFileCounter)
 }
 
-// UploadLogFileBeforeCounter returns a count of LogProcessorMock.UploadLogFile invocations
-func (mmUploadLogFile *LogProcessorMock) UploadLogFileBeforeCounter() uint64 {
+// UploadLogFileBeforeCounter returns a count of LogUploaderMock.UploadLogFile invocations
+func (mmUploadLogFile *LogUploaderMock) UploadLogFileBeforeCounter() uint64 {
 	return mm_atomic.LoadUint64(&mmUploadLogFile.beforeUploadLogFileCounter)
 }
 
-// Calls returns a list of arguments used in each call to LogProcessorMock.UploadLogFile.
+// Calls returns a list of arguments used in each call to LogUploaderMock.UploadLogFile.
 // The list is in the same order as the calls were made (i.e. recent calls have a higher index)
-func (mmUploadLogFile *mLogProcessorMockUploadLogFile) Calls() []*LogProcessorMockUploadLogFileParams {
+func (mmUploadLogFile *mLogUploaderMockUploadLogFile) Calls() []*LogUploaderMockUploadLogFileParams {
 	mmUploadLogFile.mutex.RLock()
 
-	argCopy := make([]*LogProcessorMockUploadLogFileParams, len(mmUploadLogFile.callArgs))
+	argCopy := make([]*LogUploaderMockUploadLogFileParams, len(mmUploadLogFile.callArgs))
 	copy(argCopy, mmUploadLogFile.callArgs)
 
 	mmUploadLogFile.mutex.RUnlock()
@@ -892,7 +892,7 @@ func (mmUploadLogFile *mLogProcessorMockUploadLogFile) Calls() []*LogProcessorMo
 
 // MinimockUploadLogFileDone returns true if the count of the UploadLogFile invocations corresponds
 // the number of defined expectations
-func (m *LogProcessorMock) MinimockUploadLogFileDone() bool {
+func (m *LogUploaderMock) MinimockUploadLogFileDone() bool {
 	for _, e := range m.UploadLogFileMock.expectations {
 		if mm_atomic.LoadUint64(&e.Counter) < 1 {
 			return false
@@ -911,29 +911,29 @@ func (m *LogProcessorMock) MinimockUploadLogFileDone() bool {
 }
 
 // MinimockUploadLogFileInspect logs each unmet expectation
-func (m *LogProcessorMock) MinimockUploadLogFileInspect() {
+func (m *LogUploaderMock) MinimockUploadLogFileInspect() {
 	for _, e := range m.UploadLogFileMock.expectations {
 		if mm_atomic.LoadUint64(&e.Counter) < 1 {
-			m.t.Errorf("Expected call to LogProcessorMock.UploadLogFile with params: %#v", *e.params)
+			m.t.Errorf("Expected call to LogUploaderMock.UploadLogFile with params: %#v", *e.params)
 		}
 	}
 
 	// if default expectation was set then invocations count should be greater than zero
 	if m.UploadLogFileMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterUploadLogFileCounter) < 1 {
 		if m.UploadLogFileMock.defaultExpectation.params == nil {
-			m.t.Error("Expected call to LogProcessorMock.UploadLogFile")
+			m.t.Error("Expected call to LogUploaderMock.UploadLogFile")
 		} else {
-			m.t.Errorf("Expected call to LogProcessorMock.UploadLogFile with params: %#v", *m.UploadLogFileMock.defaultExpectation.params)
+			m.t.Errorf("Expected call to LogUploaderMock.UploadLogFile with params: %#v", *m.UploadLogFileMock.defaultExpectation.params)
 		}
 	}
 	// if func was set then invocations count should be greater than zero
 	if m.funcUploadLogFile != nil && mm_atomic.LoadUint64(&m.afterUploadLogFileCounter) < 1 {
-		m.t.Error("Expected call to LogProcessorMock.UploadLogFile")
+		m.t.Error("Expected call to LogUploaderMock.UploadLogFile")
 	}
 }
 
 // MinimockFinish checks that all mocked methods have been called the expected number of times
-func (m *LogProcessorMock) MinimockFinish() {
+func (m *LogUploaderMock) MinimockFinish() {
 	if !m.minimockDone() {
 		m.MinimockGetPickupGamesInspect()
 
@@ -947,7 +947,7 @@ func (m *LogProcessorMock) MinimockFinish() {
 }
 
 // MinimockWait waits for all mocked methods to be called the expected number of times
-func (m *LogProcessorMock) MinimockWait(timeout mm_time.Duration) {
+func (m *LogUploaderMock) MinimockWait(timeout mm_time.Duration) {
 	timeoutCh := mm_time.After(timeout)
 	for {
 		if m.minimockDone() {
@@ -962,7 +962,7 @@ func (m *LogProcessorMock) MinimockWait(timeout mm_time.Duration) {
 	}
 }
 
-func (m *LogProcessorMock) minimockDone() bool {
+func (m *LogUploaderMock) minimockDone() bool {
 	done := true
 	return done &&
 		m.MinimockGetPickupGamesDone() &&

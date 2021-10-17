@@ -5,6 +5,7 @@ import (
 	"LogWatcher/pkg/mongo"
 	"LogWatcher/pkg/requests"
 	"LogWatcher/pkg/server"
+	sm "LogWatcher/pkg/stateMachine"
 	"LogWatcher/pkg/stats"
 	"context"
 	"net"
@@ -19,10 +20,12 @@ const timeout = 10
 
 var logLineRegexp = regexp.MustCompile(`L \d{2}/\d{2}/\d{4} - \d{2}:\d{2}:\d{2}: .+`)
 
+type AddressTable map[string]*sm.StateMachine
+
 type Router struct {
-	address   *net.UDPAddr
-	routerMap map[string]*server.LogFile
-	log       *logrus.Logger
+	address      *net.UDPAddr
+	addressTable AddressTable
+	log          *logrus.Logger
 }
 
 func NewRouter(ctx context.Context, cfg *config.Config, log *logrus.Logger) (*Router, error) {
@@ -39,11 +42,11 @@ func NewRouter(ctx context.Context, cfg *config.Config, log *logrus.Logger) (*Ro
 	client := &http.Client{Timeout: timeout * time.Second}
 	r := requests.NewClient(cfg.Server.APIKey, client)
 
-	m := MakeRouterMap(cfg.Clients, log, mongoClient, r)
+	addressTable := MakeAddressTable(cfg.Clients, log, mongoClient, r)
 	return &Router{
-		address:   udpAddr,
-		routerMap: m,
-		log:       log,
+		address:      udpAddr,
+		addressTable: addressTable,
+		log:          log,
 	}, nil
 }
 
@@ -60,9 +63,10 @@ func (r *Router) Listen() {
 			r.log.Errorf("Failed to read from UDP socket: %s", err)
 			return
 		}
+
 		cleanMsg := logLineRegexp.FindString(string(message[:msgLen]))
 
-		logFile, ok := r.routerMap[clientAddr.String()]
+		stateMachine, ok := r.addressTable[clientAddr.String()]
 		if !ok {
 			r.log.WithFields(logrus.Fields{
 				"address": clientAddr.String(),
@@ -71,21 +75,22 @@ func (r *Router) Listen() {
 			continue
 		}
 		r.log.WithFields(logrus.Fields{
-			"server": logFile.Name(),
-			"state":  logFile.State(),
+			"server": stateMachine.File.Name(),
+			"state":  stateMachine.State,
 		}).Debugf(cleanMsg)
-		logFile.Channel() <- cleanMsg
+		stateMachine.Channel <- cleanMsg
 	}
 }
 
-func MakeRouterMap(hosts []config.Client, log *logrus.Logger, i mongo.Inserter, r requests.LogUploader) map[string]*server.LogFile {
-	serverMap := make(map[string]*server.LogFile)
-	for _, h := range hosts {
-		lf := server.NewLogFile(log, h.Domain, h.Server)
-		md := stats.NewMatchData(h.Domain, h.Server)
-		go server.StartWorker(log, lf, r, md, i)
-		serverMap[h.Address] = lf
-		log.Infof("Started worker for %s#%d with host %s", h.Domain, h.Server, h.Address)
+func MakeAddressTable(hosts []config.Client, log *logrus.Logger, inserter mongo.Inserter, uploader requests.LogUploader) AddressTable {
+	addressTable := make(AddressTable)
+	for _, host := range hosts {
+		file := server.NewLogFile(host)
+		match := stats.NewMatch(host)
+		stateMachine := sm.NewStateMachine(log, file, uploader, match, inserter)
+		go stateMachine.StartWorker()
+		addressTable[host.Address] = stateMachine
+		log.Infof("Started worker for %s#%d with host %s", host.Domain, host.Server, host.Address)
 	}
-	return serverMap
+	return addressTable
 }

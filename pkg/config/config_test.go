@@ -32,6 +32,7 @@ func Test_LoadConfig(t *testing.T) {
 					DSN:             "dsn",
 					MongoDatabase:   "db",
 					MongoCollection: "collection",
+					LogLevel:        "level",
 				},
 				Clients: []Client{
 					{Server: 1, Domain: "test", Address: "127.0.0.1:27150"},

@@ -119,7 +119,7 @@ func TestParseTimeStamp(t *testing.T) {
 	}{
 		{
 			name: "default",
-			args: args{msg: `L 10/02/2021 - 23:31:56: \"Eshka<72><[U:1:183918108]><Red>\" triggered \"damage\" against \"slowtown<77><[U:1:148548823]><Blue>\"`},
+			args: args{msg: `L 10/02/2021 - 23:31:56: "Eshka<72><[U:1:183918108]><Red>" triggered "damage" against "slowtown<77><[U:1:148548823]><Blue>"`},
 			want: time.Unix(1633217516, 0).UTC(),
 		},
 	}
@@ -136,10 +136,10 @@ func TestExtractPlayerStats(t *testing.T) {
 	mc := minimock.NewController(t)
 	defer mc.Finish()
 
-	matchDaterMock := mocks.NewMatchDaterMock(mc)
+	matchDaterMock := mocks.NewMatcherMock(mc)
 
 	type args struct {
-		md stats.MatchDater
+		md stats.Matcher
 	}
 	tests := []struct {
 		name string
@@ -153,7 +153,7 @@ func TestExtractPlayerStats(t *testing.T) {
 					PickupPlayersMock.Return([]*stats.PickupPlayer{
 					{SteamID: "76561198011558250"},
 				}).
-					PlayerStatsMapMock.Return(stats.PlayerStatsCollection{
+					PlayerStatsMock.Return(stats.PlayerStatsCollection{
 					steamid.SID64FromString("76561198011558250"): {Kills: 1},
 				}).
 					DomainMock.Return("test").
