@@ -19,8 +19,8 @@ import (
 )
 
 const (
-	playersRawJSON = `[{"steamId":"76561198011558250","name":"supra","avatar":{"small":""},"id":"6133487c4573f9001cdc0abb","_links":[{"href":"/players/6133487c4573f9001cdc0abb/linked-profiles","title":"Linked profiles"}]}]`
-	gamesRawJSON   = `{"results":[{"connectInfoVersion":1,"state":"started","number":391,"map":"cp_granary_pro_rc8","slots":[{"connectionStatus":"","status":"","gameClass":"soldier","team":"red","player":"6133487c4573f9001cdc0abb"}],"launchedAt":"2021-09-29T21:42:54.745Z","gameServer":"","stvConnectString":"","logsUrl":"","id":"6154dddef56b5b0013b269a3"}]}`
+	playersRawJSON = `[{"steamId":"76561198011558250","name":"supra","avatar":{"small":""},"ID":"6133487c4573f9001cdc0abb","_links":[{"href":"/Players/6133487c4573f9001cdc0abb/linked-profiles","title":"Linked profiles"}]}]`
+	gamesRawJSON   = `{"results":[{"connectInfoVersion":1,"state":"started","number":391,"map":"cp_granary_pro_rc8","slots":[{"connectionStatus":"","status":"","gameClass":"soldier","team":"red","player":"6133487c4573f9001cdc0abb"}],"launchedAt":"2021-09-29T21:42:54.745Z","gameServer":"","stvConnectString":"","logsUrl":"","ID":"6154dddef56b5b0013b269a3"}]}`
 )
 
 func TestNewRequestManager(t *testing.T) {
@@ -54,103 +54,103 @@ func TestNewRequestManager(t *testing.T) {
 	}
 }
 
-func TestRequester_GetPickupGames(t *testing.T) {
-	mc := minimock.NewController(t)
-	ts, _ := time.Parse("2006-01-02T15:04:05.999Z", "2021-09-29T21:42:54.745Z")
-	type fields struct {
-		client requests.HTTPDoer
-		apiKey string
-	}
-	type args struct {
-		domain string
-	}
-	tests := []struct {
-		name    string
-		fields  fields
-		args    args
-		want    requests.GamesResponse
-		wantErr bool
-	}{
-		{
-			name: "default",
-			fields: fields{
-				client: mocks.NewHTTPDoerMock(mc).DoMock.Return(&http.Response{
-					StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader(gamesRawJSON)),
-				}, nil),
-				apiKey: "test",
-			},
-			args: args{domain: "test"},
-			want: requests.GamesResponse{
-				Results: []requests.Result{
-					{
-						ConnectInfoVersion: 1,
-						State:              "started",
-						Number:             391,
-						Map:                "cp_granary_pro_rc8",
-						Slots: []requests.Slot{
-							{
-								GameClass: "soldier",
-								Team:      "red",
-								Player:    "6133487c4573f9001cdc0abb",
-							},
-						},
-						LaunchedAt: ts,
-						ID:         "6154dddef56b5b0013b269a3",
-					},
-				},
-				ItemCount: 0,
-			},
-		},
-		{
-			name: "non 200 http response",
-			fields: fields{
-				client: mocks.NewHTTPDoerMock(mc).
-					DoMock.Return(&http.Response{StatusCode: 404, Body: nil}, nil),
-				apiKey: "test",
-			},
-			args:    args{domain: "test"},
-			want:    requests.GamesResponse{},
-			wantErr: true,
-		},
-		{
-			name: "error on Client.Do",
-			fields: fields{
-				client: mocks.NewHTTPDoerMock(mc).
-					DoMock.Return(nil, errors.New("test error")),
-			},
-			args:    args{domain: "test"},
-			want:    requests.GamesResponse{},
-			wantErr: true,
-		},
-		{
-			name: "invalid json response",
-			fields: fields{
-				client: mocks.NewHTTPDoerMock(mc).
-					DoMock.Return(&http.Response{StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader(`{"bad: "json"`))}, nil),
-				apiKey: "test",
-			},
-			args:    args{domain: "test"},
-			want:    requests.GamesResponse{},
-			wantErr: true,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			r := &requests.Client{
-				Client: tt.fields.client,
-				ApiKey: tt.fields.apiKey,
-			}
-			got, err := r.GetPickupGames(tt.args.domain)
-			if (err != nil) != tt.wantErr {
-				t.Errorf("GetPickupGames() error = %v, wantErr %v", err, tt.wantErr)
-				return
-			}
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("GetPickupGames() got = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
+//func TestRequester_GetPickupGames(t *testing.T) {
+//	mc := minimock.NewController(t)
+//	ts, _ := time.Parse("2006-01-02T15:04:05.999Z", "2021-09-29T21:42:54.745Z")
+//	type fields struct {
+//		client requests.HTTPDoer
+//		apiKey string
+//	}
+//	type args struct {
+//		domain string
+//	}
+//	tests := []struct {
+//		name    string
+//		fields  fields
+//		args    args
+//		want    requests.GamesResponse
+//		wantErr bool
+//	}{
+//		{
+//			name: "default",
+//			fields: fields{
+//				client: mocks.NewHTTPDoerMock(mc).DoMock.Return(&http.Response{
+//					StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader(gamesRawJSON)),
+//				}, nil),
+//				apiKey: "test",
+//			},
+//			args: args{domain: "test"},
+//			want: requests.GamesResponse{
+//				Results: []requests.Result{
+//					{
+//						ConnectInfoVersion: 1,
+//						State:              "started",
+//						Number:             391,
+//						Map:                "cp_granary_pro_rc8",
+//						Slots: []requests.Slot{
+//							{
+//								GameClass: "soldier",
+//								Team:      "red",
+//								Player:    "6133487c4573f9001cdc0abb",
+//							},
+//						},
+//						LaunchedAt: ts,
+//						ID:         "6154dddef56b5b0013b269a3",
+//					},
+//				},
+//				ItemCount: 0,
+//			},
+//		},
+//		{
+//			name: "non 200 http response",
+//			fields: fields{
+//				client: mocks.NewHTTPDoerMock(mc).
+//					DoMock.Return(&http.Response{StatusCode: 404, Body: nil}, nil),
+//				apiKey: "test",
+//			},
+//			args:    args{domain: "test"},
+//			want:    requests.GamesResponse{},
+//			wantErr: true,
+//		},
+//		{
+//			name: "error on Client.Do",
+//			fields: fields{
+//				client: mocks.NewHTTPDoerMock(mc).
+//					DoMock.Return(nil, errors.New("test error")),
+//			},
+//			args:    args{domain: "test"},
+//			want:    requests.GamesResponse{},
+//			wantErr: true,
+//		},
+//		{
+//			name: "invalid json response",
+//			fields: fields{
+//				client: mocks.NewHTTPDoerMock(mc).
+//					DoMock.Return(&http.Response{StatusCode: 200, Body: ioutil.NopCloser(strings.NewReader(`{"bad: "json"`))}, nil),
+//				apiKey: "test",
+//			},
+//			args:    args{domain: "test"},
+//			want:    requests.GamesResponse{},
+//			wantErr: true,
+//		},
+//	}
+//	for _, tt := range tests {
+//		t.Run(tt.name, func(t *testing.T) {
+//			r := &requests.Client{
+//				Client: tt.fields.client,
+//				ApiKey: tt.fields.apiKey,
+//			}
+//			got, err := r.GetPickupGames(tt.args.domain)
+//			if (err != nil) != tt.wantErr {
+//				t.Errorf("GetPickupGames() error = %v, wantErr %v", err, tt.wantErr)
+//				return
+//			}
+//			if !reflect.DeepEqual(got, tt.want) {
+//				t.Errorf("GetPickupGames() got = %v, want %v", got, tt.want)
+//			}
+//		})
+//	}
+//}
 
 func TestRequester_MakeMultipartMap(t *testing.T) {
 	type fields struct {
@@ -280,8 +280,8 @@ func TestRequester_ResolvePlayers(t *testing.T) {
 				Client: tt.fields.client,
 				ApiKey: tt.fields.apiKey,
 			}
-			if err := r.ResolvePlayers(tt.args.domain, tt.args.players); (err != nil) != tt.wantErr {
-				t.Errorf("ResolvePlayers() error = %v, wantErr %v", err, tt.wantErr)
+			if err := r.ResolvePlayersSteamIDs(tt.args.domain, tt.args.players); (err != nil) != tt.wantErr {
+				t.Errorf("ResolvePlayersSteamIDs() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if !cmp.Equal(tt.args.players, tt.want) {
 				t.Errorf("resolvePlayers() got = %#v, want = %#v", tt.args.players, tt.want)
@@ -354,6 +354,141 @@ func TestRequester_UploadLogFile(t *testing.T) {
 			}
 			if err := r.UploadLogFile(tt.args.payload); (err != nil) != tt.wantErr {
 				t.Errorf("UploadLogFile() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func Test_GetPickupGames(t *testing.T) {
+	mc := minimock.NewController(t)
+	ts, _ := time.Parse("2006-01-02T15:04:05.999Z", "2021-09-29T21:42:54.745Z")
+
+	type args struct {
+		domain string
+		client requests.HTTPDoer
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    requests.GamesResponse
+		wantErr bool
+	}{
+		{
+			name: "default",
+			args: args{
+				domain: "test",
+				client: mocks.NewHTTPDoerMock(mc).DoMock.Return(
+					&http.Response{
+						StatusCode: 200,
+						Body:       ioutil.NopCloser(strings.NewReader(gamesRawJSON)),
+					}, nil),
+			},
+			want: requests.GamesResponse{
+				Results: []requests.Result{
+					{
+						ConnectInfoVersion: 1,
+						State:              "started",
+						Number:             391,
+						Map:                "cp_granary_pro_rc8",
+						Slots: []requests.Slot{
+							{
+								GameClass: "soldier",
+								Team:      "red",
+								Player:    "6133487c4573f9001cdc0abb",
+							},
+						},
+						LaunchedAt: ts,
+						ID:         "6154dddef56b5b0013b269a3",
+					},
+				},
+				ItemCount: 0,
+			},
+		},
+		{
+			name: "err on client.Do",
+			args: args{
+				domain: "test",
+				client: mocks.NewHTTPDoerMock(mc).
+					DoMock.Return(nil, errors.New("test err")),
+			},
+			want:    requests.GamesResponse{},
+			wantErr: true,
+		},
+		{
+			name: "non-2xx status code",
+			args: args{
+				domain: "test",
+				client: mocks.NewHTTPDoerMock(mc).
+					DoMock.Return(&http.Response{StatusCode: 500}, nil),
+			},
+			want:    requests.GamesResponse{},
+			wantErr: true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := requests.GetPickupGames(tt.args.domain, tt.args.client)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("GetPickupGames() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("GetPickupGames() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestClient_FindMatchingPickup(t *testing.T) {
+	mc := minimock.NewController(t)
+
+	httoDoerMock := mocks.NewHTTPDoerMock(mc)
+	httoDoerMock.DoMock.Return(
+		&http.Response{
+			StatusCode: 200,
+			Body:       ioutil.NopCloser(strings.NewReader(gamesRawJSON)),
+		}, nil)
+	type fields struct {
+		Client requests.HTTPDoer
+		ApiKey string
+	}
+	type args struct {
+		domain  string
+		gameMap string
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    *requests.Pickup
+		wantErr bool
+	}{
+		{
+			name: "default",
+			fields: fields{
+				Client: httoDoerMock,
+			},
+			args: args{domain: "test", gameMap: "cp_granary_pro_rc8"},
+			want: &requests.Pickup{Players: []*stats.PickupPlayer{
+				{PlayerID: "6133487c4573f9001cdc0abb", Class: "soldier", Team: "red"},
+			},
+				ID: 391,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &requests.Client{
+				Client: tt.fields.Client,
+				ApiKey: tt.fields.ApiKey,
+			}
+			got, err := c.FindMatchingPickup(tt.args.domain, tt.args.gameMap)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("FindMatchingPickup() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !cmp.Equal(got, tt.want) {
+				t.Errorf("FindMatchingPickup() got = %#v, want %#v", got, tt.want)
 			}
 		})
 	}

@@ -5,7 +5,6 @@ import (
 	"LogWatcher/pkg/requests"
 	"LogWatcher/pkg/server"
 	"LogWatcher/pkg/stats"
-	"fmt"
 	"regexp"
 
 	"github.com/sirupsen/logrus"
@@ -16,8 +15,6 @@ var (
 	gameOver   = regexp.MustCompile(`: World triggered "Game_Over" reason "`)
 	logClosed  = regexp.MustCompile(`: Log File closed.`)
 )
-
-const StartedState = "started"
 
 type StateType int
 
@@ -104,11 +101,18 @@ func (sm *StateMachine) ProcessGameStartedEvent(msg string) {
 	sm.State = Game
 	sm.Match.SetStartTime(msg)
 	sm.File.WriteLine(msg)
-	if err := sm.UpdatePickupInfo(); err != nil {
+
+	pickup, err := sm.Uploader.FindMatchingPickup(sm.Match.Domain(), sm.Match.Map())
+	if err != nil {
 		sm.Log.WithFields(logrus.Fields{"server": sm.Match.String()}).
 			Errorf("Failed to get pickup id from API: %s", err)
+		return
 	}
-	if err := sm.Uploader.ResolvePlayers(sm.Match.Domain(), sm.Match.PickupPlayers()); err != nil {
+
+	sm.Match.SetPlayers(pickup.Players)
+	sm.Match.SetPickupID(pickup.ID)
+
+	if err := sm.Uploader.ResolvePlayersSteamIDs(sm.Match.Domain(), sm.Match.PickupPlayers()); err != nil {
 		sm.Log.WithFields(logrus.Fields{"server": sm.Match.String()}).
 			Errorf("Failed to resolve pickup player ids through API: %s", err)
 	}
@@ -142,31 +146,6 @@ func (sm *StateMachine) ProcessGameOverEvent(msg string) {
 		"map":       sm.Match.Map(),
 	}).Info("Pickup has ended")
 	sm.Flush()
-}
-
-// UpdatePickupInfo is used for finding current game on tf2pickup API
-// and loading to LogFile list of its players and pickup ID
-func (sm *StateMachine) UpdatePickupInfo() error {
-	gamesResponse, err := sm.Uploader.GetPickupGames(sm.Match.Domain())
-	if err != nil {
-		return err
-	}
-	for _, game := range gamesResponse.Results {
-		fmt.Println("GAME", game)
-		if game.State == StartedState && game.Map == sm.Match.Map() {
-			players := make([]*stats.PickupPlayer, 0)
-			for _, player := range game.Slots {
-				p := &stats.PickupPlayer{
-					PlayerID: player.Player, Class: player.GameClass, Team: player.Team,
-				}
-				players = append(players, p)
-			}
-			sm.Match.SetPlayers(players)
-			sm.Match.SetPickupID(game.Number)
-			break
-		}
-	}
-	return nil
 }
 
 // Flush is used to empty all game data

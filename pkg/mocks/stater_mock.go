@@ -1932,7 +1932,7 @@ type mStaterMockUpdatePickupInfo struct {
 	expectations       []*StaterMockUpdatePickupInfoExpectation
 }
 
-// StaterMockUpdatePickupInfoExpectation specifies expectation struct of the Stater.UpdatePickupInfo
+// StaterMockUpdatePickupInfoExpectation specifies expectation struct of the Stater.FindMatchingPickup
 type StaterMockUpdatePickupInfoExpectation struct {
 	mock *StaterMock
 
@@ -1940,15 +1940,15 @@ type StaterMockUpdatePickupInfoExpectation struct {
 	Counter uint64
 }
 
-// StaterMockUpdatePickupInfoResults contains results of the Stater.UpdatePickupInfo
+// StaterMockUpdatePickupInfoResults contains results of the Stater.FindMatchingPickup
 type StaterMockUpdatePickupInfoResults struct {
 	err error
 }
 
-// Expect sets up expected params for Stater.UpdatePickupInfo
+// Expect sets up expected params for Stater.FindMatchingPickup
 func (mmUpdatePickupInfo *mStaterMockUpdatePickupInfo) Expect() *mStaterMockUpdatePickupInfo {
 	if mmUpdatePickupInfo.mock.funcUpdatePickupInfo != nil {
-		mmUpdatePickupInfo.mock.t.Fatalf("StaterMock.UpdatePickupInfo mock is already set by Set")
+		mmUpdatePickupInfo.mock.t.Fatalf("StaterMock.FindMatchingPickup mock is already set by Set")
 	}
 
 	if mmUpdatePickupInfo.defaultExpectation == nil {
@@ -1958,10 +1958,10 @@ func (mmUpdatePickupInfo *mStaterMockUpdatePickupInfo) Expect() *mStaterMockUpda
 	return mmUpdatePickupInfo
 }
 
-// Inspect accepts an inspector function that has same arguments as the Stater.UpdatePickupInfo
+// Inspect accepts an inspector function that has same arguments as the Stater.FindMatchingPickup
 func (mmUpdatePickupInfo *mStaterMockUpdatePickupInfo) Inspect(f func()) *mStaterMockUpdatePickupInfo {
 	if mmUpdatePickupInfo.mock.inspectFuncUpdatePickupInfo != nil {
-		mmUpdatePickupInfo.mock.t.Fatalf("Inspect function is already set for StaterMock.UpdatePickupInfo")
+		mmUpdatePickupInfo.mock.t.Fatalf("Inspect function is already set for StaterMock.FindMatchingPickup")
 	}
 
 	mmUpdatePickupInfo.mock.inspectFuncUpdatePickupInfo = f
@@ -1969,10 +1969,10 @@ func (mmUpdatePickupInfo *mStaterMockUpdatePickupInfo) Inspect(f func()) *mState
 	return mmUpdatePickupInfo
 }
 
-// Return sets up results that will be returned by Stater.UpdatePickupInfo
+// Return sets up results that will be returned by Stater.FindMatchingPickup
 func (mmUpdatePickupInfo *mStaterMockUpdatePickupInfo) Return(err error) *StaterMock {
 	if mmUpdatePickupInfo.mock.funcUpdatePickupInfo != nil {
-		mmUpdatePickupInfo.mock.t.Fatalf("StaterMock.UpdatePickupInfo mock is already set by Set")
+		mmUpdatePickupInfo.mock.t.Fatalf("StaterMock.FindMatchingPickup mock is already set by Set")
 	}
 
 	if mmUpdatePickupInfo.defaultExpectation == nil {
@@ -1982,14 +1982,14 @@ func (mmUpdatePickupInfo *mStaterMockUpdatePickupInfo) Return(err error) *Stater
 	return mmUpdatePickupInfo.mock
 }
 
-//Set uses given function f to mock the Stater.UpdatePickupInfo method
+//Set uses given function f to mock the Stater.FindMatchingPickup method
 func (mmUpdatePickupInfo *mStaterMockUpdatePickupInfo) Set(f func() (err error)) *StaterMock {
 	if mmUpdatePickupInfo.defaultExpectation != nil {
-		mmUpdatePickupInfo.mock.t.Fatalf("Default expectation is already set for the Stater.UpdatePickupInfo method")
+		mmUpdatePickupInfo.mock.t.Fatalf("Default expectation is already set for the Stater.FindMatchingPickup method")
 	}
 
 	if len(mmUpdatePickupInfo.expectations) > 0 {
-		mmUpdatePickupInfo.mock.t.Fatalf("Some expectations are already set for the Stater.UpdatePickupInfo method")
+		mmUpdatePickupInfo.mock.t.Fatalf("Some expectations are already set for the Stater.FindMatchingPickup method")
 	}
 
 	mmUpdatePickupInfo.mock.funcUpdatePickupInfo = f
@@ -2010,14 +2010,14 @@ func (mmUpdatePickupInfo *StaterMock) UpdatePickupInfo() (err error) {
 
 		mm_results := mmUpdatePickupInfo.UpdatePickupInfoMock.defaultExpectation.results
 		if mm_results == nil {
-			mmUpdatePickupInfo.t.Fatal("No results are set for the StaterMock.UpdatePickupInfo")
+			mmUpdatePickupInfo.t.Fatal("No results are set for the StaterMock.FindMatchingPickup")
 		}
 		return (*mm_results).err
 	}
 	if mmUpdatePickupInfo.funcUpdatePickupInfo != nil {
 		return mmUpdatePickupInfo.funcUpdatePickupInfo()
 	}
-	mmUpdatePickupInfo.t.Fatalf("Unexpected call to StaterMock.UpdatePickupInfo.")
+	mmUpdatePickupInfo.t.Fatalf("Unexpected call to StaterMock.FindMatchingPickup.")
 	return
 }
 
@@ -2055,17 +2055,17 @@ func (m *StaterMock) MinimockUpdatePickupInfoDone() bool {
 func (m *StaterMock) MinimockUpdatePickupInfoInspect() {
 	for _, e := range m.UpdatePickupInfoMock.expectations {
 		if mm_atomic.LoadUint64(&e.Counter) < 1 {
-			m.t.Error("Expected call to StaterMock.UpdatePickupInfo")
+			m.t.Error("Expected call to StaterMock.FindMatchingPickup")
 		}
 	}
 
 	// if default expectation was set then invocations count should be greater than zero
 	if m.UpdatePickupInfoMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterUpdatePickupInfoCounter) < 1 {
-		m.t.Error("Expected call to StaterMock.UpdatePickupInfo")
+		m.t.Error("Expected call to StaterMock.FindMatchingPickup")
 	}
 	// if func was set then invocations count should be greater than zero
 	if m.funcUpdatePickupInfo != nil && mm_atomic.LoadUint64(&m.afterUpdatePickupInfoCounter) < 1 {
-		m.t.Error("Expected call to StaterMock.UpdatePickupInfo")
+		m.t.Error("Expected call to StaterMock.FindMatchingPickup")
 	}
 }
 
