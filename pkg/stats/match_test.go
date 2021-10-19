@@ -1,6 +1,7 @@
 package stats
 
 import (
+	"LogWatcher/pkg/config"
 	"reflect"
 	"testing"
 	"time"
@@ -26,7 +27,7 @@ func TestMatchData_Domain(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gi := &MatchData{
+			gi := &Match{
 				domain: tt.fields.domain,
 			}
 			if got := gi.Domain(); got != tt.want {
@@ -55,10 +56,10 @@ func TestMatchData_FlushPlayerStatsMap(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gi := &MatchData{stats: tt.fields.stats}
-			gi.FlushPlayerStatsCollection()
+			gi := &Match{stats: tt.fields.stats}
+			gi.Flush()
 			if !reflect.DeepEqual(gi.stats, tt.want) {
-				t.Errorf("FlushPlayerStatsCollection(), got = %#v, want = %#v", gi.stats, tt.want)
+				t.Errorf("Flush(), got = %#v, want = %#v", gi.stats, tt.want)
 			}
 		})
 	}
@@ -81,7 +82,7 @@ func TestMatchData_LengthSeconds(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gi := &MatchData{
+			gi := &Match{
 				matchLength: tt.fields.matchLength,
 			}
 			if got := gi.LengthSeconds(); got != tt.want {
@@ -108,7 +109,7 @@ func TestMatchData_Map(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gi := &MatchData{
+			gi := &Match{
 				_map: tt.fields._map,
 			}
 			if got := gi.Map(); got != tt.want {
@@ -135,7 +136,7 @@ func TestMatchData_PickupID(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gi := &MatchData{
+			gi := &Match{
 				pickupID: tt.fields.pickupID,
 			}
 			if got := gi.PickupID(); got != tt.want {
@@ -164,7 +165,7 @@ func TestMatchData_PickupPlayers(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gi := &MatchData{
+			gi := &Match{
 				players: tt.fields.players,
 			}
 			if got := gi.PickupPlayers(); !reflect.DeepEqual(got, tt.want) {
@@ -195,10 +196,10 @@ func TestMatchData_PlayerStatsMap(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gi := &MatchData{
+			gi := &Match{
 				stats: tt.fields.stats,
 			}
-			if got := gi.PlayerStatsCollection(); !reflect.DeepEqual(got, tt.want) {
+			if got := gi.PlayerStats(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("PlayerStatsCollection() = %v, want %v", got, tt.want)
 			}
 		})
@@ -230,7 +231,7 @@ func TestMatchData_SetLength(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gi := &MatchData{
+			gi := &Match{
 				launchedAt: tt.fields.launchedAt,
 			}
 			gi.SetLength(tt.args.msg)
@@ -261,7 +262,7 @@ func TestMatchData_SetMap(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gi := &MatchData{_map: tt.fields._map}
+			gi := &Match{_map: tt.fields._map}
 			gi.SetMap(tt.args.m)
 			if gi._map != tt.args.m {
 				t.Errorf("SetMap() = %v, want %v", gi.matchLength, tt.args.m)
@@ -290,7 +291,7 @@ func TestMatchData_SetPickupID(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gi := &MatchData{pickupID: tt.fields.pickupID}
+			gi := &Match{pickupID: tt.fields.pickupID}
 			gi.SetPickupID(tt.args.id)
 			if gi.pickupID != tt.args.id {
 				t.Errorf("SetPickupID() = %v, want %v", gi.matchLength, tt.args.id)
@@ -321,7 +322,7 @@ func TestMatchData_SetPlayers(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gi := &MatchData{
+			gi := &Match{
 				players: tt.fields.players,
 			}
 			gi.SetPlayers(tt.args.players)
@@ -354,7 +355,7 @@ func TestMatchData_SetStartTime(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gi := &MatchData{
+			gi := &Match{
 				launchedAt: tt.fields.launchedAt,
 			}
 			gi.SetStartTime(tt.args.msg)
@@ -384,7 +385,7 @@ func TestMatchData_String(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gi := &MatchData{
+			gi := &Match{
 				serverID: tt.fields.serverID,
 				domain:   tt.fields.domain,
 			}
@@ -417,7 +418,7 @@ func TestMatchData_TryParseGameMap(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gi := MatchData{
+			gi := Match{
 				_map: tt.fields._map,
 			}
 			gi.TryParseGameMap(tt.args.msg)
@@ -430,21 +431,22 @@ func TestMatchData_TryParseGameMap(t *testing.T) {
 
 func TestNewMatchData(t *testing.T) {
 	type args struct {
-		domain   string
-		serverID int
+		host config.Client
 	}
 	tests := []struct {
 		name string
 		args args
-		want *MatchData
+		want *Match
 	}{
 		{
 			name: "default",
 			args: args{
-				domain:   "test",
-				serverID: 1,
+				config.Client{
+					Server: 1,
+					Domain: "test",
+				},
 			},
-			want: &MatchData{
+			want: &Match{
 				domain:   "test",
 				serverID: 1,
 				stats:    PlayerStatsCollection{},
@@ -453,8 +455,41 @@ func TestNewMatchData(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := NewMatchData(tt.args.domain, tt.args.serverID); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("NewMatchData() = %v, want %v", got, tt.want)
+			if got := NewMatch(tt.args.host); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NewMatch() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMatch_SetPlayerStats(t *testing.T) {
+	type fields struct {
+		stats PlayerStatsCollection
+	}
+	type args struct {
+		stats PlayerStatsCollection
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+	}{
+		{
+			name:   "default",
+			fields: fields{map[steamid.SID64]*PlayerStats{}},
+			args: args{map[steamid.SID64]*PlayerStats{
+				steamid.SID64FromString("76561198439712695"): {Kills: 1},
+			}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			md := &Match{
+				stats: tt.fields.stats,
+			}
+			md.SetPlayerStats(tt.args.stats)
+			if !cmp.Equal(md.stats, tt.args.stats) {
+				t.Errorf("NewMatch() = %v, want %v", tt.fields.stats, tt.args.stats)
 			}
 		})
 	}

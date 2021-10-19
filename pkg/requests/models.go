@@ -2,7 +2,7 @@ package requests
 
 import "time"
 
-// PlayersResponse represents single player entry from api.tf2pickup.*/players
+// PlayersResponse represents single player entry from api.tf2pickup.*/Players
 type PlayersResponse struct {
 	SteamId string `json:"steamId"`
 	Name    string `json:"name"`
@@ -14,7 +14,7 @@ type PlayersResponse struct {
 	Roles          []string  `json:"roles"`
 	Etf2LProfileId int       `json:"etf2lProfileId"`
 	JoinedAt       time.Time `json:"joinedAt"`
-	Id             string    `json:"id"`
+	Id             string    `json:"ID"`
 	Links          []struct {
 		Href  string `json:"href"`
 		Title string `json:"title"`
@@ -43,7 +43,7 @@ type Result struct {
 	LaunchedAt         time.Time `json:"launchedAt"`
 	GameServer         string    `json:"gameServer"`
 	StvConnectString   string    `json:"stvConnectString"`
-	ID                 string    `json:"id"`
+	ID                 string    `json:"ID"`
 	LogsUrl            string    `json:"logsUrl,omitempty"`
 	Score              Score     `json:"score,omitempty"`
 	DemoUrl            string    `json:"demoUrl,omitempty"`

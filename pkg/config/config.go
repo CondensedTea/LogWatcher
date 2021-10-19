@@ -18,6 +18,7 @@ type Server struct {
 	DSN             string `yaml:"DSN"`
 	MongoDatabase   string `yaml:"MongoDatabase"`
 	MongoCollection string `yaml:"MongoCollection"`
+	LogLevel        string `yaml:"LogLevel"`
 }
 
 type Config struct {

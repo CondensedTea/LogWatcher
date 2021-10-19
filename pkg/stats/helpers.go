@@ -15,8 +15,8 @@ var (
 	healsRegexp  = regexp.MustCompile(`(\[U:\d:\d{1,10}]).+triggered "healed" against.+(\[U:\d:\d{1,10}]).+\(healing "(\d+)"\)`)
 )
 
-// UpdateStatsMap parses log line and updates PlayerStats map
-func UpdateStatsMap(msg string, stats PlayerStatsCollection) {
+// UpdateStatsMap parses log line and updates PlayerStatsCollection
+func UpdateStatsMap(msg string, stats PlayerStatsCollection) PlayerStatsCollection {
 	switch {
 	case killRegexp.MatchString(msg):
 		match := killRegexp.FindStringSubmatch(msg)
@@ -69,12 +69,13 @@ func UpdateStatsMap(msg string, stats PlayerStatsCollection) {
 			h.HealsReceived += heals
 		}
 	}
+	return stats
 }
 
-func ExtractPlayerStats(md MatchDater) []interface{} {
+func ExtractPlayerStats(md Matcher) []interface{} {
 	s := make([]interface{}, 0)
 	for _, player := range md.PickupPlayers() {
-		for steamID, stats := range md.PlayerStatsCollection() {
+		for steamID, stats := range md.PlayerStats() {
 			if player.SteamID == steamID.String() {
 				gs := MongoPlayerInfo{
 					Player:   player,

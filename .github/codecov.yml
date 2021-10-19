@@ -1,3 +1,6 @@
 ignore:
   - "pkg/mocks/*"
   - "*_test.go"
+
+coverage:
+  range: "60...95"
