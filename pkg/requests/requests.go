@@ -10,6 +10,8 @@ import (
 	"mime/multipart"
 	"net/http"
 	"strings"
+
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -28,6 +30,7 @@ var Version = "dev"
 type Client struct {
 	Client HTTPDoer
 	ApiKey string
+	Log    *logrus.Logger
 }
 
 type Pickup struct {
@@ -50,10 +53,11 @@ type HTTPDoer interface {
 }
 
 // NewClient is client factory
-func NewClient(apiKey string, client HTTPDoer) *Client {
+func NewClient(apiKey string, client HTTPDoer, log *logrus.Logger) *Client {
 	return &Client{
 		ApiKey: apiKey,
 		Client: client,
+		Log:    log,
 	}
 }
 
@@ -136,6 +140,10 @@ func (c *Client) FindMatchingPickup(domain, gameMap string) (*Pickup, error) {
 		return pickup, err
 	}
 	for _, game := range gamesResponse.Results {
+		c.Log.WithFields(logrus.Fields{
+			"state": game.State,
+			"map":   game.Map,
+		}).Infof("looking for pickup...")
 		if game.State == StartedState && game.Map == gameMap {
 			for _, player := range game.Slots {
 				p := &stats.PickupPlayer{
