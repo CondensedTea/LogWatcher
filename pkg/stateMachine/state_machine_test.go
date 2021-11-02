@@ -194,6 +194,38 @@ func TestStateMachine_ProcessLogLine(t *testing.T) {
 			},
 		},
 		{
+			name: "game to roundreset switch",
+			args: args{
+				msg: `: World triggered "Round_Win" (winner "Red")`,
+			},
+			fields: fields{
+				State: stateMachine.Game,
+				log:   log,
+			},
+		},
+		{
+			name: "round reset update red score",
+			args: args{
+				msg: `: Team "Red" current score "5" with "6" players`,
+			},
+			fields: fields{
+				State: stateMachine.RoundReset,
+				log:   log,
+				Match: mocks.NewMatcherMock(mc).SetRedScoreMock.Expect(5).Return(),
+			},
+		},
+		{
+			name: "round reset update blue score",
+			args: args{
+				msg: `: Team "Blue" current score "5" with "6" players`,
+			},
+			fields: fields{
+				State: stateMachine.RoundReset,
+				log:   log,
+				Match: mocks.NewMatcherMock(mc).SetBlueScoreMock.Expect(5).Return(),
+			},
+		},
+		{
 			name: "error in UploadLogFile",
 			args: args{
 				msg: `: World triggered "Game_Over" reason "`,
@@ -312,6 +344,11 @@ func TestStateType_String(t *testing.T) {
 			name: "game",
 			st:   stateMachine.Game,
 			want: "game",
+		},
+		{
+			name: "round reset",
+			st:   stateMachine.RoundReset,
+			want: "round reset",
 		},
 		{
 			name: "unknown",

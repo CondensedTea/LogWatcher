@@ -42,6 +42,12 @@ type MongoPlayerInfo struct {
 	SchemaVersion int
 }
 
+// CurrentScores represents teams score in single round
+type CurrentScores struct {
+	Red  int
+	Blue int
+}
+
 // Match represents data from all players in single game,
 // including game info and player stats
 type Match struct {
@@ -53,6 +59,7 @@ type Match struct {
 	stats       PlayerStatsCollection
 	launchedAt  time.Time
 	matchLength time.Duration
+	Scores      CurrentScores
 }
 
 // Matcher is interface for Match object
@@ -72,6 +79,8 @@ type Matcher interface {
 	SetPlayers(players []*PickupPlayer)
 	Flush()
 	TryParseGameMap(msg string)
+	SetRedScore(score int)
+	SetBlueScore(score int)
 }
 
 // PlayerStatsCollection represents game stats for all players from single game
@@ -86,70 +95,78 @@ func NewMatch(host config.Client) *Match {
 	}
 }
 
-func (md *Match) PickupPlayers() []*PickupPlayer {
-	return md.players
+func (m *Match) PickupPlayers() []*PickupPlayer {
+	return m.players
 }
 
-func (md *Match) PlayerStats() PlayerStatsCollection {
-	return md.stats
+func (m *Match) PlayerStats() PlayerStatsCollection {
+	return m.stats
 }
 
-func (md *Match) PickupID() int {
-	return md.pickupID
+func (m *Match) PickupID() int {
+	return m.pickupID
 }
 
-func (md *Match) SetLength(msg string) {
+func (m *Match) SetLength(msg string) {
 	ts := ParseTimeStamp(msg)
-	md.matchLength = ts.Sub(md.launchedAt)
+	m.matchLength = ts.Sub(m.launchedAt)
 }
 
-func (md *Match) LengthSeconds() int {
-	return int(md.matchLength.Seconds())
+func (m *Match) LengthSeconds() int {
+	return int(m.matchLength.Seconds())
 }
 
-func (md *Match) Domain() string {
-	return md.domain
+func (m *Match) Domain() string {
+	return m.domain
 }
 
-func (md *Match) String() string {
-	return fmt.Sprintf("%s#%d", md.domain, md.serverID)
+func (m *Match) String() string {
+	return fmt.Sprintf("%s#%d", m.domain, m.serverID)
 }
 
-func (md *Match) SetPickupID(id int) {
-	md.pickupID = id
+func (m *Match) SetPickupID(id int) {
+	m.pickupID = id
 }
 
-func (md *Match) SetPlayers(players []*PickupPlayer) {
-	md.players = players
+func (m *Match) SetPlayers(players []*PickupPlayer) {
+	m.players = players
 }
 
-func (md *Match) SetStartTime(msg string) {
+func (m *Match) SetStartTime(msg string) {
 	ts := ParseTimeStamp(msg)
-	md.launchedAt = ts
+	m.launchedAt = ts
 }
 
-func (md *Match) SetMap(m string) {
-	md._map = m
+func (m *Match) SetMap(_map string) {
+	m._map = _map
 }
 
-func (md *Match) Map() string {
-	return md._map
+func (m *Match) Map() string {
+	return m._map
 }
 
-func (md *Match) Flush() {
-	md.pickupID = 0
-	md._map = ""
-	md.stats = make(PlayerStatsCollection)
+func (m *Match) Flush() {
+	m.pickupID = 0
+	m._map = ""
+	m.stats = make(PlayerStatsCollection)
 }
 
 // TryParseGameMap tries to find "Loading map" with regexp in message
 // and sets it to go._map if succeed
-func (md *Match) TryParseGameMap(msg string) {
+func (m *Match) TryParseGameMap(msg string) {
 	if match := mapLoaded.FindStringSubmatch(msg); len(match) > 0 {
-		md._map = match[1]
+		m._map = match[1]
 	}
 }
 
-func (md *Match) SetPlayerStats(stats PlayerStatsCollection) {
-	md.stats = stats
+func (m *Match) SetPlayerStats(stats PlayerStatsCollection) {
+	m.stats = stats
+}
+
+func (m *Match) SetRedScore(score int) {
+	m.Scores.Red = score
+}
+
+func (m *Match) SetBlueScore(score int) {
+	m.Scores.Blue = score
 }

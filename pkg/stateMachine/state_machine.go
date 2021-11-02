@@ -6,14 +6,17 @@ import (
 	"LogWatcher/pkg/server"
 	"LogWatcher/pkg/stats"
 	"regexp"
+	"strconv"
 
 	"github.com/sirupsen/logrus"
 )
 
 var (
-	roundStart = regexp.MustCompile(`: World triggered "Round_Start"`)
-	gameOver   = regexp.MustCompile(`: World triggered "Game_Over" reason "`)
-	logClosed  = regexp.MustCompile(`: Log File closed.`)
+	roundStart   = regexp.MustCompile(`: World triggered "Round_Start"`)
+	roundWin     = regexp.MustCompile(`: World triggered "Round_Win"`)
+	gameOver     = regexp.MustCompile(`: World triggered "Game_Over" reason "`)
+	logClosed    = regexp.MustCompile(`: Log File closed.`)
+	currentScore = regexp.MustCompile(`: Team "(Red|Blue)" current score "(\d)" with "\d" players`)
 )
 
 type StateType int
@@ -21,6 +24,7 @@ type StateType int
 const (
 	Pregame StateType = iota
 	Game
+	RoundReset
 )
 
 func (st StateType) String() string {
@@ -29,6 +33,8 @@ func (st StateType) String() string {
 		return "pregame"
 	case Game:
 		return "game"
+	case RoundReset:
+		return "round reset"
 	default:
 		return "unknown State"
 	}
@@ -90,9 +96,20 @@ func (sm *StateMachine) ProcessLogLine(msg string) {
 			sm.ProcessGameStartedEvent(msg)
 		}
 	case Game:
+		if roundWin.MatchString(msg) {
+			sm.State = RoundReset
+			break
+		}
 		sm.ProcessGameLogLine(msg)
 		if logClosed.MatchString(msg) || gameOver.MatchString(msg) {
 			sm.ProcessGameOverEvent(msg)
+		}
+	case RoundReset:
+		if currentScore.MatchString(msg) {
+			sm.ProcessCurrentScore(msg)
+		}
+		if roundStart.MatchString(msg) {
+			sm.State = Game
 		}
 	}
 }
@@ -152,4 +169,14 @@ func (sm *StateMachine) ProcessGameOverEvent(msg string) {
 func (sm *StateMachine) Flush() {
 	sm.File.FlushBuffer()
 	sm.Match.Flush()
+}
+
+func (sm *StateMachine) ProcessCurrentScore(msg string) {
+	match := currentScore.FindStringSubmatch(msg)
+	score, _ := strconv.Atoi(match[2])
+	if match[1] == "Red" {
+		sm.Match.SetRedScore(score)
+	} else if match[1] == "Blue" {
+		sm.Match.SetBlueScore(score)
+	}
 }
