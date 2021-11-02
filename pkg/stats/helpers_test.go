@@ -162,11 +162,12 @@ func TestExtractPlayerStats(t *testing.T) {
 			},
 			want: []interface{}{
 				stats.MongoPlayerInfo{
-					Player:   &stats.PickupPlayer{SteamID: "76561198011558250"},
-					Stats:    stats.PlayerStats{Kills: 1},
-					Domain:   "test",
-					PickupID: 123,
-					Length:   100,
+					Player:        &stats.PickupPlayer{SteamID: "76561198011558250"},
+					Stats:         stats.PlayerStats{Kills: 1},
+					Domain:        "test",
+					PickupID:      123,
+					Length:        100,
+					SchemaVersion: 1,
 				},
 			},
 		},
