@@ -49,7 +49,7 @@ func TestStateMachine_ProcessLogLine(t *testing.T) {
 				File: mocks.NewLogFilerMock(mc).
 					WriteLineMock.Expect(`: World triggered "Round_Start"`).Return(),
 				Uploader: mocks.NewLogUploaderMock(mc).
-					ResolvePlayersSteamIDsMock.Expect("test",
+					ResolvePlayersMock.Expect("test",
 					[]*stats.PickupPlayer{
 						{PlayerID: "123", Class: "soldier", SteamID: "76561198011558250", Team: "red"},
 					}).Return(nil).
@@ -118,7 +118,7 @@ func TestStateMachine_ProcessLogLine(t *testing.T) {
 			},
 		},
 		{
-			name: "error in ResolvePlayersSteamIDs",
+			name: "error in ResolvePlayers",
 			args: args{msg: `: World triggered "Round_Start"`},
 			fields: fields{
 				State: stateMachine.Pregame,
@@ -126,7 +126,7 @@ func TestStateMachine_ProcessLogLine(t *testing.T) {
 				File: mocks.NewLogFilerMock(mc).
 					WriteLineMock.Expect(`: World triggered "Round_Start"`).Return(),
 				Uploader: mocks.NewLogUploaderMock(mc).
-					ResolvePlayersSteamIDsMock.Expect("test",
+					ResolvePlayersMock.Expect("test",
 					[]*stats.PickupPlayer{
 						{PlayerID: "123", Class: "soldier", SteamID: "76561198011558250", Team: "red"},
 					}).Return(errors.New("failed to resolve players")).

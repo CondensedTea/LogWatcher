@@ -16,6 +16,7 @@ import (
 
 	"github.com/gojuno/minimock/v3"
 	"github.com/google/go-cmp/cmp"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -24,6 +25,8 @@ const (
 )
 
 func TestNewRequestManager(t *testing.T) {
+	log := logrus.New()
+
 	type args struct {
 		apiKey string
 		client requests.HTTPDoer
@@ -42,12 +45,13 @@ func TestNewRequestManager(t *testing.T) {
 			want: &requests.Client{
 				Client: &http.Client{},
 				ApiKey: "test",
+				Log:    log,
 			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := requests.NewClient(tt.args.apiKey, tt.args.client); !reflect.DeepEqual(got, tt.want) {
+			if got := requests.NewClient(tt.args.apiKey, tt.args.client, log); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NewClient() = %v, want %v", got, tt.want)
 			}
 		})
@@ -132,7 +136,7 @@ func TestRequester_ResolvePlayers(t *testing.T) {
 					{PlayerID: "6133487c4573f9001cdc0abb", Class: "soldier"},
 				},
 			},
-			want: []*stats.PickupPlayer{{PlayerID: "6133487c4573f9001cdc0abb", Class: "soldier", SteamID: "76561198011558250"}},
+			want: []*stats.PickupPlayer{{PlayerID: "6133487c4573f9001cdc0abb", Name: "supra", Class: "soldier", SteamID: "76561198011558250"}},
 		},
 		{
 			name: "non 200 http response",
@@ -182,8 +186,8 @@ func TestRequester_ResolvePlayers(t *testing.T) {
 				Client: tt.fields.client,
 				ApiKey: tt.fields.apiKey,
 			}
-			if err := r.ResolvePlayersSteamIDs(tt.args.domain, tt.args.players); (err != nil) != tt.wantErr {
-				t.Errorf("ResolvePlayersSteamIDs() error = %v, wantErr %v", err, tt.wantErr)
+			if err := r.ResolvePlayers(tt.args.domain, tt.args.players); (err != nil) != tt.wantErr {
+				t.Errorf("ResolvePlayers() error = %v, wantErr %v", err, tt.wantErr)
 			}
 			if !cmp.Equal(tt.args.players, tt.want) {
 				t.Errorf("resolvePlayers() got = %#v, want = %#v", tt.args.players, tt.want)
@@ -402,6 +406,7 @@ func TestClient_FindMatchingPickup(t *testing.T) {
 			c := &requests.Client{
 				Client: tt.fields.Client,
 				ApiKey: tt.fields.ApiKey,
+				Log:    logrus.New(),
 			}
 			got, err := c.FindMatchingPickup(tt.args.domain, tt.args.gameMap)
 			if (err != nil) != tt.wantErr {

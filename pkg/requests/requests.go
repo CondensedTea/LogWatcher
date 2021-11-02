@@ -43,7 +43,7 @@ type Pickup struct {
 type LogUploader interface {
 	MakeMultipartMap(_map, domain string, pickupID int, buf bytes.Buffer) map[string]io.Reader
 	UploadLogFile(payload map[string]io.Reader) error
-	ResolvePlayersSteamIDs(domain string, players []*stats.PickupPlayer) error
+	ResolvePlayers(domain string, players []*stats.PickupPlayer) error
 	FindMatchingPickup(domain, Map string) (*Pickup, error)
 }
 
@@ -102,8 +102,8 @@ func (c *Client) UploadLogFile(payload map[string]io.Reader) error {
 	return nil
 }
 
-// ResolvePlayersSteamIDs populates PickupPlayer entries with correct SteamIDs
-func (c *Client) ResolvePlayersSteamIDs(domain string, players []*stats.PickupPlayer) error {
+// ResolvePlayers populates PickupPlayer entries with correct SteamIDs and names
+func (c *Client) ResolvePlayers(domain string, players []*stats.PickupPlayer) error {
 	var responses []PlayersResponse
 	url := fmt.Sprintf(PickupAPITemplateUrl+"/Players", domain)
 	req, _ := http.NewRequest(http.MethodGet, url, nil) // err is always nil
@@ -123,6 +123,7 @@ func (c *Client) ResolvePlayersSteamIDs(domain string, players []*stats.PickupPl
 		for _, pr := range responses {
 			if pickupPlayer.PlayerID == pr.Id {
 				pickupPlayer.SteamID = pr.SteamId
+				pickupPlayer.Name = pr.Name
 			}
 		}
 	}

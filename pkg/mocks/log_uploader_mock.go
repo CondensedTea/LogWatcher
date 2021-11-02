@@ -32,11 +32,11 @@ type LogUploaderMock struct {
 	beforeMakeMultipartMapCounter uint64
 	MakeMultipartMapMock          mLogUploaderMockMakeMultipartMap
 
-	funcResolvePlayersSteamIDs          func(domain string, players []*stats.PickupPlayer) (err error)
-	inspectFuncResolvePlayersSteamIDs   func(domain string, players []*stats.PickupPlayer)
-	afterResolvePlayersSteamIDsCounter  uint64
-	beforeResolvePlayersSteamIDsCounter uint64
-	ResolvePlayersSteamIDsMock          mLogUploaderMockResolvePlayersSteamIDs
+	funcResolvePlayers          func(domain string, players []*stats.PickupPlayer) (err error)
+	inspectFuncResolvePlayers   func(domain string, players []*stats.PickupPlayer)
+	afterResolvePlayersCounter  uint64
+	beforeResolvePlayersCounter uint64
+	ResolvePlayersMock          mLogUploaderMockResolvePlayers
 
 	funcUploadLogFile          func(payload map[string]io.Reader) (err error)
 	inspectFuncUploadLogFile   func(payload map[string]io.Reader)
@@ -58,8 +58,8 @@ func NewLogUploaderMock(t minimock.Tester) *LogUploaderMock {
 	m.MakeMultipartMapMock = mLogUploaderMockMakeMultipartMap{mock: m}
 	m.MakeMultipartMapMock.callArgs = []*LogUploaderMockMakeMultipartMapParams{}
 
-	m.ResolvePlayersSteamIDsMock = mLogUploaderMockResolvePlayersSteamIDs{mock: m}
-	m.ResolvePlayersSteamIDsMock.callArgs = []*LogUploaderMockResolvePlayersSteamIDsParams{}
+	m.ResolvePlayersMock = mLogUploaderMockResolvePlayers{mock: m}
+	m.ResolvePlayersMock.callArgs = []*LogUploaderMockResolvePlayersParams{}
 
 	m.UploadLogFileMock = mLogUploaderMockUploadLogFile{mock: m}
 	m.UploadLogFileMock.callArgs = []*LogUploaderMockUploadLogFileParams{}
@@ -502,219 +502,219 @@ func (m *LogUploaderMock) MinimockMakeMultipartMapInspect() {
 	}
 }
 
-type mLogUploaderMockResolvePlayersSteamIDs struct {
+type mLogUploaderMockResolvePlayers struct {
 	mock               *LogUploaderMock
-	defaultExpectation *LogUploaderMockResolvePlayersSteamIDsExpectation
-	expectations       []*LogUploaderMockResolvePlayersSteamIDsExpectation
+	defaultExpectation *LogUploaderMockResolvePlayersExpectation
+	expectations       []*LogUploaderMockResolvePlayersExpectation
 
-	callArgs []*LogUploaderMockResolvePlayersSteamIDsParams
+	callArgs []*LogUploaderMockResolvePlayersParams
 	mutex    sync.RWMutex
 }
 
-// LogUploaderMockResolvePlayersSteamIDsExpectation specifies expectation struct of the LogUploader.ResolvePlayersSteamIDs
-type LogUploaderMockResolvePlayersSteamIDsExpectation struct {
+// LogUploaderMockResolvePlayersExpectation specifies expectation struct of the LogUploader.ResolvePlayers
+type LogUploaderMockResolvePlayersExpectation struct {
 	mock    *LogUploaderMock
-	params  *LogUploaderMockResolvePlayersSteamIDsParams
-	results *LogUploaderMockResolvePlayersSteamIDsResults
+	params  *LogUploaderMockResolvePlayersParams
+	results *LogUploaderMockResolvePlayersResults
 	Counter uint64
 }
 
-// LogUploaderMockResolvePlayersSteamIDsParams contains parameters of the LogUploader.ResolvePlayersSteamIDs
-type LogUploaderMockResolvePlayersSteamIDsParams struct {
+// LogUploaderMockResolvePlayersParams contains parameters of the LogUploader.ResolvePlayers
+type LogUploaderMockResolvePlayersParams struct {
 	domain  string
 	players []*stats.PickupPlayer
 }
 
-// LogUploaderMockResolvePlayersSteamIDsResults contains results of the LogUploader.ResolvePlayersSteamIDs
-type LogUploaderMockResolvePlayersSteamIDsResults struct {
+// LogUploaderMockResolvePlayersResults contains results of the LogUploader.ResolvePlayers
+type LogUploaderMockResolvePlayersResults struct {
 	err error
 }
 
-// Expect sets up expected params for LogUploader.ResolvePlayersSteamIDs
-func (mmResolvePlayersSteamIDs *mLogUploaderMockResolvePlayersSteamIDs) Expect(domain string, players []*stats.PickupPlayer) *mLogUploaderMockResolvePlayersSteamIDs {
-	if mmResolvePlayersSteamIDs.mock.funcResolvePlayersSteamIDs != nil {
-		mmResolvePlayersSteamIDs.mock.t.Fatalf("LogUploaderMock.ResolvePlayersSteamIDs mock is already set by Set")
+// Expect sets up expected params for LogUploader.ResolvePlayers
+func (mmResolvePlayers *mLogUploaderMockResolvePlayers) Expect(domain string, players []*stats.PickupPlayer) *mLogUploaderMockResolvePlayers {
+	if mmResolvePlayers.mock.funcResolvePlayers != nil {
+		mmResolvePlayers.mock.t.Fatalf("LogUploaderMock.ResolvePlayers mock is already set by Set")
 	}
 
-	if mmResolvePlayersSteamIDs.defaultExpectation == nil {
-		mmResolvePlayersSteamIDs.defaultExpectation = &LogUploaderMockResolvePlayersSteamIDsExpectation{}
+	if mmResolvePlayers.defaultExpectation == nil {
+		mmResolvePlayers.defaultExpectation = &LogUploaderMockResolvePlayersExpectation{}
 	}
 
-	mmResolvePlayersSteamIDs.defaultExpectation.params = &LogUploaderMockResolvePlayersSteamIDsParams{domain, players}
-	for _, e := range mmResolvePlayersSteamIDs.expectations {
-		if minimock.Equal(e.params, mmResolvePlayersSteamIDs.defaultExpectation.params) {
-			mmResolvePlayersSteamIDs.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmResolvePlayersSteamIDs.defaultExpectation.params)
+	mmResolvePlayers.defaultExpectation.params = &LogUploaderMockResolvePlayersParams{domain, players}
+	for _, e := range mmResolvePlayers.expectations {
+		if minimock.Equal(e.params, mmResolvePlayers.defaultExpectation.params) {
+			mmResolvePlayers.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmResolvePlayers.defaultExpectation.params)
 		}
 	}
 
-	return mmResolvePlayersSteamIDs
+	return mmResolvePlayers
 }
 
-// Inspect accepts an inspector function that has same arguments as the LogUploader.ResolvePlayersSteamIDs
-func (mmResolvePlayersSteamIDs *mLogUploaderMockResolvePlayersSteamIDs) Inspect(f func(domain string, players []*stats.PickupPlayer)) *mLogUploaderMockResolvePlayersSteamIDs {
-	if mmResolvePlayersSteamIDs.mock.inspectFuncResolvePlayersSteamIDs != nil {
-		mmResolvePlayersSteamIDs.mock.t.Fatalf("Inspect function is already set for LogUploaderMock.ResolvePlayersSteamIDs")
+// Inspect accepts an inspector function that has same arguments as the LogUploader.ResolvePlayers
+func (mmResolvePlayers *mLogUploaderMockResolvePlayers) Inspect(f func(domain string, players []*stats.PickupPlayer)) *mLogUploaderMockResolvePlayers {
+	if mmResolvePlayers.mock.inspectFuncResolvePlayers != nil {
+		mmResolvePlayers.mock.t.Fatalf("Inspect function is already set for LogUploaderMock.ResolvePlayers")
 	}
 
-	mmResolvePlayersSteamIDs.mock.inspectFuncResolvePlayersSteamIDs = f
+	mmResolvePlayers.mock.inspectFuncResolvePlayers = f
 
-	return mmResolvePlayersSteamIDs
+	return mmResolvePlayers
 }
 
-// Return sets up results that will be returned by LogUploader.ResolvePlayersSteamIDs
-func (mmResolvePlayersSteamIDs *mLogUploaderMockResolvePlayersSteamIDs) Return(err error) *LogUploaderMock {
-	if mmResolvePlayersSteamIDs.mock.funcResolvePlayersSteamIDs != nil {
-		mmResolvePlayersSteamIDs.mock.t.Fatalf("LogUploaderMock.ResolvePlayersSteamIDs mock is already set by Set")
+// Return sets up results that will be returned by LogUploader.ResolvePlayers
+func (mmResolvePlayers *mLogUploaderMockResolvePlayers) Return(err error) *LogUploaderMock {
+	if mmResolvePlayers.mock.funcResolvePlayers != nil {
+		mmResolvePlayers.mock.t.Fatalf("LogUploaderMock.ResolvePlayers mock is already set by Set")
 	}
 
-	if mmResolvePlayersSteamIDs.defaultExpectation == nil {
-		mmResolvePlayersSteamIDs.defaultExpectation = &LogUploaderMockResolvePlayersSteamIDsExpectation{mock: mmResolvePlayersSteamIDs.mock}
+	if mmResolvePlayers.defaultExpectation == nil {
+		mmResolvePlayers.defaultExpectation = &LogUploaderMockResolvePlayersExpectation{mock: mmResolvePlayers.mock}
 	}
-	mmResolvePlayersSteamIDs.defaultExpectation.results = &LogUploaderMockResolvePlayersSteamIDsResults{err}
-	return mmResolvePlayersSteamIDs.mock
+	mmResolvePlayers.defaultExpectation.results = &LogUploaderMockResolvePlayersResults{err}
+	return mmResolvePlayers.mock
 }
 
-//Set uses given function f to mock the LogUploader.ResolvePlayersSteamIDs method
-func (mmResolvePlayersSteamIDs *mLogUploaderMockResolvePlayersSteamIDs) Set(f func(domain string, players []*stats.PickupPlayer) (err error)) *LogUploaderMock {
-	if mmResolvePlayersSteamIDs.defaultExpectation != nil {
-		mmResolvePlayersSteamIDs.mock.t.Fatalf("Default expectation is already set for the LogUploader.ResolvePlayersSteamIDs method")
+//Set uses given function f to mock the LogUploader.ResolvePlayers method
+func (mmResolvePlayers *mLogUploaderMockResolvePlayers) Set(f func(domain string, players []*stats.PickupPlayer) (err error)) *LogUploaderMock {
+	if mmResolvePlayers.defaultExpectation != nil {
+		mmResolvePlayers.mock.t.Fatalf("Default expectation is already set for the LogUploader.ResolvePlayers method")
 	}
 
-	if len(mmResolvePlayersSteamIDs.expectations) > 0 {
-		mmResolvePlayersSteamIDs.mock.t.Fatalf("Some expectations are already set for the LogUploader.ResolvePlayersSteamIDs method")
+	if len(mmResolvePlayers.expectations) > 0 {
+		mmResolvePlayers.mock.t.Fatalf("Some expectations are already set for the LogUploader.ResolvePlayers method")
 	}
 
-	mmResolvePlayersSteamIDs.mock.funcResolvePlayersSteamIDs = f
-	return mmResolvePlayersSteamIDs.mock
+	mmResolvePlayers.mock.funcResolvePlayers = f
+	return mmResolvePlayers.mock
 }
 
-// When sets expectation for the LogUploader.ResolvePlayersSteamIDs which will trigger the result defined by the following
+// When sets expectation for the LogUploader.ResolvePlayers which will trigger the result defined by the following
 // Then helper
-func (mmResolvePlayersSteamIDs *mLogUploaderMockResolvePlayersSteamIDs) When(domain string, players []*stats.PickupPlayer) *LogUploaderMockResolvePlayersSteamIDsExpectation {
-	if mmResolvePlayersSteamIDs.mock.funcResolvePlayersSteamIDs != nil {
-		mmResolvePlayersSteamIDs.mock.t.Fatalf("LogUploaderMock.ResolvePlayersSteamIDs mock is already set by Set")
+func (mmResolvePlayers *mLogUploaderMockResolvePlayers) When(domain string, players []*stats.PickupPlayer) *LogUploaderMockResolvePlayersExpectation {
+	if mmResolvePlayers.mock.funcResolvePlayers != nil {
+		mmResolvePlayers.mock.t.Fatalf("LogUploaderMock.ResolvePlayers mock is already set by Set")
 	}
 
-	expectation := &LogUploaderMockResolvePlayersSteamIDsExpectation{
-		mock:   mmResolvePlayersSteamIDs.mock,
-		params: &LogUploaderMockResolvePlayersSteamIDsParams{domain, players},
+	expectation := &LogUploaderMockResolvePlayersExpectation{
+		mock:   mmResolvePlayers.mock,
+		params: &LogUploaderMockResolvePlayersParams{domain, players},
 	}
-	mmResolvePlayersSteamIDs.expectations = append(mmResolvePlayersSteamIDs.expectations, expectation)
+	mmResolvePlayers.expectations = append(mmResolvePlayers.expectations, expectation)
 	return expectation
 }
 
-// Then sets up LogUploader.ResolvePlayersSteamIDs return parameters for the expectation previously defined by the When method
-func (e *LogUploaderMockResolvePlayersSteamIDsExpectation) Then(err error) *LogUploaderMock {
-	e.results = &LogUploaderMockResolvePlayersSteamIDsResults{err}
+// Then sets up LogUploader.ResolvePlayers return parameters for the expectation previously defined by the When method
+func (e *LogUploaderMockResolvePlayersExpectation) Then(err error) *LogUploaderMock {
+	e.results = &LogUploaderMockResolvePlayersResults{err}
 	return e.mock
 }
 
-// ResolvePlayersSteamIDs implements requests.LogUploader
-func (mmResolvePlayersSteamIDs *LogUploaderMock) ResolvePlayersSteamIDs(domain string, players []*stats.PickupPlayer) (err error) {
-	mm_atomic.AddUint64(&mmResolvePlayersSteamIDs.beforeResolvePlayersSteamIDsCounter, 1)
-	defer mm_atomic.AddUint64(&mmResolvePlayersSteamIDs.afterResolvePlayersSteamIDsCounter, 1)
+// ResolvePlayers implements requests.LogUploader
+func (mmResolvePlayers *LogUploaderMock) ResolvePlayers(domain string, players []*stats.PickupPlayer) (err error) {
+	mm_atomic.AddUint64(&mmResolvePlayers.beforeResolvePlayersCounter, 1)
+	defer mm_atomic.AddUint64(&mmResolvePlayers.afterResolvePlayersCounter, 1)
 
-	if mmResolvePlayersSteamIDs.inspectFuncResolvePlayersSteamIDs != nil {
-		mmResolvePlayersSteamIDs.inspectFuncResolvePlayersSteamIDs(domain, players)
+	if mmResolvePlayers.inspectFuncResolvePlayers != nil {
+		mmResolvePlayers.inspectFuncResolvePlayers(domain, players)
 	}
 
-	mm_params := &LogUploaderMockResolvePlayersSteamIDsParams{domain, players}
+	mm_params := &LogUploaderMockResolvePlayersParams{domain, players}
 
 	// Record call args
-	mmResolvePlayersSteamIDs.ResolvePlayersSteamIDsMock.mutex.Lock()
-	mmResolvePlayersSteamIDs.ResolvePlayersSteamIDsMock.callArgs = append(mmResolvePlayersSteamIDs.ResolvePlayersSteamIDsMock.callArgs, mm_params)
-	mmResolvePlayersSteamIDs.ResolvePlayersSteamIDsMock.mutex.Unlock()
+	mmResolvePlayers.ResolvePlayersMock.mutex.Lock()
+	mmResolvePlayers.ResolvePlayersMock.callArgs = append(mmResolvePlayers.ResolvePlayersMock.callArgs, mm_params)
+	mmResolvePlayers.ResolvePlayersMock.mutex.Unlock()
 
-	for _, e := range mmResolvePlayersSteamIDs.ResolvePlayersSteamIDsMock.expectations {
+	for _, e := range mmResolvePlayers.ResolvePlayersMock.expectations {
 		if minimock.Equal(e.params, mm_params) {
 			mm_atomic.AddUint64(&e.Counter, 1)
 			return e.results.err
 		}
 	}
 
-	if mmResolvePlayersSteamIDs.ResolvePlayersSteamIDsMock.defaultExpectation != nil {
-		mm_atomic.AddUint64(&mmResolvePlayersSteamIDs.ResolvePlayersSteamIDsMock.defaultExpectation.Counter, 1)
-		mm_want := mmResolvePlayersSteamIDs.ResolvePlayersSteamIDsMock.defaultExpectation.params
-		mm_got := LogUploaderMockResolvePlayersSteamIDsParams{domain, players}
+	if mmResolvePlayers.ResolvePlayersMock.defaultExpectation != nil {
+		mm_atomic.AddUint64(&mmResolvePlayers.ResolvePlayersMock.defaultExpectation.Counter, 1)
+		mm_want := mmResolvePlayers.ResolvePlayersMock.defaultExpectation.params
+		mm_got := LogUploaderMockResolvePlayersParams{domain, players}
 		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
-			mmResolvePlayersSteamIDs.t.Errorf("LogUploaderMock.ResolvePlayersSteamIDs got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
+			mmResolvePlayers.t.Errorf("LogUploaderMock.ResolvePlayers got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
 		}
 
-		mm_results := mmResolvePlayersSteamIDs.ResolvePlayersSteamIDsMock.defaultExpectation.results
+		mm_results := mmResolvePlayers.ResolvePlayersMock.defaultExpectation.results
 		if mm_results == nil {
-			mmResolvePlayersSteamIDs.t.Fatal("No results are set for the LogUploaderMock.ResolvePlayersSteamIDs")
+			mmResolvePlayers.t.Fatal("No results are set for the LogUploaderMock.ResolvePlayers")
 		}
 		return (*mm_results).err
 	}
-	if mmResolvePlayersSteamIDs.funcResolvePlayersSteamIDs != nil {
-		return mmResolvePlayersSteamIDs.funcResolvePlayersSteamIDs(domain, players)
+	if mmResolvePlayers.funcResolvePlayers != nil {
+		return mmResolvePlayers.funcResolvePlayers(domain, players)
 	}
-	mmResolvePlayersSteamIDs.t.Fatalf("Unexpected call to LogUploaderMock.ResolvePlayersSteamIDs. %v %v", domain, players)
+	mmResolvePlayers.t.Fatalf("Unexpected call to LogUploaderMock.ResolvePlayers. %v %v", domain, players)
 	return
 }
 
-// ResolvePlayersSteamIDsAfterCounter returns a count of finished LogUploaderMock.ResolvePlayersSteamIDs invocations
-func (mmResolvePlayersSteamIDs *LogUploaderMock) ResolvePlayersSteamIDsAfterCounter() uint64 {
-	return mm_atomic.LoadUint64(&mmResolvePlayersSteamIDs.afterResolvePlayersSteamIDsCounter)
+// ResolvePlayersAfterCounter returns a count of finished LogUploaderMock.ResolvePlayers invocations
+func (mmResolvePlayers *LogUploaderMock) ResolvePlayersAfterCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmResolvePlayers.afterResolvePlayersCounter)
 }
 
-// ResolvePlayersSteamIDsBeforeCounter returns a count of LogUploaderMock.ResolvePlayersSteamIDs invocations
-func (mmResolvePlayersSteamIDs *LogUploaderMock) ResolvePlayersSteamIDsBeforeCounter() uint64 {
-	return mm_atomic.LoadUint64(&mmResolvePlayersSteamIDs.beforeResolvePlayersSteamIDsCounter)
+// ResolvePlayersBeforeCounter returns a count of LogUploaderMock.ResolvePlayers invocations
+func (mmResolvePlayers *LogUploaderMock) ResolvePlayersBeforeCounter() uint64 {
+	return mm_atomic.LoadUint64(&mmResolvePlayers.beforeResolvePlayersCounter)
 }
 
-// Calls returns a list of arguments used in each call to LogUploaderMock.ResolvePlayersSteamIDs.
+// Calls returns a list of arguments used in each call to LogUploaderMock.ResolvePlayers.
 // The list is in the same order as the calls were made (i.e. recent calls have a higher index)
-func (mmResolvePlayersSteamIDs *mLogUploaderMockResolvePlayersSteamIDs) Calls() []*LogUploaderMockResolvePlayersSteamIDsParams {
-	mmResolvePlayersSteamIDs.mutex.RLock()
+func (mmResolvePlayers *mLogUploaderMockResolvePlayers) Calls() []*LogUploaderMockResolvePlayersParams {
+	mmResolvePlayers.mutex.RLock()
 
-	argCopy := make([]*LogUploaderMockResolvePlayersSteamIDsParams, len(mmResolvePlayersSteamIDs.callArgs))
-	copy(argCopy, mmResolvePlayersSteamIDs.callArgs)
+	argCopy := make([]*LogUploaderMockResolvePlayersParams, len(mmResolvePlayers.callArgs))
+	copy(argCopy, mmResolvePlayers.callArgs)
 
-	mmResolvePlayersSteamIDs.mutex.RUnlock()
+	mmResolvePlayers.mutex.RUnlock()
 
 	return argCopy
 }
 
-// MinimockResolvePlayersSteamIDsDone returns true if the count of the ResolvePlayersSteamIDs invocations corresponds
+// MinimockResolvePlayersDone returns true if the count of the ResolvePlayers invocations corresponds
 // the number of defined expectations
-func (m *LogUploaderMock) MinimockResolvePlayersSteamIDsDone() bool {
-	for _, e := range m.ResolvePlayersSteamIDsMock.expectations {
+func (m *LogUploaderMock) MinimockResolvePlayersDone() bool {
+	for _, e := range m.ResolvePlayersMock.expectations {
 		if mm_atomic.LoadUint64(&e.Counter) < 1 {
 			return false
 		}
 	}
 
 	// if default expectation was set then invocations count should be greater than zero
-	if m.ResolvePlayersSteamIDsMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterResolvePlayersSteamIDsCounter) < 1 {
+	if m.ResolvePlayersMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterResolvePlayersCounter) < 1 {
 		return false
 	}
 	// if func was set then invocations count should be greater than zero
-	if m.funcResolvePlayersSteamIDs != nil && mm_atomic.LoadUint64(&m.afterResolvePlayersSteamIDsCounter) < 1 {
+	if m.funcResolvePlayers != nil && mm_atomic.LoadUint64(&m.afterResolvePlayersCounter) < 1 {
 		return false
 	}
 	return true
 }
 
-// MinimockResolvePlayersSteamIDsInspect logs each unmet expectation
-func (m *LogUploaderMock) MinimockResolvePlayersSteamIDsInspect() {
-	for _, e := range m.ResolvePlayersSteamIDsMock.expectations {
+// MinimockResolvePlayersInspect logs each unmet expectation
+func (m *LogUploaderMock) MinimockResolvePlayersInspect() {
+	for _, e := range m.ResolvePlayersMock.expectations {
 		if mm_atomic.LoadUint64(&e.Counter) < 1 {
-			m.t.Errorf("Expected call to LogUploaderMock.ResolvePlayersSteamIDs with params: %#v", *e.params)
+			m.t.Errorf("Expected call to LogUploaderMock.ResolvePlayers with params: %#v", *e.params)
 		}
 	}
 
 	// if default expectation was set then invocations count should be greater than zero
-	if m.ResolvePlayersSteamIDsMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterResolvePlayersSteamIDsCounter) < 1 {
-		if m.ResolvePlayersSteamIDsMock.defaultExpectation.params == nil {
-			m.t.Error("Expected call to LogUploaderMock.ResolvePlayersSteamIDs")
+	if m.ResolvePlayersMock.defaultExpectation != nil && mm_atomic.LoadUint64(&m.afterResolvePlayersCounter) < 1 {
+		if m.ResolvePlayersMock.defaultExpectation.params == nil {
+			m.t.Error("Expected call to LogUploaderMock.ResolvePlayers")
 		} else {
-			m.t.Errorf("Expected call to LogUploaderMock.ResolvePlayersSteamIDs with params: %#v", *m.ResolvePlayersSteamIDsMock.defaultExpectation.params)
+			m.t.Errorf("Expected call to LogUploaderMock.ResolvePlayers with params: %#v", *m.ResolvePlayersMock.defaultExpectation.params)
 		}
 	}
 	// if func was set then invocations count should be greater than zero
-	if m.funcResolvePlayersSteamIDs != nil && mm_atomic.LoadUint64(&m.afterResolvePlayersSteamIDsCounter) < 1 {
-		m.t.Error("Expected call to LogUploaderMock.ResolvePlayersSteamIDs")
+	if m.funcResolvePlayers != nil && mm_atomic.LoadUint64(&m.afterResolvePlayersCounter) < 1 {
+		m.t.Error("Expected call to LogUploaderMock.ResolvePlayers")
 	}
 }
 
@@ -940,7 +940,7 @@ func (m *LogUploaderMock) MinimockFinish() {
 
 		m.MinimockMakeMultipartMapInspect()
 
-		m.MinimockResolvePlayersSteamIDsInspect()
+		m.MinimockResolvePlayersInspect()
 
 		m.MinimockUploadLogFileInspect()
 		m.t.FailNow()
@@ -968,6 +968,6 @@ func (m *LogUploaderMock) minimockDone() bool {
 	return done &&
 		m.MinimockFindMatchingPickupDone() &&
 		m.MinimockMakeMultipartMapDone() &&
-		m.MinimockResolvePlayersSteamIDsDone() &&
+		m.MinimockResolvePlayersDone() &&
 		m.MinimockUploadLogFileDone()
 }

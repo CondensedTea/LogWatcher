@@ -8,6 +8,8 @@ import (
 	"github.com/leighmacdonald/steamid/steamid"
 )
 
+const CurrentStatsSchemaVersion = 1
+
 var (
 	timeStamp    = regexp.MustCompile(`\d{2}/\d{2}/\d{4} - \d{2}:\d{2}:\d{2}`)
 	killRegexp   = regexp.MustCompile(`(\[U:\d:\d{1,10}]).+killed.+(\[U:\d:\d{1,10}])`)
@@ -78,11 +80,12 @@ func ExtractPlayerStats(md Matcher) []interface{} {
 		for steamID, stats := range md.PlayerStats() {
 			if player.SteamID == steamID.String() {
 				gs := MongoPlayerInfo{
-					Player:   player,
-					Stats:    *stats,
-					Domain:   md.Domain(),
-					PickupID: md.PickupID(),
-					Length:   md.LengthSeconds(),
+					Player:        player,
+					Stats:         *stats,
+					Domain:        md.Domain(),
+					PickupID:      md.PickupID(),
+					Length:        md.LengthSeconds(),
+					SchemaVersion: CurrentStatsSchemaVersion,
 				}
 				s = append(s, gs)
 			}

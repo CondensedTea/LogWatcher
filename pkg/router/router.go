@@ -40,7 +40,7 @@ func NewRouter(ctx context.Context, cfg *config.Config, log *logrus.Logger) (*Ro
 	}
 
 	client := &http.Client{Timeout: timeout * time.Second}
-	r := requests.NewClient(cfg.Server.APIKey, client)
+	r := requests.NewClient(cfg.Server.APIKey, client, log)
 
 	addressTable := MakeAddressTable(cfg.Clients, log, mongoClient, r)
 	return &Router{

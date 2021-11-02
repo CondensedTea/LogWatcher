@@ -112,7 +112,7 @@ func (sm *StateMachine) ProcessGameStartedEvent(msg string) {
 	sm.Match.SetPlayers(pickup.Players)
 	sm.Match.SetPickupID(pickup.ID)
 
-	if err := sm.Uploader.ResolvePlayersSteamIDs(sm.Match.Domain(), sm.Match.PickupPlayers()); err != nil {
+	if err := sm.Uploader.ResolvePlayers(sm.Match.Domain(), sm.Match.PickupPlayers()); err != nil {
 		sm.Log.WithFields(logrus.Fields{"server": sm.Match.String()}).
 			Errorf("Failed to resolve pickup player ids through API: %s", err)
 	}

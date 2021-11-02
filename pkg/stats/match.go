@@ -24,19 +24,22 @@ type PlayerStats struct {
 // PickupPlayer represents player's information from single game
 type PickupPlayer struct {
 	PlayerID string `bson:"player_id"`
+	Name     string `bson:"name"`
 	Class    string `bson:"class"`
 	SteamID  string `bson:"steam_id"`
 	Team     string `bson:"team"`
 }
 
 // MongoPlayerInfo represents single player's data from single game,
-// used as model for mongo entries
+// used as model for mongo entries.
+// Schema version used for tracking new features.
 type MongoPlayerInfo struct {
-	Player   *PickupPlayer
-	Stats    PlayerStats
-	Domain   string
-	PickupID int
-	Length   int
+	Player        *PickupPlayer
+	Stats         PlayerStats
+	Domain        string
+	PickupID      int
+	Length        int
+	SchemaVersion int
 }
 
 // Match represents data from all players in single game,
