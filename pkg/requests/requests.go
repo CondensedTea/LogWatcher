@@ -144,6 +144,7 @@ func (c *Client) FindMatchingPickup(domain, gameMap string) (*Pickup, error) {
 		c.Log.WithFields(logrus.Fields{
 			"state": game.State,
 			"map":   game.Map,
+			"id":    game.ID,
 		}).Infof("looking for pickup...")
 		if game.State == StartedState && game.Map == gameMap {
 			for _, player := range game.Slots {
@@ -154,6 +155,7 @@ func (c *Client) FindMatchingPickup(domain, gameMap string) (*Pickup, error) {
 			}
 			pickup.Players = players
 			pickup.ID = game.Number
+			break
 		}
 	}
 	return pickup, nil
