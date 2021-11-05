@@ -149,7 +149,7 @@ func (sm *StateMachine) ProcessGameLogLine(msg string) {
 func (sm *StateMachine) ProcessGameOverEvent(msg string) {
 	sm.State = Pregame
 	sm.Match.SetLength(msg)
-	payload := sm.Uploader.MakeMultipartMap(sm.Match.Map(), sm.Match.Domain(), sm.Match.PickupID(), sm.File.Buffer())
+	payload := sm.Uploader.MakeMultipartMap(sm.Match, sm.File.Buffer())
 	if err := sm.Uploader.UploadLogFile(payload); err != nil {
 		sm.Log.WithFields(logrus.Fields{"server": sm.Match.String()}).Errorf("Failed to upload File to logs.tf: %s", err)
 	}

@@ -162,7 +162,7 @@ func TestStateMachine_ProcessLogLine(t *testing.T) {
 					BufferMock.Return(bytes.Buffer{}).
 					FlushBufferMock.Return(),
 				Uploader: mocks.NewLogUploaderMock(mc).
-					MakeMultipartMapMock.Expect("cp_granary_pro_rc8", "test", 0, bytes.Buffer{}).Return(map[string]io.Reader{}).
+					MakeMultipartMapMock.Return(map[string]io.Reader{}).
 					UploadLogFileMock.Expect(map[string]io.Reader{}).Return(nil),
 				Match: mocks.NewMatcherMock(mc).
 					MapMock.Return("cp_granary_pro_rc8").
@@ -238,7 +238,7 @@ func TestStateMachine_ProcessLogLine(t *testing.T) {
 					BufferMock.Return(bytes.Buffer{}).
 					FlushBufferMock.Return(),
 				Uploader: mocks.NewLogUploaderMock(mc).
-					MakeMultipartMapMock.Expect("cp_granary_pro_rc8", "test", 0, bytes.Buffer{}).Return(map[string]io.Reader{}).
+					MakeMultipartMapMock.Return(map[string]io.Reader{}).
 					UploadLogFileMock.Expect(map[string]io.Reader{}).Return(errors.New("test error")),
 				Match: mocks.NewMatcherMock(mc).
 					MapMock.Return("cp_granary_pro_rc8").
@@ -282,7 +282,7 @@ func TestStateMachine_ProcessLogLine(t *testing.T) {
 					BufferMock.Return(bytes.Buffer{}).
 					FlushBufferMock.Return(),
 				Uploader: mocks.NewLogUploaderMock(mc).
-					MakeMultipartMapMock.Expect("cp_granary_pro_rc8", "test", 0, bytes.Buffer{}).Return(map[string]io.Reader{}).
+					MakeMultipartMapMock.Return(map[string]io.Reader{}).
 					UploadLogFileMock.Expect(map[string]io.Reader{}).Return(nil),
 				Match: mocks.NewMatcherMock(mc).
 					MapMock.Return("cp_granary_pro_rc8").
