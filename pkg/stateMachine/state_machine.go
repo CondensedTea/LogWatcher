@@ -16,6 +16,7 @@ var (
 	roundWin     = regexp.MustCompile(`: World triggered "Round_Win"`)
 	gameOver     = regexp.MustCompile(`: World triggered "Game_Over" reason "`)
 	logClosed    = regexp.MustCompile(`: Log File closed.`)
+	logStarted   = regexp.MustCompile(`: Log file started`)
 	currentScore = regexp.MustCompile(`: Team "(Red|Blue)" current score "(\d)" with "\d" players`)
 )
 
@@ -111,11 +112,13 @@ func (sm *StateMachine) ProcessLogLine(msg string) {
 		if roundStart.MatchString(msg) {
 			sm.State = Game
 		}
+		if logStarted.MatchString(msg) {
+			sm.State = Pregame
+		}
 	}
 }
 
 func (sm *StateMachine) ProcessGameStartedEvent(msg string) {
-	sm.State = Game
 	sm.Match.SetStartTime(msg)
 	sm.File.WriteLine(msg)
 
