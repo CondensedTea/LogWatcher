@@ -104,6 +104,7 @@ func (sm *StateMachine) ProcessLogLine(msg string) {
 		}
 		sm.ProcessGameLogLine(msg)
 		if logClosed.MatchString(msg) || gameOver.MatchString(msg) {
+			sm.State = Pregame
 			sm.ProcessGameOverEvent(msg)
 		}
 	case RoundReset:
@@ -113,8 +114,13 @@ func (sm *StateMachine) ProcessLogLine(msg string) {
 		if roundStart.MatchString(msg) {
 			sm.State = Game
 		}
+		if logClosed.MatchString(msg) || gameOver.MatchString(msg) {
+			sm.State = Pregame
+			sm.ProcessGameOverEvent(msg)
+		}
 		if logStarted.MatchString(msg) {
 			sm.State = Pregame
+			sm.Flush()
 		}
 	}
 }
@@ -151,7 +157,6 @@ func (sm *StateMachine) ProcessGameLogLine(msg string) {
 }
 
 func (sm *StateMachine) ProcessGameOverEvent(msg string) {
-	sm.State = Pregame
 	sm.Match.SetLength(msg)
 	payload := sm.Uploader.MakeMultipartMap(sm.Match, sm.File.Buffer())
 	if err := sm.Uploader.UploadLogFile(payload); err != nil {
