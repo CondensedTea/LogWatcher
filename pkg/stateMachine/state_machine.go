@@ -94,6 +94,7 @@ func (sm *StateMachine) ProcessLogLine(msg string) {
 	case Pregame:
 		sm.Match.TryParseGameMap(msg)
 		if roundStart.MatchString(msg) {
+			sm.State = Game
 			sm.ProcessGameStartedEvent(msg)
 		}
 	case Game:
