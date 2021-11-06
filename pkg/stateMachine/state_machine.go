@@ -175,6 +175,7 @@ func (sm *StateMachine) Flush() {
 }
 
 func (sm *StateMachine) ProcessCurrentScore(msg string) {
+	sm.File.WriteLine(msg)
 	match := currentScore.FindStringSubmatch(msg)
 	score, _ := strconv.Atoi(match[2])
 	if match[1] == "Red" {

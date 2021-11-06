@@ -211,6 +211,7 @@ func TestStateMachine_ProcessLogLine(t *testing.T) {
 			fields: fields{
 				State: stateMachine.RoundReset,
 				log:   log,
+				File:  mocks.NewLogFilerMock(mc).WriteLineMock.Expect(`: Team "Red" current score "5" with "6" players`).Return(),
 				Match: mocks.NewMatcherMock(mc).SetRedScoreMock.Expect(5).Return(),
 			},
 		},
@@ -222,6 +223,7 @@ func TestStateMachine_ProcessLogLine(t *testing.T) {
 			fields: fields{
 				State: stateMachine.RoundReset,
 				log:   log,
+				File:  mocks.NewLogFilerMock(mc).WriteLineMock.Expect(`: Team "Blue" current score "5" with "6" players`).Return(),
 				Match: mocks.NewMatcherMock(mc).SetBlueScoreMock.Expect(5).Return(),
 			},
 		},
