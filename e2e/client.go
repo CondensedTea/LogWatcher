@@ -3,6 +3,7 @@ package main
 import (
 	"bufio"
 	"flag"
+	"fmt"
 	"log"
 	"net"
 	"os"
@@ -37,11 +38,18 @@ func main() {
 		log.Fatalf("Failed to dial to UDP app: %s", err)
 	}
 
+	var counter int
+
 	for scanner.Scan() {
 		_, err = conn.Write([]byte(scanner.Text()))
 		if err != nil {
 			log.Printf("Failed to write to UDP socket: %s", err)
 		}
 		time.Sleep(50 * time.Millisecond)
+		counter++
+		if counter%20 == 0 {
+			fmt.Println("10 seconds passed, working...")
+		}
 	}
+	fmt.Printf("Jobs done, minutes passed: %f\n", (50*time.Millisecond).Minutes()*float64(counter))
 }

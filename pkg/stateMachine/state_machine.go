@@ -53,17 +53,12 @@ type StateMachine struct {
 }
 
 type Stater interface {
-	Channel() chan string
 	StartWorker()
 	ProcessLogLine(msg string)
 	ProcessGameStartedEvent(msg string)
 	ProcessGameLogLine(msg string)
 	ProcessGameOverEvent(msg string)
 	UpdatePickupInfo() error
-	Match() stats.Matcher
-	Uploader() requests.LogUploader
-	Inserter() mongo.Inserter
-	SetState(state StateType)
 }
 
 func NewStateMachine(
@@ -160,6 +155,7 @@ func (sm *StateMachine) ProcessGameLogLine(msg string) {
 
 func (sm *StateMachine) ProcessGameOverEvent(msg string) {
 	sm.Match.SetLength(msg)
+
 	payload := sm.Uploader.MakeMultipartMap(sm.Match, sm.File.Buffer())
 	if err := sm.Uploader.UploadLogFile(payload); err != nil {
 		sm.Log.WithFields(logrus.Fields{"server": sm.Match.String()}).Errorf("Failed to upload File to logs.tf: %s", err)

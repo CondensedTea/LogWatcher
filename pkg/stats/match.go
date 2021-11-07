@@ -152,7 +152,7 @@ func (m *Match) Flush() {
 }
 
 // TryParseGameMap tries to find "Loading map" with regexp in message
-// and sets it to go._map if succeed
+// and sets it to Match._map if succeed
 func (m *Match) TryParseGameMap(msg string) {
 	if match := mapLoaded.FindStringSubmatch(msg); len(match) > 0 {
 		m._map = match[1]
