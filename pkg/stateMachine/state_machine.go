@@ -150,6 +150,10 @@ func (sm *StateMachine) ProcessGameStartedEvent(msg string) {
 
 func (sm *StateMachine) ProcessGameLogLine(msg string) {
 	playerStats := stats.UpdateStatsMap(msg, sm.Match.PlayerStats())
+	sm.Log.WithFields(logrus.Fields{
+		"state": sm.State.String(),
+		"msg":   msg,
+	}).Debugf("Processing player stats")
 	sm.Match.SetPlayerStats(playerStats)
 }
 
