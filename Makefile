@@ -1,6 +1,6 @@
 LOCAL_BIN ?= ./bin
 
-version=v1.2.9-pre
+version=v1.2.10-pre
 container_name=LogWatcher
 loglevel=info
 config_path=config.yaml
