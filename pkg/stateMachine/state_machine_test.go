@@ -41,7 +41,7 @@ func TestStateMachine_ProcessLogLine(t *testing.T) {
 		args   args
 	}{
 		{
-			name: "game to pregame switch",
+			name: "Pregame to Game switch",
 			args: args{msg: `: World triggered "Round_Start"`},
 			fields: fields{
 				State: stateMachine.Pregame,
@@ -98,7 +98,7 @@ func TestStateMachine_ProcessLogLine(t *testing.T) {
 			},
 		},
 		{
-			name: "default with state game",
+			name: "Game default",
 			args: args{
 				msg: `"jel<62><[U:1:479446967]><Blue>" killed "KEYREAL<65><[U:1:861133286]><Red>" with "sniperrifle""`,
 			},
@@ -150,7 +150,7 @@ func TestStateMachine_ProcessLogLine(t *testing.T) {
 			},
 		},
 		{
-			name: "game to pregame switch",
+			name: "Game to Pregame switch",
 			args: args{
 				msg: `: World triggered "Game_Over" reason "`,
 			},
@@ -194,13 +194,14 @@ func TestStateMachine_ProcessLogLine(t *testing.T) {
 			},
 		},
 		{
-			name: "game to roundreset switch",
+			name: "Game to RoundReset switch",
 			args: args{
 				msg: `: World triggered "Round_Win" (winner "Red")`,
 			},
 			fields: fields{
 				State: stateMachine.Game,
 				log:   log,
+				File:  mocks.NewLogFilerMock(mc).WriteLineMock.Expect(`: World triggered "Round_Win" (winner "Red")`).Return(),
 			},
 		},
 		{
@@ -225,6 +226,76 @@ func TestStateMachine_ProcessLogLine(t *testing.T) {
 				log:   log,
 				File:  mocks.NewLogFilerMock(mc).WriteLineMock.Expect(`: Team "Blue" current score "5" with "6" players`).Return(),
 				Match: mocks.NewMatcherMock(mc).SetBlueScoreMock.Expect(5).Return(),
+			},
+		},
+		{
+			name: "round reset round start event",
+			args: args{msg: `: World triggered "Round_Start"`},
+			fields: fields{
+				State: stateMachine.RoundReset,
+				log:   log,
+				File:  mocks.NewLogFilerMock(mc).WriteLineMock.Expect(`: World triggered "Round_Start"`).Return(),
+			},
+		},
+		{
+			name: "RoundReset to Pregame switch",
+			args: args{
+				msg: `: World triggered "Game_Over" reason "`,
+			},
+			fields: fields{
+				State: stateMachine.RoundReset,
+				log:   log,
+				File: mocks.NewLogFilerMock(mc).
+					WriteLineMock.Expect(`: World triggered "Game_Over" reason "`).Return().
+					BufferMock.Return(bytes.Buffer{}).
+					FlushBufferMock.Return(),
+				Uploader: mocks.NewLogUploaderMock(mc).
+					MakeMultipartMapMock.Return(map[string]io.Reader{}).
+					UploadLogFileMock.Expect(map[string]io.Reader{}).Return(nil),
+				Match: mocks.NewMatcherMock(mc).
+					MapMock.Return("cp_granary_pro_rc8").
+					DomainMock.Return("test").
+					PickupIDMock.Return(0).
+					PlayerStatsMock.Return(stats.PlayerStatsCollection{
+					steamid.SID64FromString("76561198439712695"): {Kills: 1},
+				}).
+					SetLengthMock.Expect(`: World triggered "Game_Over" reason "`).Return().
+					PickupPlayersMock.Return([]*stats.PickupPlayer{
+					{SteamID: "76561198439712695"},
+				}).
+					LengthSecondsMock.Return(0).
+					StringMock.Return("test#1").
+					FlushMock.Return(),
+				Mongo: mocks.NewInserterMock(mc).InsertGameStatsMock.Expect([]interface{}{
+					stats.MongoPlayerInfo{
+						Player:        &stats.PickupPlayer{SteamID: "76561198439712695"},
+						Stats:         stats.PlayerStats{Kills: 1},
+						Domain:        "test",
+						PickupID:      0,
+						Length:        0,
+						SchemaVersion: 1,
+					},
+				}).Return(nil),
+			},
+		},
+		{
+			name: "round reset log started event",
+			args: args{msg: `: Log file started (`},
+			fields: fields{
+				State: stateMachine.RoundReset,
+				log:   log,
+				File: mocks.NewLogFilerMock(mc).
+					FlushBufferMock.Return(),
+				Match: mocks.NewMatcherMock(mc).FlushMock.Return(),
+			},
+		},
+		{
+			name: "round reset round length event",
+			args: args{msg: `: World triggered "Round_Length" (seconds "350.12")`},
+			fields: fields{
+				State: stateMachine.RoundReset,
+				log:   log,
+				File:  mocks.NewLogFilerMock(mc).WriteLineMock.Expect(`: World triggered "Round_Length" (seconds "350.12")`).Return(),
 			},
 		},
 		{

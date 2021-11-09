@@ -18,7 +18,7 @@ var (
 	logClosed    = regexp.MustCompile(`: Log File closed.`)
 	logStarted   = regexp.MustCompile(`: Log file started`)
 	currentScore = regexp.MustCompile(`: Team "(Red|Blue)" current score "(\d)" with "\d" players`)
-	//roundLength  = regexp.MustCompile(`: World triggered "Round_Length" \(seconds `)
+	roundLength  = regexp.MustCompile(`: World triggered "Round_Length" \(seconds`)
 )
 
 type StateType int
@@ -105,20 +105,25 @@ func (sm *StateMachine) ProcessLogLine(msg string) {
 			sm.ProcessGameOverEvent(msg)
 		}
 	case RoundReset:
-		sm.File.WriteLine(msg)
 		if currentScore.MatchString(msg) {
+			sm.File.WriteLine(msg)
 			sm.ProcessCurrentScore(msg)
 		}
 		if roundStart.MatchString(msg) {
+			sm.File.WriteLine(msg)
 			sm.State = Game
 		}
 		if logClosed.MatchString(msg) || gameOver.MatchString(msg) {
+			sm.File.WriteLine(msg)
 			sm.State = Pregame
 			sm.ProcessGameOverEvent(msg)
 		}
 		if logStarted.MatchString(msg) {
 			sm.State = Pregame
 			sm.Flush()
+		}
+		if roundLength.MatchString(msg) {
+			sm.File.WriteLine(msg)
 		}
 	}
 }
@@ -150,10 +155,6 @@ func (sm *StateMachine) ProcessGameStartedEvent(msg string) {
 
 func (sm *StateMachine) ProcessGameLogLine(msg string) {
 	playerStats := stats.UpdateStatsMap(msg, sm.Match.PlayerStats())
-	sm.Log.WithFields(logrus.Fields{
-		"state": sm.State.String(),
-		"msg":   msg,
-	}).Debugf("Processing player stats")
 	sm.Match.SetPlayerStats(playerStats)
 }
 

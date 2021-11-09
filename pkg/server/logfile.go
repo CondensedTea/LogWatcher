@@ -15,13 +15,13 @@ type LogFiler interface {
 
 type LogFile struct {
 	name   string
-	buffer bytes.Buffer
+	buffer *bytes.Buffer
 }
 
 func NewLogFile(client config.Client) *LogFile {
 	return &LogFile{
 		name:   fmt.Sprintf("%s#%d", client.Domain, client.Server),
-		buffer: bytes.Buffer{},
+		buffer: &bytes.Buffer{},
 	}
 }
 
@@ -34,7 +34,7 @@ func (s *LogFile) WriteLine(msg string) {
 }
 
 func (s *LogFile) Buffer() bytes.Buffer {
-	return s.buffer
+	return *s.buffer
 }
 
 func (s *LogFile) FlushBuffer() {

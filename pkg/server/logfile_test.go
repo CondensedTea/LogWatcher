@@ -3,7 +3,6 @@ package server
 import (
 	"LogWatcher/pkg/config"
 	"bytes"
-	"context"
 	"reflect"
 	"testing"
 
@@ -33,7 +32,7 @@ func TestLogFile_Buffer(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			s := &LogFile{
-				buffer: tt.fields.buffer,
+				buffer: &tt.fields.buffer,
 			}
 			if got := s.Buffer(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Buffer() = %v, want %v", got, tt.want)
@@ -45,66 +44,27 @@ func TestLogFile_Buffer(t *testing.T) {
 func TestLogFile_FlushBuffer(t *testing.T) {
 	buf := bytes.Buffer{}
 	buf.WriteString("hello")
-	type fields struct {
-		buffer bytes.Buffer
+
+	file := &LogFile{
+		buffer: &buf,
 	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   bytes.Buffer
-	}{
-		{
-			name:   "default",
-			fields: fields{buffer: buf},
-			want:   bytes.Buffer{},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &LogFile{
-				buffer: tt.fields.buffer,
-			}
-			s.FlushBuffer()
-			if !reflect.DeepEqual(s.buffer, tt.want) {
-				t.Errorf("FlushBuffer(), got = %v, want %v", tt.fields.buffer, tt.want)
-			}
-		})
+	file.FlushBuffer()
+	if length := file.buffer.Len(); length > 0 {
+		t.Errorf("buffer length after FlushBuffer() is %v, wanted 0", length)
 	}
 }
 
 func TestLogFile_WriteLine(t *testing.T) {
-	originalBuf := bytes.Buffer{}
-	updatedBuf := bytes.Buffer{}
-	updatedBuf.WriteString("test" + "\n")
-	type fields struct {
-		buffer bytes.Buffer
+	msg := "test"
+	buf := &bytes.Buffer{}
+
+	file := &LogFile{
+		buffer: buf,
 	}
-	type args struct {
-		msg string
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   bytes.Buffer
-	}{
-		{
-			name:   "default",
-			fields: fields{buffer: originalBuf},
-			args:   args{msg: "test"},
-			want:   updatedBuf,
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			s := &LogFile{
-				buffer: tt.fields.buffer,
-			}
-			s.WriteLine(tt.args.msg)
-			if !reflect.DeepEqual(s.buffer, tt.want) {
-				t.Errorf("WriteLine(), got = %v, want %v", s.buffer, tt.want)
-			}
-		})
+	file.WriteLine(msg)
+	text := file.buffer.String()
+	if text != msg+"\n" {
+		t.Errorf("WriteLine() got = %v, want = %v", text, msg)
 	}
 }
 
@@ -136,35 +96,15 @@ func TestLogFile_Name(t *testing.T) {
 }
 
 func TestNewLogFile(t *testing.T) {
-	ctx := context.Background()
-	type args struct {
-		host config.Client
+	host := config.Client{
+		Server: 1,
+		Domain: "test",
 	}
-	tests := []struct {
-		name string
-		args args
-		want *LogFile
-	}{
-		{
-			name: "default",
-			args: args{
-				host: config.Client{
-					Server: 1,
-					Domain: "test",
-				},
-			},
-			want: &LogFile{
-				name: "test#1",
-				ctx:  ctx,
-			},
-		},
+	want := &LogFile{
+		name: "test#1",
 	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := NewLogFile(tt.args.host)
-			if !cmp.Equal(tt.want.name, got.name) {
-				t.Errorf("NewLogFile() = %v, want %v", got, tt.want)
-			}
-		})
+	result := NewLogFile(host)
+	if !cmp.Equal(result.name, want.name) {
+		t.Errorf("NewLogFile() = %v, want %v", result, want)
 	}
 }
