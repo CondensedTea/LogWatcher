@@ -16,7 +16,7 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-const timeout = 10
+const timeout = 40 * time.Second
 
 var logLineRegexp = regexp.MustCompile(`L \d{2}/\d{2}/\d{4} - \d{2}:\d{2}:\d{2}: .+`)
 
@@ -39,7 +39,7 @@ func NewRouter(ctx context.Context, cfg *config.Config, log *logrus.Logger) (*Ro
 		return nil, err
 	}
 
-	client := &http.Client{Timeout: timeout * time.Second}
+	client := &http.Client{Timeout: timeout}
 	r := requests.NewClient(cfg.Server.APIKey, client, log)
 
 	addressTable := MakeAddressTable(cfg.Clients, log, mongoClient, r)
