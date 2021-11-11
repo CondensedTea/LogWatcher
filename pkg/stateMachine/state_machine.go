@@ -6,14 +6,19 @@ import (
 	"LogWatcher/pkg/server"
 	"LogWatcher/pkg/stats"
 	"regexp"
+	"strconv"
 
 	"github.com/sirupsen/logrus"
 )
 
 var (
-	roundStart = regexp.MustCompile(`: World triggered "Round_Start"`)
-	gameOver   = regexp.MustCompile(`: World triggered "Game_Over" reason "`)
-	logClosed  = regexp.MustCompile(`: Log File closed.`)
+	roundStart   = regexp.MustCompile(`: World triggered "Round_Start"`)
+	roundWin     = regexp.MustCompile(`: World triggered "Round_Win"`)
+	gameOver     = regexp.MustCompile(`: World triggered "Game_Over" reason "`)
+	logClosed    = regexp.MustCompile(`: Log File closed.`)
+	logStarted   = regexp.MustCompile(`: Log file started`)
+	currentScore = regexp.MustCompile(`: Team "(Red|Blue)" current score "(\d)" with "\d" players`)
+	roundLength  = regexp.MustCompile(`: World triggered "Round_Length" \(seconds`)
 )
 
 type StateType int
@@ -21,6 +26,7 @@ type StateType int
 const (
 	Pregame StateType = iota
 	Game
+	RoundReset
 )
 
 func (st StateType) String() string {
@@ -29,6 +35,8 @@ func (st StateType) String() string {
 		return "pregame"
 	case Game:
 		return "game"
+	case RoundReset:
+		return "round reset"
 	default:
 		return "unknown State"
 	}
@@ -45,17 +53,12 @@ type StateMachine struct {
 }
 
 type Stater interface {
-	Channel() chan string
 	StartWorker()
 	ProcessLogLine(msg string)
 	ProcessGameStartedEvent(msg string)
 	ProcessGameLogLine(msg string)
 	ProcessGameOverEvent(msg string)
 	UpdatePickupInfo() error
-	Match() stats.Matcher
-	Uploader() requests.LogUploader
-	Inserter() mongo.Inserter
-	SetState(state StateType)
 }
 
 func NewStateMachine(
@@ -87,18 +90,45 @@ func (sm *StateMachine) ProcessLogLine(msg string) {
 	case Pregame:
 		sm.Match.TryParseGameMap(msg)
 		if roundStart.MatchString(msg) {
+			sm.State = Game
 			sm.ProcessGameStartedEvent(msg)
 		}
 	case Game:
+		sm.File.WriteLine(msg)
+		if roundWin.MatchString(msg) {
+			sm.State = RoundReset
+			break
+		}
 		sm.ProcessGameLogLine(msg)
 		if logClosed.MatchString(msg) || gameOver.MatchString(msg) {
+			sm.State = Pregame
 			sm.ProcessGameOverEvent(msg)
+		}
+	case RoundReset:
+		if currentScore.MatchString(msg) {
+			sm.File.WriteLine(msg)
+			sm.ProcessCurrentScore(msg)
+		}
+		if roundStart.MatchString(msg) {
+			sm.File.WriteLine(msg)
+			sm.State = Game
+		}
+		if logClosed.MatchString(msg) || gameOver.MatchString(msg) {
+			sm.File.WriteLine(msg)
+			sm.State = Pregame
+			sm.ProcessGameOverEvent(msg)
+		}
+		if logStarted.MatchString(msg) {
+			sm.State = Pregame
+			sm.Flush()
+		}
+		if roundLength.MatchString(msg) {
+			sm.File.WriteLine(msg)
 		}
 	}
 }
 
 func (sm *StateMachine) ProcessGameStartedEvent(msg string) {
-	sm.State = Game
 	sm.Match.SetStartTime(msg)
 	sm.File.WriteLine(msg)
 
@@ -124,15 +154,14 @@ func (sm *StateMachine) ProcessGameStartedEvent(msg string) {
 }
 
 func (sm *StateMachine) ProcessGameLogLine(msg string) {
-	sm.File.WriteLine(msg)
 	playerStats := stats.UpdateStatsMap(msg, sm.Match.PlayerStats())
 	sm.Match.SetPlayerStats(playerStats)
 }
 
 func (sm *StateMachine) ProcessGameOverEvent(msg string) {
-	sm.State = Pregame
 	sm.Match.SetLength(msg)
-	payload := sm.Uploader.MakeMultipartMap(sm.Match.Map(), sm.Match.Domain(), sm.Match.PickupID(), sm.File.Buffer())
+
+	payload := sm.Uploader.MakeMultipartMap(sm.Match, sm.File.Buffer())
 	if err := sm.Uploader.UploadLogFile(payload); err != nil {
 		sm.Log.WithFields(logrus.Fields{"server": sm.Match.String()}).Errorf("Failed to upload File to logs.tf: %s", err)
 	}
@@ -152,4 +181,14 @@ func (sm *StateMachine) ProcessGameOverEvent(msg string) {
 func (sm *StateMachine) Flush() {
 	sm.File.FlushBuffer()
 	sm.Match.Flush()
+}
+
+func (sm *StateMachine) ProcessCurrentScore(msg string) {
+	match := currentScore.FindStringSubmatch(msg)
+	score, _ := strconv.Atoi(match[2])
+	if match[1] == "Red" {
+		sm.Match.SetRedScore(score)
+	} else if match[1] == "Blue" {
+		sm.Match.SetBlueScore(score)
+	}
 }

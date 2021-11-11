@@ -41,7 +41,7 @@ type Pickup struct {
 // LogUploader provides methods for processing logs
 // and interacting with logs.tf and tf2pickup APIs
 type LogUploader interface {
-	MakeMultipartMap(_map, domain string, pickupID int, buf bytes.Buffer) map[string]io.Reader
+	MakeMultipartMap(matcher stats.Matcher, buf bytes.Buffer) map[string]io.Reader
 	UploadLogFile(payload map[string]io.Reader) error
 	ResolvePlayers(domain string, players []*stats.PickupPlayer) error
 	FindMatchingPickup(domain, Map string) (*Pickup, error)
@@ -62,10 +62,10 @@ func NewClient(apiKey string, client HTTPDoer, log *logrus.Logger) *Client {
 }
 
 // MakeMultipartMap constructs logs.tf/upload multipart payload from provided values
-func (c *Client) MakeMultipartMap(Map, domain string, pickupID int, buf bytes.Buffer) map[string]io.Reader {
+func (c *Client) MakeMultipartMap(matcher stats.Matcher, buf bytes.Buffer) map[string]io.Reader {
 	m := make(map[string]io.Reader)
-	m["title"] = strings.NewReader(fmt.Sprintf("tf2pickup.%s #%d", domain, pickupID))
-	m["map"] = strings.NewReader(Map)
+	m["title"] = strings.NewReader(fmt.Sprintf("tf2pickup.%s #%d", matcher.Domain(), matcher.PickupID()))
+	m["map"] = strings.NewReader(matcher.Map())
 	m["key"] = strings.NewReader(c.ApiKey)
 	m["logfile"] = &buf
 	m["uploader"] = strings.NewReader(fmt.Sprintf(uploaderSignTemplate, Version))
@@ -144,6 +144,7 @@ func (c *Client) FindMatchingPickup(domain, gameMap string) (*Pickup, error) {
 		c.Log.WithFields(logrus.Fields{
 			"state": game.State,
 			"map":   game.Map,
+			"id":    game.ID,
 		}).Infof("looking for pickup...")
 		if game.State == StartedState && game.Map == gameMap {
 			for _, player := range game.Slots {
@@ -154,6 +155,7 @@ func (c *Client) FindMatchingPickup(domain, gameMap string) (*Pickup, error) {
 			}
 			pickup.Players = players
 			pickup.ID = game.Number
+			break
 		}
 	}
 	return pickup, nil

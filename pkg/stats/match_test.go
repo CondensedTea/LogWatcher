@@ -494,3 +494,61 @@ func TestMatch_SetPlayerStats(t *testing.T) {
 		})
 	}
 }
+
+func TestMatch_SetRedScore(t *testing.T) {
+	type fields struct {
+		Scores CurrentScores
+	}
+	type args struct {
+		score int
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+	}{
+		{
+			name:   "default",
+			fields: fields{},
+			args:   args{score: 5},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := &Match{Scores: tt.fields.Scores}
+			m.SetRedScore(tt.args.score)
+			if !cmp.Equal(m.Scores.Red, tt.args.score) {
+				t.Errorf("NewMatch() = %v, want %v", tt.fields.Scores.Red, tt.args.score)
+			}
+		})
+	}
+}
+
+func TestMatch_SetBlueScore(t *testing.T) {
+	type fields struct {
+		Scores CurrentScores
+	}
+	type args struct {
+		score int
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+	}{
+		{
+			name:   "default",
+			fields: fields{},
+			args:   args{score: 5},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			m := &Match{Scores: tt.fields.Scores}
+			m.SetBlueScore(tt.args.score)
+			if !cmp.Equal(m.Scores.Blue, tt.args.score) {
+				t.Errorf("NewMatch() = %v, want %v", tt.fields.Scores.Red, tt.args.score)
+			}
+		})
+	}
+}

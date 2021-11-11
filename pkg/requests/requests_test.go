@@ -59,15 +59,15 @@ func TestNewRequestManager(t *testing.T) {
 }
 
 func TestRequester_MakeMultipartMap(t *testing.T) {
+	mc := minimock.NewController(t)
+
 	type fields struct {
 		client requests.HTTPDoer
 		apiKey string
 	}
 	type args struct {
-		_map     string
-		domain   string
-		pickupID int
-		buf      bytes.Buffer
+		match stats.Matcher
+		buf   bytes.Buffer
 	}
 	tests := []struct {
 		name   string
@@ -79,10 +79,11 @@ func TestRequester_MakeMultipartMap(t *testing.T) {
 			name:   "default",
 			fields: fields{apiKey: "test"},
 			args: args{
-				_map:     "cp_granary_rc8",
-				domain:   "test",
-				pickupID: 123,
-				buf:      bytes.Buffer{},
+				match: mocks.NewMatcherMock(mc).
+					MapMock.Return("cp_granary_rc8").
+					DomainMock.Return("test").
+					PickupIDMock.Return(123),
+				buf: bytes.Buffer{},
 			},
 			want: map[string]io.Reader{
 				"title":    strings.NewReader("tf2pickup.test #123"),
@@ -99,7 +100,7 @@ func TestRequester_MakeMultipartMap(t *testing.T) {
 				Client: tt.fields.client,
 				ApiKey: tt.fields.apiKey,
 			}
-			if got := r.MakeMultipartMap(tt.args._map, tt.args.domain, tt.args.pickupID, tt.args.buf); !reflect.DeepEqual(got, tt.want) {
+			if got := r.MakeMultipartMap(tt.args.match, tt.args.buf); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("MakeMultipartMap() = %v, want %v", got, tt.want)
 			}
 		})

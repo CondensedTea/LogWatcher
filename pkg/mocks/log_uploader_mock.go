@@ -26,8 +26,8 @@ type LogUploaderMock struct {
 	beforeFindMatchingPickupCounter uint64
 	FindMatchingPickupMock          mLogUploaderMockFindMatchingPickup
 
-	funcMakeMultipartMap          func(_map string, domain string, pickupID int, buf bytes.Buffer) (m1 map[string]io.Reader)
-	inspectFuncMakeMultipartMap   func(_map string, domain string, pickupID int, buf bytes.Buffer)
+	funcMakeMultipartMap          func(matcher stats.Matcher, buf bytes.Buffer) (m1 map[string]io.Reader)
+	inspectFuncMakeMultipartMap   func(matcher stats.Matcher, buf bytes.Buffer)
 	afterMakeMultipartMapCounter  uint64
 	beforeMakeMultipartMapCounter uint64
 	MakeMultipartMapMock          mLogUploaderMockMakeMultipartMap
@@ -303,10 +303,8 @@ type LogUploaderMockMakeMultipartMapExpectation struct {
 
 // LogUploaderMockMakeMultipartMapParams contains parameters of the LogUploader.MakeMultipartMap
 type LogUploaderMockMakeMultipartMapParams struct {
-	_map     string
-	domain   string
-	pickupID int
-	buf      bytes.Buffer
+	matcher stats.Matcher
+	buf     bytes.Buffer
 }
 
 // LogUploaderMockMakeMultipartMapResults contains results of the LogUploader.MakeMultipartMap
@@ -315,7 +313,7 @@ type LogUploaderMockMakeMultipartMapResults struct {
 }
 
 // Expect sets up expected params for LogUploader.MakeMultipartMap
-func (mmMakeMultipartMap *mLogUploaderMockMakeMultipartMap) Expect(_map string, domain string, pickupID int, buf bytes.Buffer) *mLogUploaderMockMakeMultipartMap {
+func (mmMakeMultipartMap *mLogUploaderMockMakeMultipartMap) Expect(matcher stats.Matcher, buf bytes.Buffer) *mLogUploaderMockMakeMultipartMap {
 	if mmMakeMultipartMap.mock.funcMakeMultipartMap != nil {
 		mmMakeMultipartMap.mock.t.Fatalf("LogUploaderMock.MakeMultipartMap mock is already set by Set")
 	}
@@ -324,7 +322,7 @@ func (mmMakeMultipartMap *mLogUploaderMockMakeMultipartMap) Expect(_map string, 
 		mmMakeMultipartMap.defaultExpectation = &LogUploaderMockMakeMultipartMapExpectation{}
 	}
 
-	mmMakeMultipartMap.defaultExpectation.params = &LogUploaderMockMakeMultipartMapParams{_map, domain, pickupID, buf}
+	mmMakeMultipartMap.defaultExpectation.params = &LogUploaderMockMakeMultipartMapParams{matcher, buf}
 	for _, e := range mmMakeMultipartMap.expectations {
 		if minimock.Equal(e.params, mmMakeMultipartMap.defaultExpectation.params) {
 			mmMakeMultipartMap.mock.t.Fatalf("Expectation set by When has same params: %#v", *mmMakeMultipartMap.defaultExpectation.params)
@@ -335,7 +333,7 @@ func (mmMakeMultipartMap *mLogUploaderMockMakeMultipartMap) Expect(_map string, 
 }
 
 // Inspect accepts an inspector function that has same arguments as the LogUploader.MakeMultipartMap
-func (mmMakeMultipartMap *mLogUploaderMockMakeMultipartMap) Inspect(f func(_map string, domain string, pickupID int, buf bytes.Buffer)) *mLogUploaderMockMakeMultipartMap {
+func (mmMakeMultipartMap *mLogUploaderMockMakeMultipartMap) Inspect(f func(matcher stats.Matcher, buf bytes.Buffer)) *mLogUploaderMockMakeMultipartMap {
 	if mmMakeMultipartMap.mock.inspectFuncMakeMultipartMap != nil {
 		mmMakeMultipartMap.mock.t.Fatalf("Inspect function is already set for LogUploaderMock.MakeMultipartMap")
 	}
@@ -359,7 +357,7 @@ func (mmMakeMultipartMap *mLogUploaderMockMakeMultipartMap) Return(m1 map[string
 }
 
 //Set uses given function f to mock the LogUploader.MakeMultipartMap method
-func (mmMakeMultipartMap *mLogUploaderMockMakeMultipartMap) Set(f func(_map string, domain string, pickupID int, buf bytes.Buffer) (m1 map[string]io.Reader)) *LogUploaderMock {
+func (mmMakeMultipartMap *mLogUploaderMockMakeMultipartMap) Set(f func(matcher stats.Matcher, buf bytes.Buffer) (m1 map[string]io.Reader)) *LogUploaderMock {
 	if mmMakeMultipartMap.defaultExpectation != nil {
 		mmMakeMultipartMap.mock.t.Fatalf("Default expectation is already set for the LogUploader.MakeMultipartMap method")
 	}
@@ -374,14 +372,14 @@ func (mmMakeMultipartMap *mLogUploaderMockMakeMultipartMap) Set(f func(_map stri
 
 // When sets expectation for the LogUploader.MakeMultipartMap which will trigger the result defined by the following
 // Then helper
-func (mmMakeMultipartMap *mLogUploaderMockMakeMultipartMap) When(_map string, domain string, pickupID int, buf bytes.Buffer) *LogUploaderMockMakeMultipartMapExpectation {
+func (mmMakeMultipartMap *mLogUploaderMockMakeMultipartMap) When(matcher stats.Matcher, buf bytes.Buffer) *LogUploaderMockMakeMultipartMapExpectation {
 	if mmMakeMultipartMap.mock.funcMakeMultipartMap != nil {
 		mmMakeMultipartMap.mock.t.Fatalf("LogUploaderMock.MakeMultipartMap mock is already set by Set")
 	}
 
 	expectation := &LogUploaderMockMakeMultipartMapExpectation{
 		mock:   mmMakeMultipartMap.mock,
-		params: &LogUploaderMockMakeMultipartMapParams{_map, domain, pickupID, buf},
+		params: &LogUploaderMockMakeMultipartMapParams{matcher, buf},
 	}
 	mmMakeMultipartMap.expectations = append(mmMakeMultipartMap.expectations, expectation)
 	return expectation
@@ -394,15 +392,15 @@ func (e *LogUploaderMockMakeMultipartMapExpectation) Then(m1 map[string]io.Reade
 }
 
 // MakeMultipartMap implements requests.LogUploader
-func (mmMakeMultipartMap *LogUploaderMock) MakeMultipartMap(_map string, domain string, pickupID int, buf bytes.Buffer) (m1 map[string]io.Reader) {
+func (mmMakeMultipartMap *LogUploaderMock) MakeMultipartMap(matcher stats.Matcher, buf bytes.Buffer) (m1 map[string]io.Reader) {
 	mm_atomic.AddUint64(&mmMakeMultipartMap.beforeMakeMultipartMapCounter, 1)
 	defer mm_atomic.AddUint64(&mmMakeMultipartMap.afterMakeMultipartMapCounter, 1)
 
 	if mmMakeMultipartMap.inspectFuncMakeMultipartMap != nil {
-		mmMakeMultipartMap.inspectFuncMakeMultipartMap(_map, domain, pickupID, buf)
+		mmMakeMultipartMap.inspectFuncMakeMultipartMap(matcher, buf)
 	}
 
-	mm_params := &LogUploaderMockMakeMultipartMapParams{_map, domain, pickupID, buf}
+	mm_params := &LogUploaderMockMakeMultipartMapParams{matcher, buf}
 
 	// Record call args
 	mmMakeMultipartMap.MakeMultipartMapMock.mutex.Lock()
@@ -419,7 +417,7 @@ func (mmMakeMultipartMap *LogUploaderMock) MakeMultipartMap(_map string, domain 
 	if mmMakeMultipartMap.MakeMultipartMapMock.defaultExpectation != nil {
 		mm_atomic.AddUint64(&mmMakeMultipartMap.MakeMultipartMapMock.defaultExpectation.Counter, 1)
 		mm_want := mmMakeMultipartMap.MakeMultipartMapMock.defaultExpectation.params
-		mm_got := LogUploaderMockMakeMultipartMapParams{_map, domain, pickupID, buf}
+		mm_got := LogUploaderMockMakeMultipartMapParams{matcher, buf}
 		if mm_want != nil && !minimock.Equal(*mm_want, mm_got) {
 			mmMakeMultipartMap.t.Errorf("LogUploaderMock.MakeMultipartMap got unexpected parameters, want: %#v, got: %#v%s\n", *mm_want, mm_got, minimock.Diff(*mm_want, mm_got))
 		}
@@ -431,9 +429,9 @@ func (mmMakeMultipartMap *LogUploaderMock) MakeMultipartMap(_map string, domain 
 		return (*mm_results).m1
 	}
 	if mmMakeMultipartMap.funcMakeMultipartMap != nil {
-		return mmMakeMultipartMap.funcMakeMultipartMap(_map, domain, pickupID, buf)
+		return mmMakeMultipartMap.funcMakeMultipartMap(matcher, buf)
 	}
-	mmMakeMultipartMap.t.Fatalf("Unexpected call to LogUploaderMock.MakeMultipartMap. %v %v %v %v", _map, domain, pickupID, buf)
+	mmMakeMultipartMap.t.Fatalf("Unexpected call to LogUploaderMock.MakeMultipartMap. %v %v", matcher, buf)
 	return
 }
 

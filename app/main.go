@@ -3,6 +3,7 @@ package main
 import (
 	"LogWatcher/pkg/config"
 	"LogWatcher/pkg/logger"
+	"LogWatcher/pkg/requests"
 	"LogWatcher/pkg/router"
 	"context"
 	"log"
@@ -23,7 +24,7 @@ func main() {
 		log.Fatalf("Failed to create logrus logger: %s", err)
 	}
 
-	l.Infof("Launching LogWatcher, log level is %q", cfg.Server.LogLevel)
+	l.Infof("Starting LogWatcher@%s, log level: %s", requests.Version, cfg.Server.LogLevel)
 
 	r, err := router.NewRouter(ctx, cfg, l)
 	if err != nil {
