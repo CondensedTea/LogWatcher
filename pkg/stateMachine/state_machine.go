@@ -12,13 +12,14 @@ import (
 )
 
 var (
-	roundStart   = regexp.MustCompile(`: World triggered "Round_Start"`)
-	roundWin     = regexp.MustCompile(`: World triggered "Round_Win"`)
-	gameOver     = regexp.MustCompile(`: World triggered "Game_Over" reason "`)
-	logClosed    = regexp.MustCompile(`: Log File closed.`)
-	logStarted   = regexp.MustCompile(`: Log file started`)
-	currentScore = regexp.MustCompile(`: Team "(Red|Blue)" current score "(\d)" with "\d" players`)
-	roundLength  = regexp.MustCompile(`: World triggered "Round_Length" \(seconds`)
+	roundStart       = regexp.MustCompile(`: World triggered "Round_Start"`)
+	roundWin         = regexp.MustCompile(`: World triggered "Round_Win"`)
+	gameOver         = regexp.MustCompile(`: World triggered "Game_Over" reason "`)
+	logClosed        = regexp.MustCompile(`: Log File closed.`)
+	logStarted       = regexp.MustCompile(`: Log file started`)
+	currentScore     = regexp.MustCompile(`: Team "(Red|Blue)" current score "(\d)" with "\d" players`)
+	roundLength      = regexp.MustCompile(`: World triggered "Round_Length" \(seconds`)
+	gamePlayerDelAll = regexp.MustCompile(`rcon from "\d{1,3}.\d{1,3}.\d{1,3}.\d{1,3}:\d+": command "sm_game_player_delall"`)
 )
 
 type StateType int
@@ -113,7 +114,7 @@ func (sm *StateMachine) ProcessLogLine(msg string) {
 			sm.File.WriteLine(msg)
 			sm.State = Game
 		}
-		if logClosed.MatchString(msg) || gameOver.MatchString(msg) {
+		if logClosed.MatchString(msg) || gameOver.MatchString(msg) || gamePlayerDelAll.MatchString(msg) {
 			sm.File.WriteLine(msg)
 			sm.State = Pregame
 			sm.ProcessGameOverEvent(msg)
