@@ -29,7 +29,7 @@ e2e:
 
 PHONY: run
 run:
-	docker run --network=host --rm -d --name=$(container_name) condensedtea/logwatcher:latest
+	docker run --network=host -d --name=$(container_name) condensedtea/logwatcher:latest
 
 PHONY: down
 down:
